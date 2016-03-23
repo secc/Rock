@@ -6,3 +6,4 @@
 
 *.pdb
 *.dll
+*.Redis.xml
