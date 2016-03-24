@@ -296,7 +296,7 @@ namespace Rock.Web.Cache
 
         #region Static Methods
 
-        private static RockMemoryCache _cache = RockMemoryCache.Default;
+        private static RockCache _cache = RockCache.Instance;
 
         private static string CacheKey()
         {

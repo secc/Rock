@@ -31,6 +31,7 @@ using Rock;
 using Rock.Data;
 using Rock.Model;
 using Rock.VersionInfo;
+using Rock.Web.Cache;
 
 namespace RockWeb.Blocks.Administration
 {
@@ -117,8 +118,8 @@ namespace RockWeb.Blocks.Administration
             var msgs = new List<string>();
 
             // Clear all cached items
-            Rock.Web.Cache.RockMemoryCache.Clear();
-            msgs.Add( "RockMemoryCache has been cleared" );
+            Rock.Web.Cache.RockCache.Clear();
+            msgs.Add( "RockCache has been cleared" );
 
             // Clear the static object that contains all auth rules (so that it will be refreshed)
             Rock.Security.Authorization.Flush();
@@ -253,13 +254,13 @@ namespace RockWeb.Blocks.Administration
 
         private string GetCacheInfo()
         {
-            var cache = Rock.Web.Cache.RockMemoryCache.Default;
+            RockCache cache = RockCache.Instance;
 
             StringBuilder sb = new StringBuilder();
             sb.AppendFormat( "<p><strong>Cache Items:</strong><br /> {0}</p>{1}", cache.Count(), Environment.NewLine );
-            sb.AppendFormat( "<p><strong>Cache Memory Limit:</strong><br /> {0:N0} (bytes)</p>{1}", cache.CacheMemoryLimit, Environment.NewLine );
+            /*sb.AppendFormat( "<p><strong>Cache Memory Limit:</strong><br /> {0:N0} (bytes)</p>{1}", cache.CacheMemoryLimit, Environment.NewLine );
             sb.AppendFormat( "<p><strong>Physical Memory Limit:</strong><br /> {0} %</p>{1}", cache.PhysicalMemoryLimit, Environment.NewLine );
-            sb.AppendFormat( "<p><strong>Polling Interval:</strong><br /> {0}</p>{1}", cache.PollingInterval, Environment.NewLine );
+            sb.AppendFormat( "<p><strong>Polling Interval:</strong><br /> {0}</p>{1}", cache.PollingInterval, Environment.NewLine );*/
             lCacheObjects.Text = cache.GroupBy( a => a.Value.GetType() ).Select( a => new
             {
                 a.Key.Name,

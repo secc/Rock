@@ -114,7 +114,7 @@ namespace Rock.Security
         /// <returns></returns>
         public static Role GetOrAddExisting( string key, Func<Role> valueFactory )
         {
-            RockMemoryCache cache = RockMemoryCache.Default;
+            RockCache cache = RockCache.Instance;
 
             object cacheValue = cache.Get( key );
             if ( cacheValue != null )
@@ -206,7 +206,7 @@ namespace Rock.Security
         /// <param name="id">The id.</param>
         public static void Flush( int id )
         {
-            ObjectCache cache = Rock.Web.Cache.RockMemoryCache.Default;
+            RockCache cache = RockCache.Instance;
             cache.Remove( Role.CacheKey( id ) );
         }
 

@@ -132,7 +132,7 @@ namespace RockWeb
                 }
 
                 // Clear all cache
-                RockMemoryCache.Clear();
+                RockCache.Clear();
 
                 // Get a db context
                 using ( var rockContext = new RockContext() )

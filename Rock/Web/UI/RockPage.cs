@@ -901,7 +901,7 @@ namespace Rock.Web.UI
                             {
                                 // Cache object used for block output caching
                                 Page.Trace.Warn( "Getting memory cache" );
-                                RockMemoryCache cache = RockMemoryCache.Default;
+                                RockCache cache = RockCache.Instance;
                                 string blockCacheKey = string.Format( "Rock:BlockOutput:{0}", block.Id );
                                 if ( cache.Contains( blockCacheKey ) )
                                 {

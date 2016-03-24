@@ -50,7 +50,7 @@ namespace Rock.Model
         /// <returns></returns>
         private static List<GroupMemberWorkflowTrigger> GetOrAddExisting( Func<List<GroupMemberWorkflowTrigger>> factory )
         {
-            RockMemoryCache cache = RockMemoryCache.Default;
+            RockCache cache = RockCache.Instance;
 
             var value = cache.Get( CACHE_KEY ) as List<GroupMemberWorkflowTrigger>;
             if ( value != null )
@@ -91,7 +91,7 @@ namespace Rock.Model
         /// </summary>
         public static void FlushCachedTriggers()
         {
-            RockMemoryCache cache = RockMemoryCache.Default;
+            RockCache cache = RockCache.Instance;
             cache.Remove( CACHE_KEY );
         }
 

@@ -87,7 +87,7 @@ namespace RockWeb.Blocks.Cms
         /// <param name="e">The <see cref="EventArgs"/> instance containing the event data.</param>
         protected void PageMenu_BlockUpdated( object sender, EventArgs e )
         {
-            RockMemoryCache cache = RockMemoryCache.Default;
+            RockCache cache = RockCache.Instance;
             cache.Remove( CacheKey() );
         }
 
@@ -200,7 +200,7 @@ namespace RockWeb.Blocks.Cms
         {
             string cacheKey = CacheKey();
 
-            RockMemoryCache cache = RockMemoryCache.Default;
+            RockCache cache = RockCache.Instance;
             Template template = cache[cacheKey] as Template;
 
             if ( template != null )

@@ -317,7 +317,7 @@ namespace RockWeb.Blocks.Store
                     InstalledPackageService.SaveInstall( purchaseResponse.PackageId, purchaseResponse.PackageName, installStep.VersionId, installStep.VersionLabel, purchaseResponse.VendorId, purchaseResponse.VendorName, purchaseResponse.InstalledBy );
                 
                     // Clear all cached items
-                    Rock.Web.Cache.RockMemoryCache.Clear();
+                    Rock.Web.Cache.RockCache.Clear();
 
                     // Clear the static object that contains all auth rules (so that it will be refreshed)
                     Rock.Security.Authorization.Flush();

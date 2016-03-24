@@ -46,7 +46,7 @@ namespace Rock.Web.Cache
         /// <returns></returns>
         public static TT GetOrAddExisting<TT>( string key, Func<TT> valueFactory )
         {
-            RockMemoryCache cache = RockMemoryCache.Default;
+            RockCache cache = RockCache.Instance;
 
             object cacheValue = cache.Get( key );
             if ( cacheValue != null )
@@ -70,7 +70,7 @@ namespace Rock.Web.Cache
         /// <returns></returns>
         public static int GetOrAddExisting( string key, Func<int> valueFactory )
         {
-            RockMemoryCache cache = RockMemoryCache.Default;
+            RockCache cache = RockCache.Instance;
 
             object cacheValue = cache.Get( key );
             if ( cacheValue != null )
@@ -91,7 +91,7 @@ namespace Rock.Web.Cache
         /// <returns></returns>
         public static List<int> GetOrAddAll( string key, Func<List<int>> valueFactory )
         {
-            RockMemoryCache cache = RockMemoryCache.Default;
+            RockCache cache = RockCache.Instance;
 
             var value = cache.Get( key ) as List<int>;
             if ( value != null )
@@ -115,7 +115,7 @@ namespace Rock.Web.Cache
         /// <param name="policy">The policy.</param>
         public static void SetCache( string key, object item, CacheItemPolicy policy )
         {
-            RockMemoryCache cache = RockMemoryCache.Default;
+            RockCache cache = RockCache.Instance;
             cache.Set( key, item, policy );
         }
 
@@ -126,7 +126,7 @@ namespace Rock.Web.Cache
         /// <returns></returns>
         public static bool CacheContainsKey( string key )
         {
-            RockMemoryCache cache = RockMemoryCache.Default;
+            RockCache cache = RockCache.Instance;
             return cache.Contains( key );
         }
 
@@ -136,7 +136,7 @@ namespace Rock.Web.Cache
         /// <param name="key">The key.</param>
         public static void FlushCache( string key )
         {
-            RockMemoryCache cache = RockMemoryCache.Default;
+            RockCache cache = RockCache.Instance;
             cache.Remove( key );
         }
 
@@ -197,7 +197,7 @@ namespace Rock.Web.Cache
             this.ForeignGuid = model.ForeignGuid;
             this.ForeignKey = model.ForeignKey;
 
-            RockMemoryCache cache = RockMemoryCache.Default;
+            RockCache cache = RockCache.Instance;
             cache.Set( model.Guid.ToString(), model.Id, new CacheItemPolicy() );
         }
 

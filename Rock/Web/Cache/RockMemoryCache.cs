@@ -29,14 +29,8 @@ namespace Rock.Web.Cache
     /// https://github.com/ironyx/sharpmemorycache
     /// 
     /// </summary>
-    public class RockMemoryCache : MemoryCache
+    public class RockMemoryCache : MemoryCache, IRockCacheProvider
     {
-        // object used for locking
-        private static object s_initLock;
-
-        // singleton instance of RockMemoryCache
-        private static RockMemoryCache s_defaultCache;
-
         // The function that sets the memory cache's last trim gen 2 count to a specific value
         private readonly Action<int> _setMemoryCacheLastTrimGen2CountFunc = null;
 
@@ -51,14 +45,6 @@ namespace Rock.Web.Cache
 
         // Whether caching is being disabled or not
         private bool _isCachingDisabled = false;
-
-        /// <summary>
-        /// Initializes the <see cref="RockMemoryCache"/> class.
-        /// </summary>
-        static RockMemoryCache()
-        {
-            RockMemoryCache.s_initLock = new object();
-        }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="RockMemoryCache"/> class.
@@ -239,46 +225,6 @@ namespace Rock.Web.Cache
             object obj = base.Get( key, regionName );
             UpdateCacheHitMiss( key, obj != null );
             return obj;
-        }
-
-        /// <summary>
-        /// Gets the default.
-        /// </summary>
-        /// <value>
-        /// The default.
-        /// </value>
-        public static new RockMemoryCache Default
-        {
-            get
-            {
-                if ( RockMemoryCache.s_defaultCache == null )
-                {
-                    lock ( RockMemoryCache.s_initLock )
-                    {
-                        if ( RockMemoryCache.s_defaultCache == null )
-                        {
-                            RockMemoryCache.s_defaultCache = new RockMemoryCache();
-                        }
-                    }
-                }
-
-                return RockMemoryCache.s_defaultCache;
-            }
-        }
-
-        /// <summary>
-        /// Clears all items from cache.
-        /// </summary>
-        public static void Clear()
-        {
-            lock ( RockMemoryCache.s_initLock )
-            {
-                if ( RockMemoryCache.s_defaultCache != null )
-                {
-                    RockMemoryCache.s_defaultCache.Dispose();
-                    RockMemoryCache.s_defaultCache = null;
-                }
-            }
         }
     }
 }

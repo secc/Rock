@@ -24,6 +24,7 @@ using System.Runtime.Serialization;
 
 using Rock.Data;
 using Rock.Model;
+using Rock.Web.Cache;
 
 namespace Rock.CheckIn
 {
@@ -192,7 +193,7 @@ namespace Rock.CheckIn
             {
                 string cacheKey = KioskDevice.CacheKey( id );
 
-                ObjectCache cache = Rock.Web.Cache.RockMemoryCache.Default;
+                RockCache cache = RockCache.Instance;
                 KioskDevice device = cache[cacheKey] as KioskDevice;
 
                 if ( device != null )
@@ -244,7 +245,7 @@ namespace Rock.CheckIn
         /// <param name="id">The id.</param>
         public static void Flush( int id )
         {
-            ObjectCache cache = Rock.Web.Cache.RockMemoryCache.Default;
+            RockCache cache = RockCache.Instance;
             cache.Remove( KioskDevice.CacheKey( id ) );
         }
 
@@ -254,7 +255,7 @@ namespace Rock.CheckIn
         /// </summary>
         public static void FlushAll()
         {
-            ObjectCache cache = Rock.Web.Cache.RockMemoryCache.Default;
+            RockCache cache = RockCache.Instance;
             var keysToRemove = cache
                 .Where( c =>
                     c.Key.StartsWith( "Rock:CheckIn:KioskDevice:" ) )

@@ -902,7 +902,7 @@ namespace Rock.Web.Cache
         /// </summary>
         public static void FlushLayout( int layoutId )
         {
-            RockMemoryCache cache = RockMemoryCache.Default;
+            RockCache cache = RockCache.Instance;
             foreach ( var item in cache )
             {
                 if ( item.Key.StartsWith( "Rock:Page:" ) )
@@ -921,7 +921,7 @@ namespace Rock.Web.Cache
         /// </summary>
         public static void FlushLayoutBlocks( int layoutId )
         {
-            RockMemoryCache cache = RockMemoryCache.Default;
+            RockCache cache = RockCache.Instance;
             foreach ( var item in cache )
             {
                 if ( item.Key.StartsWith( "Rock:Page:" ) )

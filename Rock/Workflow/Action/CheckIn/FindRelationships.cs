@@ -25,6 +25,7 @@ using System.Runtime.Caching;
 using Rock.CheckIn;
 using Rock.Data;
 using Rock.Model;
+using Rock.Web.Cache;
 
 namespace Rock.Workflow.Action.CheckIn
 {
@@ -50,7 +51,7 @@ namespace Rock.Workflow.Action.CheckIn
         {
             string cacheKey = "Rock.FindRelationships.Roles";
 
-            ObjectCache cache = Rock.Web.Cache.RockMemoryCache.Default;
+            RockCache cache = RockCache.Instance;
             List<int> roles = cache[cacheKey] as List<int>;
 
             if ( roles == null )

@@ -362,7 +362,7 @@ namespace Rock.Web.UI
         /// <param name="cacheItemPolicy">Optional <see cref="System.Runtime.Caching.CacheItemPolicy"/>, defaults to null</param>
         protected virtual void AddCacheItem( string key, object value, CacheItemPolicy cacheItemPolicy )
         {
-            RockMemoryCache cache = RockMemoryCache.Default;
+            RockCache cache = RockCache.Instance;
             cache.Set( ItemCacheKey( key ), value, cacheItemPolicy );
         }
 
@@ -373,7 +373,7 @@ namespace Rock.Web.UI
         /// <returns>The cached <see cref="System.Object"/> if a key match is not found, a null object will be returned.</returns>
         protected virtual object GetCacheItem( string key = "" )
         {
-            RockMemoryCache cache = RockMemoryCache.Default;
+            RockCache cache = RockCache.Instance;
             return cache[ItemCacheKey( key )];
         }
 
@@ -384,7 +384,7 @@ namespace Rock.Web.UI
         /// defaults to an empty string.</param>
         protected virtual void FlushCacheItem( string key = "" )
         {
-            RockMemoryCache cache = RockMemoryCache.Default;
+            RockCache cache = RockCache.Instance;
             cache.Remove( ItemCacheKey( key ) );
         }
 
@@ -396,7 +396,7 @@ namespace Rock.Web.UI
         /// <param name="blockId">An <see cref="System.Int32"/> representing the block item that will be flushed.</param>
         protected virtual void FlushSharedBlock( int blockId )
         {
-            MemoryCache cache = RockMemoryCache.Default;
+            RockCache cache = RockCache.Instance;
             string blockKey = string.Format( ":RockBlock:{0}:", blockId );
             foreach ( var keyValuePair in cache.Where( k => k.Key.Contains( blockKey ) ) )
             {

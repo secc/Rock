@@ -141,7 +141,7 @@ namespace Rock.Web
         {
             string cacheKey = SystemSettings.CacheKey();
 
-            RockMemoryCache cache = RockMemoryCache.Default;
+            RockCache cache = RockCache.Instance;
             SystemSettings systemSettings = cache[cacheKey] as SystemSettings;
 
             if ( systemSettings != null )
@@ -173,7 +173,7 @@ namespace Rock.Web
         /// </summary>
         public static void Flush()
         {
-            RockMemoryCache cache = RockMemoryCache.Default;
+            RockCache cache = RockCache.Instance;
             cache.Remove( SystemSettings.CacheKey() );
         }
 

@@ -20,6 +20,7 @@ using System.Linq;
 using System.Runtime.Caching;
 
 using Rock.Model;
+using Rock.Web.Cache;
 
 namespace Rock.CheckIn
 {
@@ -116,7 +117,7 @@ namespace Rock.CheckIn
         {
             string cacheKey = KioskLocationAttendance.CacheKey( id );
 
-            ObjectCache cache = Rock.Web.Cache.RockMemoryCache.Default;
+            RockCache cache = RockCache.Instance;
             KioskLocationAttendance locationAttendance = cache[cacheKey] as KioskLocationAttendance;
 
             if ( locationAttendance != null )
@@ -159,7 +160,7 @@ namespace Rock.CheckIn
         /// <param name="id">The id.</param>
         public static void Flush( int id )
         {
-            ObjectCache cache = Rock.Web.Cache.RockMemoryCache.Default;
+            RockCache cache = RockCache.Instance;
             cache.Remove( KioskLocationAttendance.CacheKey( id ) );
         }
 
