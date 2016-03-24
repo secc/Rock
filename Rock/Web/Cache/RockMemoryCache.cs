@@ -43,9 +43,6 @@ namespace Rock.Web.Cache
         // Whether or not the polling interval has been set
         private bool _isPollingIntervalSet = false;
 
-        // Whether caching is being disabled or not
-        private bool _isCachingDisabled = false;
-
         /// <summary>
         /// Initializes a new instance of the <see cref="RockMemoryCache"/> class.
         /// </summary>
@@ -94,9 +91,6 @@ namespace Rock.Web.Cache
 
             // Fire this method initially after a 1000 ms delay
             _setMemoryCacheLastTrimGen2CountTimer = new Timer( SetMemoryCacheLastTrimGen2Count, null, 1000, Timeout.Infinite );
-
-            // Check to see if caching has been disabled
-            _isCachingDisabled = ConfigurationManager.AppSettings["DisableCaching"].AsBoolean();
         }
 
         /// <summary>
@@ -150,11 +144,6 @@ namespace Rock.Web.Cache
         {
             get
             {
-                if ( _isCachingDisabled )
-                {
-                    return null;
-                }
-
                 object obj = base[key];
                 UpdateCacheHitMiss( key, obj != null );
                 return obj;
@@ -164,7 +153,7 @@ namespace Rock.Web.Cache
                 base[key] = value;
             }
         }
-
+        /* JME Commented out as they were not being used (so they are not in the IRockCache interface)
         /// <summary>
         /// Inserts a cache entry into the cache using the specified key and value and the specified details for how it is to be evicted.
         /// </summary>
@@ -186,6 +175,7 @@ namespace Rock.Web.Cache
             return base.AddOrGetExisting( key, value, policy, regionName );
         }
 
+        
         /// <summary>
         /// Adds a cache entry into the cache using the specified key and a value and an absolute expiration value.
         /// </summary>
@@ -206,7 +196,7 @@ namespace Rock.Web.Cache
             UpdateCacheHitMiss( key, Contains( key ) );
             return base.AddOrGetExisting( key, value, absoluteExpiration, regionName );
         }
-
+        */
         /// <summary>
         /// Returns an entry from the cache.
         /// </summary>
@@ -217,11 +207,6 @@ namespace Rock.Web.Cache
         /// </returns>
         public override object Get( string key, string regionName = null )
         {
-            if ( _isCachingDisabled )
-            {
-                return null;
-            }
-
             object obj = base.Get( key, regionName );
             UpdateCacheHitMiss( key, obj != null );
             return obj;

@@ -21,6 +21,9 @@ namespace Rock.Web.Cache
         // static instance of the cache provider
         private static IRockCacheProvider s_cacheProvider;
 
+        // variable to determine if caching is enabled
+        private bool _isCachingDisabled = false;
+
         /// <summary>
         /// Gets the default.
         /// </summary>
@@ -51,7 +54,12 @@ namespace Rock.Web.Cache
         /// </summary>
         public RockCache()
         {
+            // Check to see if caching has been disabled
+            _isCachingDisabled = ConfigurationManager.AppSettings["DisableCaching"].AsBoolean();
+
             LoadCacheProvider();
+
+
         }
 
         /// <summary>
@@ -129,6 +137,11 @@ namespace Rock.Web.Cache
         /// <returns></returns>
         public object Get( string key, string regionName = null )
         {
+            if ( _isCachingDisabled )
+            {
+                return null;
+            }
+
             return s_cacheProvider.Get( key, regionName );
         }
 
@@ -192,6 +205,11 @@ namespace Rock.Web.Cache
         {
             get
             {
+                if ( _isCachingDisabled )
+                {
+                    return null;
+                }
+
                 return s_cacheProvider[key];
             }
             set
