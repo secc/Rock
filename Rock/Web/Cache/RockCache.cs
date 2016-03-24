@@ -142,7 +142,9 @@ namespace Rock.Web.Cache
                 return null;
             }
 
-            return s_cacheProvider.Get( key, regionName );
+            object obj = s_cacheProvider.Get( key, regionName );
+            UpdateCacheHitMiss( key, obj != null );
+            return obj;
         }
 
         /// <summary>
@@ -201,6 +203,14 @@ namespace Rock.Web.Cache
             s_cacheProvider.Set( key, value, absoluteExpiration, regionName );
         }
 
+        /// <summary>
+        /// Gets or sets the <see cref="System.Object"/> with the specified key.
+        /// </summary>
+        /// <value>
+        /// The <see cref="System.Object"/>.
+        /// </value>
+        /// <param name="key">The key.</param>
+        /// <returns></returns>
         public object this[string key]
         {
             get
@@ -210,7 +220,9 @@ namespace Rock.Web.Cache
                     return null;
                 }
 
-                return s_cacheProvider[key];
+                object obj = s_cacheProvider[key];
+                UpdateCacheHitMiss( key, obj != null );
+                return obj;
             }
             set
             {
@@ -233,6 +245,12 @@ namespace Rock.Web.Cache
             }
         }
 
+        /// <summary>
+        /// Returns an enumerator that iterates through the collection.
+        /// </summary>
+        /// <returns>
+        /// A <see cref="T:System.Collections.Generic.IEnumerator`1" /> that can be used to iterate through the collection.
+        /// </returns>
         public IEnumerator<KeyValuePair<string, object>> GetEnumerator()
         {
             return s_cacheProvider.GetEnumerator();
@@ -241,6 +259,24 @@ namespace Rock.Web.Cache
         IEnumerator IEnumerable.GetEnumerator()
         {
             return this.GetEnumerator();
+        }
+
+        /// <summary>
+        /// Updates the cache hit miss.
+        /// </summary>
+        /// <param name="key">The key.</param>
+        /// <param name="hit">if set to <c>true</c> [hit].</param>
+        private void UpdateCacheHitMiss( string key, bool hit )
+        {
+            var httpContext = System.Web.HttpContext.Current;
+            if ( httpContext != null && httpContext.Items.Contains( "Cache_Hits" ) )
+            {
+                var cacheHits = httpContext.Items["Cache_Hits"] as System.Collections.Generic.Dictionary<string, bool>;
+                if ( cacheHits != null )
+                {
+                    cacheHits.AddOrIgnore( key, hit );
+                }
+            }
         }
     }
 }
