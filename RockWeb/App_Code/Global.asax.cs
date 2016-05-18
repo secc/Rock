@@ -127,7 +127,7 @@ namespace RockWeb
         {
             try
             {
-                var stopwatch = System.Diagnostics.Stopwatch.StartNew();
+              var stopwatch = System.Diagnostics.Stopwatch.StartNew();
                 LogMessage( APP_LOG_FILENAME, "Application Starting..." ); 
                 
                 if ( System.Web.Hosting.HostingEnvironment.IsDevelopmentEnvironment )
@@ -629,6 +629,7 @@ namespace RockWeb
                                                     migration.SqlConnection = con;
                                                     migration.SqlTransaction = sqlTxn;
                                                     migration.Up();
+                                                    migration.RunMigration();
                                                     sqlTxn.Commit();
                                                     transactionActive = false;
 
