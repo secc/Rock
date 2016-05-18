@@ -30,7 +30,10 @@ using System.Web.Caching;
 using System.Web.Http;
 using System.Web.Optimization;
 using System.Web.Routing;
+<<<<<<< 30bb979a22a4a564ed864933063c224e25a0fd59
 
+=======
+>>>>>>> #1528 - Plugin Migration now extends DbMigration.
 using DotLiquid;
 
 using Quartz;
