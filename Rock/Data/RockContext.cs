@@ -1189,12 +1189,15 @@ namespace Rock.Data
                 foreach ( var entityType in entityTypeList )
                 {
                     modelBuilder.RegisterEntityType( entityType );
-                }
 
-                // add configurations that might be in plugin assemblies
-                foreach ( var assembly in entityTypeList.Select( a => a.Assembly ).Distinct() )
-                {
-                    modelBuilder.Configurations.AddFromAssembly( assembly );
+                    var configurationTypes = entityType.Assembly.GetTypes().Where( t => t.BaseType.IsGenericType
+                            && t.BaseType.GetGenericTypeDefinition() == typeof( System.Data.Entity.ModelConfiguration.EntityTypeConfiguration<> )
+                            && t.BaseType.GetGenericArguments()[0] == entityType );
+                    foreach(var configurationType in configurationTypes)
+                    {
+                        dynamic configurationInstance = Activator.CreateInstance( configurationType );
+                        modelBuilder.Configurations.Add( configurationInstance );
+                    }
                 }
             }
             catch ( Exception ex )
