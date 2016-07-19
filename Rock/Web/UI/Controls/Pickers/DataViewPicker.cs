@@ -71,15 +71,28 @@ namespace Rock.Web.UI.Controls
                 {
                     var allEntityFilters = new DataViewFilterService( rockContext )
                         .Queryable().AsNoTracking()
-                        .Where( f => f.EntityTypeId == _entityTypeId )
+                        .Where( f => _entityTypeId == 0 || f.EntityTypeId == _entityTypeId )
                         .ToList();
-                        
-                    foreach ( var dataView in new DataViewService( rockContext )
-                        .GetByEntityTypeId( _entityTypeId.Value )
-                        .Include( "EntityType" )
-                        .Include( "Category" )
-                        .Include( "DataViewFilter" )
-                        .AsNoTracking() )
+                    IQueryable<DataView> dataViews;
+                    if ( _entityTypeId > 0 )
+                    {
+                        dataViews = new DataViewService( rockContext )
+                            .GetByEntityTypeId( _entityTypeId.Value )
+                            .Include( "EntityType" )
+                            .Include( "Category" )
+                            .Include( "DataViewFilter" )
+                            .AsNoTracking();
+                    }
+                    else
+                    {
+                        dataViews = new DataViewService( rockContext ).Queryable()
+                            .Include( "EntityType" )
+                            .Include( "Category" )
+                            .Include( "DataViewFilter" )
+                            .AsNoTracking();
+                    }
+                     
+                    foreach ( var dataView in dataViews )
                     {
                         var currentPerson = HttpContext.Current.Items["CurrentPerson"] as Person;
                         if ( dataView.IsAuthorized( Authorization.VIEW, currentPerson ) &&
