@@ -127,6 +127,18 @@
     <Compile Include="Migrations\Version 5.0\Version 1.5.0\201602231841538_RegistrationPaymentReminders.Designer.cs">
       <DependentUpon>201602231841538_RegistrationPaymentReminders.cs</DependentUpon>
     </Compile>
+    <Compile Include="Migrations\201607301400275_DigitalSignatures.cs" />
+    <Compile Include="Migrations\201607301400275_DigitalSignatures.Designer.cs">
+      <DependentUpon>201607301400275_DigitalSignatures.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Migrations\Configuration.cs" />
+    <Compile Include="Migrations\RockCSharpMigrationCodeGenerator.cs" />
+    <Compile Include="Migrations\RockMigration.cs" />
+    <Compile Include="Migrations\RockMigrationSQL.Designer.cs" />
+    <Compile Include="Migrations\Version 0.0 %28Pre Beta%29\Version 0.0.2\201311251734059_CreateDatabase.cs" />
+    <Compile Include="Migrations\Version 0.0 %28Pre Beta%29\Version 0.0.2\201311251734059_CreateDatabase.Designer.cs">
+      <DependentUpon>201311251734059_CreateDatabase.cs</DependentUpon>
+    </Compile>
     <Compile Include="Migrations\Version 5.0\Version 1.5.0\201602242247579_PaymentReminderPageAndJob.cs" />
     <Compile Include="Migrations\Version 5.0\Version 1.5.0\201602242247579_PaymentReminderPageAndJob.Designer.cs">
       <DependentUpon>201602242247579_PaymentReminderPageAndJob.cs</DependentUpon>
@@ -2165,8 +2177,17 @@
     <EmbeddedResource Include="Migrations\Version 5.0\Version 1.5.0\201601100030367_IncreaseDefinedValueSize.resx">
       <DependentUpon>201601100030367_IncreaseDefinedValueSize.cs</DependentUpon>
     </EmbeddedResource>
+<<<<<<< HEAD
     <EmbeddedResource Include="Migrations\Version 5.0\Version 1.5.0\201601191845218_AdditionalSqlFunctions.resx">
       <DependentUpon>201601191845218_AdditionalSqlFunctions.cs</DependentUpon>
+=======
+    <EmbeddedResource Include="Migrations\201607301400275_DigitalSignatures.resx">
+      <DependentUpon>201607301400275_DigitalSignatures.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Migrations\RockMigrationSQL.resx" />
+    <EmbeddedResource Include="Migrations\Version 0.0 %28Pre Beta%29\Version 0.0.2\201311251734059_CreateDatabase.resx">
+      <DependentUpon>201311251734059_CreateDatabase.cs</DependentUpon>
+>>>>>>> 97030a1... + Added ability for registrations and groups to require electronically signed documents.
     </EmbeddedResource>
     <EmbeddedResource Include="Migrations\Version 5.0\Version 1.5.0\201601241806293_RegistrationInstanceCosts.resx">
       <DependentUpon>201601241806293_RegistrationInstanceCosts.cs</DependentUpon>
