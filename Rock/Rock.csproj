@@ -43,10 +43,6 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\packages\CronExpressionDescriptor.1.12.0\lib\net35\CronExpressionDescriptor.dll</HintPath>
     </Reference>
-    <Reference Include="CSLibrary, Version=2.0.2.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\CudaSign.2.0.5\lib\CSLibrary.dll</HintPath>
-      <Private>True</Private>
-    </Reference>
     <Reference Include="CSScriptLibrary, Version=3.13.2.0, Culture=neutral, PublicKeyToken=70fcc3d18c749033, processorArchitecture=MSIL">
       <HintPath>..\packages\CS-Script.bin.3.13.2.0\lib\net45\CSScriptLibrary.dll</HintPath>
       <Private>True</Private>
@@ -319,6 +315,25 @@
     <Compile Include="Follow\EventContainer.cs" />
     <Compile Include="Jobs\CalculateFamilyAnalytics.cs" />
     <Compile Include="Jobs\SendGroupEmail.cs" />
+    <Compile Include="Jobs\CalculateGroupRequirements.cs" />
+    <Compile Include="Jobs\CalculateMetrics.cs" />
+    <Compile Include="Jobs\GetScheduledPayments.cs" />
+    <Compile Include="Jobs\GroupLeaderPendingNotifications.cs" />
+    <Compile Include="Jobs\GroupSync.cs" />
+    <Compile Include="Jobs\JobLoadFailedException.cs" />
+    <Compile Include="Jobs\JobPulse.cs" />
+    <Compile Include="Jobs\LaunchWorkflow.cs">
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="Jobs\LocationServicesVerify.cs" />
+    <Compile Include="Jobs\ProcessSignatureDocuments.cs" />
+    <Compile Include="Jobs\ProcessWorkflows.cs" />
+    <Compile Include="Jobs\RockCleanup.cs" />
+    <Compile Include="Jobs\RockJobListener.cs" />
+    <Compile Include="Jobs\RunSQL.cs" />
+    <Compile Include="Jobs\SendAttendanceReminders.cs" />
+    <Compile Include="Jobs\SendBirthdayEmail.cs" />
+    <Compile Include="Jobs\SendCommunications.cs" />
     <Compile Include="Jobs\SendFollowingEvents.cs" />
     <Compile Include="Jobs\SendFollowingSuggestions.cs" />
     <Compile Include="Jobs\SendRegistrationPaymentReminders.cs" />
@@ -458,7 +473,6 @@
     <Compile Include="Model\CodeGenerated\RegistrationTemplateFormFieldService.cs" />
     <Compile Include="Model\CodeGenerated\RegistrationTemplateFormService.cs" />
     <Compile Include="Model\CodeGenerated\RegistrationTemplateService.cs" />
-<<<<<<< HEAD
     <Compile Include="Model\ContentChannel.cs">
       <SubType>Code</SubType>
     </Compile>
@@ -468,7 +482,6 @@
     <Compile Include="Model\ContentChannelType.cs">
       <SubType>Code</SubType>
     </Compile>
-=======
     <Compile Include="Model\CodeGenerated\ReportFieldService.cs" />
     <Compile Include="Model\CodeGenerated\ReportService.cs" />
     <Compile Include="Model\CodeGenerated\RestActionService.cs" />
@@ -477,7 +490,7 @@
     <Compile Include="Model\CodeGenerated\ServiceJobService.cs" />
     <Compile Include="Model\CodeGenerated\ServiceLogService.cs" />
     <Compile Include="Model\CodeGenerated\SignatureDocumentService.cs" />
-    <Compile Include="Model\CodeGenerated\SignatureDocumentTypeService.cs" />
+    <Compile Include="Model\CodeGenerated\SignatureDocumentTemplateService.cs" />
     <Compile Include="Model\CodeGenerated\SiteDomainService.cs" />
     <Compile Include="Model\CodeGenerated\SiteService.cs" />
     <Compile Include="Model\CodeGenerated\SystemEmailService.cs" />
@@ -529,7 +542,6 @@
     <Compile Include="Model\EntitySet.cs" />
     <Compile Include="Model\EntitySetItem.cs" />
     <Compile Include="Model\EntitySetItemService.Partial.cs" />
->>>>>>> 97030a1... + Added ability for registrations and groups to require electronically signed documents.
     <Compile Include="Model\EntitySetService.Partial.cs" />
     <Compile Include="Model\EntitySetItemService.Partial.cs" />
     <Compile Include="Model\EventCalendar.cs" />
@@ -575,15 +587,13 @@
     <Compile Include="Model\RegistrationService.partial.cs" />
     <Compile Include="Model\RestActionService.partial.cs" />
     <Compile Include="Model\ScheduleService.Partial.cs" />
-<<<<<<< HEAD
-=======
     <Compile Include="Model\ServiceJob.cs" />
     <Compile Include="Model\ServiceJobService.Partial.cs" />
     <Compile Include="Model\ServiceLog.cs" />
     <Compile Include="Model\SignatureDocument.cs" />
     <Compile Include="Model\SignatureDocumentService.Partial.cs" />
-    <Compile Include="Model\SignatureDocumentType.cs" />
-    <Compile Include="Model\SignatureDocumentTypeService.Partial.cs" />
+    <Compile Include="Model\SignatureDocumentTemplate.cs" />
+    <Compile Include="Model\SignatureDocumentTemplateService.Partial.cs" />
     <Compile Include="Model\Site.cs" />
     <Compile Include="Model\SiteDomain.cs" />
     <Compile Include="Model\SiteDomainService.Partial.cs" />
@@ -599,7 +609,6 @@
     <Compile Include="Model\WorkflowAction.cs" />
     <Compile Include="Model\WorkflowActionForm.cs" />
     <Compile Include="Model\WorkflowActionFormAttribute.cs" />
->>>>>>> 97030a1... + Added ability for registrations and groups to require electronically signed documents.
     <Compile Include="Model\WorkflowActionService.Partial.cs" />
     <Compile Include="Model\GroupMemberWorkflowTrigger.cs" />
     <Compile Include="Net\RockWebRequest.cs" />
@@ -714,11 +723,8 @@
     <Compile Include="Security\BackgroundCheckComponent.cs" />
     <Compile Include="Security\BackgroundCheckContainer.cs" />
     <Compile Include="Security\BackgroundCheck\ProtectMyMinistry.cs" />
-<<<<<<< HEAD
-=======
     <Compile Include="Security\DigitalSignatureComponent.cs" />
     <Compile Include="Security\DigitalSignatureContainer.cs" />
-    <Compile Include="Security\DigitalSignature\SignNow.cs" />
     <Compile Include="Security\Encryption.cs" />
     <Compile Include="Security\GlobalDefault.cs" />
     <Compile Include="Security\ISecured.cs" />
@@ -732,7 +738,6 @@
     <Compile Include="Services\NuGet\NuGetExtensionsMethods.cs" />
     <Compile Include="Services\NuGet\PackageService.cs" />
     <Compile Include="Services\NuGet\RockPackagePathResolver.cs" />
->>>>>>> 97030a1... + Added ability for registrations and groups to require electronically signed documents.
     <Compile Include="Services\NuGet\RockProjectManager.cs" />
     <Compile Include="Store\Package.cs" />
     <Compile Include="Store\InstalledPackageService.cs" />
@@ -762,8 +767,6 @@
     <Compile Include="Transactions\GroupAttendedTransaction.cs" />
     <Compile Include="Transactions\ConnectionRequestChangeTransaction.cs" />
     <Compile Include="Transactions\GroupMemberChangeTransaction.cs" />
-<<<<<<< HEAD
-=======
     <Compile Include="Transactions\GroupMemberPlacedElsewhereTransaction.cs" />
     <Compile Include="Transactions\ITransaction.cs" />
     <Compile Include="Transactions\LaunchWorkflowTransaction.cs" />
@@ -777,7 +780,6 @@
     <Compile Include="Transactions\SendCommunicationTransaction.cs" />
     <Compile Include="Transactions\SendDigitalSignatureRequestTransaction.cs" />
     <Compile Include="Transactions\SendPaymentReciepts.cs" />
->>>>>>> 97030a1... + Added ability for registrations and groups to require electronically signed documents.
     <Compile Include="Transactions\SendRegistrationConfirmationTransaction.cs" />
     <Compile Include="Transactions\SendCommunicationApprovalEmail.cs" />
     <Compile Include="Transactions\RunJobNowTransaction.cs" />
