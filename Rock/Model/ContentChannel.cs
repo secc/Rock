@@ -84,6 +84,24 @@ namespace Rock.Model
         public bool RequiresApproval { get; set; }
 
         /// <summary>
+        /// Gets or sets a value indicating whether items are manually ordered or not
+        /// </summary>
+        /// <value>
+        /// <c>true</c> if [items manually ordered]; otherwise, <c>false</c>.
+        /// </value>
+        [DataMember]
+        public bool ItemsManuallyOrdered { get; set; }
+
+        /// <summary>
+        /// Gets or sets a value indicating whether child items are manually ordered or not
+        /// </summary>
+        /// <value>
+        /// <c>true</c> if [child items manually ordered]; otherwise, <c>false</c>.
+        /// </value>
+        [DataMember]
+        public bool ChildItemsManuallyOrdered { get; set; }
+
+        /// <summary>
         /// Gets or sets a value indicating whether [enable RSS].
         /// </summary>
         /// <value>
