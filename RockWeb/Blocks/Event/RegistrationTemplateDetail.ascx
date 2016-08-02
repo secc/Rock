@@ -46,10 +46,7 @@
                                     Help="The group member role that new registrants should be added to group with." />
                                 <Rock:RockDropDownList ID="ddlGroupMemberStatus" runat="server" Label="Group Member Status" 
                                     Help="The group member status that new registrants should be added to group with."/>
-                                <Rock:RockDropDownList ID="ddlSignatureDocumentTemplate" runat="server" Label="Required Signature Document" 
-                                    Help="A document that needs to be signed for registrations of this type."/>
-                                <Rock:WorkflowTypePicker ID="wtpRegistrationWorkflow" runat="server" Label="Registration Workflow"
-                                    Help="An optional workflow type to launch when a new registration is completed." />
+                                
                                 <div class="row">
                                     <div class="col-xs-6">
                                         <Rock:RockCheckBoxList ID="cblNotify" runat="server" Label="Notify" RepeatDirection="Vertical"
@@ -74,13 +71,17 @@
                                                 adding registrants to specific child groups of a selected parent group." />
                                     </div>
                                 </div>
-                                <div class="row">
-                                    <div class="col-xs-6">
-                                        <Rock:RockCheckBox ID="cbAllowExternalUpdates" runat="server" Label="Allow External Updates to Saved Registrations" Text="Yes"
+
+                                <Rock:RockCheckBox ID="cbAllowExternalUpdates" runat="server" Label="Allow External Updates to Saved Registrations" Text="Yes"
                                             Help="Allow saved registrations to be updated online. If false the individual will be able to make additional payments, but will
                                             not be allow to change any of the registrant information and attributes." />
-                                    </div>
-                                </div>
+
+                                <Rock:WorkflowTypePicker ID="wtpRegistrationWorkflow" runat="server" Label="Registration Workflow"
+                                    Help="An optional workflow type to launch when a new registration is completed." />
+
+                                <Rock:RockDropDownList ID="ddlSignatureDocumentTemplate" runat="server" Label="Required Signature Document" 
+                                    Help="A document that needs to be signed for registrations of this type."/>
+
                             </div>
                             <div class="col-md-6">
                                 <div class="row">
@@ -258,11 +259,8 @@
                     <div class="row">
                         <div class="col-md-6">
                             <Rock:RockLiteral ID="lGroupType" runat="server" Label="Group Type" />
-<<<<<<< HEAD
-=======
                             <Rock:RockLiteral ID="lWorkflowType" runat="server" Label="Registration Workflow" />
                             <Rock:RockLiteral ID="lRequiredSignedDocument" runat="server" Label="Required Signed Document" />
->>>>>>> 97030a1... + Added ability for registrations and groups to require electronically signed documents.
                             <Rock:RockControlWrapper ID="rcwForms" runat="server" Label="Forms" CssClass="js-forms-wrapper">
                                 <div class="forms-readonly-list" style="display: none">
                                     <asp:Literal ID="lFormsReadonly" runat="server" />
