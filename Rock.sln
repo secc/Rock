@@ -21,7 +21,6 @@ Project("{E24C65DC-7377-472B-9ABA-BC803B73C61A}") = "RockWeb", "http://localhost
 		UseIISExpress = "true"
 		TargetFrameworkMoniker = ".NETFramework,Version%3Dv4.5.2"
 		ProjectReferences = "{CB9372CD-9C1D-47AB-92D8-702D4D68324F}|DotLiquid.dll;{8F8C2A79-24F4-4157-8B99-45F75FA85799}|Rock.dll;{681D7CE2-D156-4414-ABEC-06CB5F47ADEC}|Rock.Mailgun.dll;{EEE3C919-71C8-4160-A3C6-49DB39394A84}|Rock.Mandrill.dll;{957B1DBE-B921-4FAE-8E5E-B7AD7F01B161}|Rock.Migrations.dll;{0A624087-2AE4-4E31-9154-DB488AFE75AB}|Rock.NMI.dll;{05F3587D-86DD-4CF3-A80A-D8CF598E1FD1}|Rock.PayFlowPro.dll;{B89DFD33-CE93-44E1-8616-C31ACDFE89CB}|Rock.Rest.dll;{381A2FC8-6F4F-4B66-A9B4-14932D43B76A}|Rock.Version.dll;{1F5956F2-2B0F-49B8-AAF1-2CC28F01426A}|Rock.SignNow.dll;"
-
 		Debug.AspNetCompiler.VirtualPath = "/localhost_6229"
 		Debug.AspNetCompiler.PhysicalPath = "RockWeb\"
 		Debug.AspNetCompiler.TargetPath = "PrecompiledWeb\localhost_6229\"
