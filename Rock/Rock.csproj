@@ -310,6 +310,7 @@
     <Compile Include="Follow\SuggestionContainer.cs" />
     <Compile Include="Follow\EventContainer.cs" />
     <Compile Include="Jobs\CalculateFamilyAnalytics.cs" />
+    <Compile Include="Jobs\ProcessSignatureDocuments.cs" />
     <Compile Include="Jobs\SendGroupEmail.cs" />
     <Compile Include="Jobs\SendFollowingEvents.cs" />
     <Compile Include="Jobs\SendFollowingSuggestions.cs" />
