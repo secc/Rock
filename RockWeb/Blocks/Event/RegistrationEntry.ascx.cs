@@ -1517,7 +1517,6 @@ namespace RockWeb.Blocks.Event
                         }
 
                         newRegistration.LaunchWorkflow( RegistrationTemplate.RegistrationWorkflowTypeId, newRegistration.ToString() );
-                        newRegistration.LaunchWorkflow( RegistrationInstanceState.RegistrationWorkflowTypeId, newRegistration.ToString() );
                     }
 
                     RegistrationInstanceState = newRegistration.RegistrationInstance;

@@ -139,10 +139,6 @@
     <Compile Include="Migrations\201608020435091_DigitalSignature3.Designer.cs">
       <DependentUpon>201608020435091_DigitalSignature3.cs</DependentUpon>
     </Compile>
-    <Compile Include="Migrations\Configuration.cs" />
-    <Compile Include="Migrations\RockCSharpMigrationCodeGenerator.cs" />
-    <Compile Include="Migrations\RockMigration.cs" />
-    <Compile Include="Migrations\RockMigrationSQL.Designer.cs" />
     <Compile Include="Migrations\Version 0.0 %28Pre Beta%29\Version 0.0.2\201311251734059_CreateDatabase.cs" />
     <Compile Include="Migrations\Version 0.0 %28Pre Beta%29\Version 0.0.2\201311251734059_CreateDatabase.Designer.cs">
       <DependentUpon>201311251734059_CreateDatabase.cs</DependentUpon>
@@ -1066,10 +1062,6 @@
     <Compile Include="Migrations\Version 1.0 %28Beta%29\Version 1.0.13\201408252322078_ActivatedByActivity.cs" />
     <Compile Include="Migrations\Version 1.0 %28Beta%29\Version 1.0.13\201408252322078_ActivatedByActivity.Designer.cs">
       <DependentUpon>201408252322078_ActivatedByActivity.cs</DependentUpon>
-    </Compile>
-    <Compile Include="Migrations\Version 0.0 %28Pre Beta%29\Version 0.0.2\201311251734059_CreateDatabase.cs" />
-    <Compile Include="Migrations\Version 0.0 %28Pre Beta%29\Version 0.0.2\201311251734059_CreateDatabase.Designer.cs">
-      <DependentUpon>201311251734059_CreateDatabase.cs</DependentUpon>
     </Compile>
     <Compile Include="Migrations\Version 0.0 %28Pre Beta%29\Version 0.0.2\201311272223099_GroupLocationPersonId.cs" />
     <Compile Include="Migrations\Version 0.0 %28Pre Beta%29\Version 0.0.2\201311272223099_GroupLocationPersonId.Designer.cs">
@@ -2185,10 +2177,9 @@
     <EmbeddedResource Include="Migrations\Version 5.0\Version 1.5.0\201601100030367_IncreaseDefinedValueSize.resx">
       <DependentUpon>201601100030367_IncreaseDefinedValueSize.cs</DependentUpon>
     </EmbeddedResource>
-<<<<<<< HEAD
     <EmbeddedResource Include="Migrations\Version 5.0\Version 1.5.0\201601191845218_AdditionalSqlFunctions.resx">
       <DependentUpon>201601191845218_AdditionalSqlFunctions.cs</DependentUpon>
-=======
+    </EmbeddedResource>
     <EmbeddedResource Include="Migrations\201607301400275_DigitalSignatures.resx">
       <DependentUpon>201607301400275_DigitalSignatures.cs</DependentUpon>
     </EmbeddedResource>
@@ -2198,10 +2189,8 @@
     <EmbeddedResource Include="Migrations\201608020435091_DigitalSignature3.resx">
       <DependentUpon>201608020435091_DigitalSignature3.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="Migrations\RockMigrationSQL.resx" />
     <EmbeddedResource Include="Migrations\Version 0.0 %28Pre Beta%29\Version 0.0.2\201311251734059_CreateDatabase.resx">
       <DependentUpon>201311251734059_CreateDatabase.cs</DependentUpon>
->>>>>>> 97030a1... + Added ability for registrations and groups to require electronically signed documents.
     </EmbeddedResource>
     <EmbeddedResource Include="Migrations\Version 5.0\Version 1.5.0\201601241806293_RegistrationInstanceCosts.resx">
       <DependentUpon>201601241806293_RegistrationInstanceCosts.cs</DependentUpon>
@@ -2904,9 +2893,6 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Migrations\Version 1.0 %28Beta%29\Version 1.0.13\201408252322078_ActivatedByActivity.resx">
       <DependentUpon>201408252322078_ActivatedByActivity.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="Migrations\Version 0.0 %28Pre Beta%29\Version 0.0.2\201311251734059_CreateDatabase.resx">
-      <DependentUpon>201311251734059_CreateDatabase.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Migrations\Version 0.0 %28Pre Beta%29\Version 0.0.2\201311272223099_GroupLocationPersonId.resx">
       <DependentUpon>201311272223099_GroupLocationPersonId.cs</DependentUpon>

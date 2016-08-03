@@ -419,9 +419,7 @@ namespace Rock.Model
             set { _allowExternalRegistrationUpdates = value; }
         }
         private bool _allowExternalRegistrationUpdates = true;
-
-<<<<<<< HEAD
-=======
+        
         /// <summary>
         /// Optional workflow type to launch at end of registration
         /// </summary>

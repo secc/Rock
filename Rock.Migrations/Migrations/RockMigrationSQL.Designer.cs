@@ -72,7 +72,8 @@ namespace Rock.Migrations.Migrations {
         ///alter table [AttributeValue] nocheck constraint all
         ///alter table [Audit] nocheck constraint all
         ///alter table [Auth] nocheck constraint all
-        ///alter table [BinaryFile] nocheck cons [rest of string was truncated]&quot;;.
+        ///alter table [BinaryFile] nocheck constraint all
+        /// [rest of string was truncated]&quot;;.
         /// </summary>
         public static string _201311251734059_CreateDatabase_PopulateData {
             get {
@@ -89,7 +90,7 @@ namespace Rock.Migrations.Migrations {
         ///-- envelope
         ///INSERT INTO [dbo].[BinaryFile] ([IsTemporary], [IsSystem], [BinaryFileTypeId], [Path], [FileName], [MimeType], [Description], [StorageEntityTypeId], [Guid]) 
         ///        VALUES 
-        ///        (0, 0, 3, N&apos;~/GetFile.ashx?guid=425298 [rest of string was truncated]&quot;;.
+        ///        (0, 0, 3, N&apos;~/GetFile.ashx?guid=425298CC-D22D- [rest of string was truncated]&quot;;.
         /// </summary>
         public static string _201506051749054_AddSampleMergeDocs {
             get {
@@ -114,7 +115,7 @@ namespace Rock.Migrations.Migrations {
         ///                BirthMonth = 2
         ///                AND BirthDay = 29
         ///                AND datepart(month, sysdatetime()) &lt; 3
-        ///                AND (isdate(convert(VARCHAR(4), datepart(year, [rest of string was truncated]&quot;;.
+        ///                AND (isdate(convert(VARCHAR(4), datepart(year, sysdatetime())) [rest of string was truncated]&quot;;.
         /// </summary>
         public static string _201506112030400_PersonDaysUntilBirthday {
             get {
@@ -140,7 +141,8 @@ namespace Rock.Migrations.Migrations {
         ///	, @MaxComplete decimal(18,2) = NULL
         ///	, @MinAmountGiven decimal(18,2) = NULL
         ///	, @MaxAmountGiven decimal(18,2) = NULL
-        ///	, @Include [rest of string was truncated]&quot;;.
+        ///	, @IncludePledges bit = 1
+        ///	 [rest of string was truncated]&quot;;.
         /// </summary>
         public static string _201506121300596_FinancialAnalyticsProcs_1 {
             get {
@@ -164,7 +166,13 @@ namespace Rock.Migrations.Migrations {
         ///	, @AccountIds varchar(max) = NULL
         ///	, @CurrencyTypeIds varchar(max) = NULL
         ///	, @SourceTypeIds varchar(max) = NULL
-        ///	, @ViewBy varchar(1) = &apos;G&apos;		-- G = Giving Leader, A = Adults, C = Children, F = Famil [rest of string was truncated]&quot;;.
+        ///	, @ViewBy varchar(1) = &apos;G&apos;		-- G = Giving Leader, A = Adults, C = Children, F = Family
+        ///
+        ///AS
+        ///
+        ///BEGIN
+        ///
+        ///	 [rest of string was truncated]&quot;;.
         /// </summary>
         public static string _201506121300596_FinancialAnalyticsProcs_2 {
             get {
@@ -188,7 +196,7 @@ namespace Rock.Migrations.Migrations {
         ///CREATE INDEX IX_ValueAsNumeric on AttributeValue (ValueAsNumeric)
         ///
         ///ALTER TABLE AttributeValue DROP COLUMN ValueAsDateTime
-        ///ALTER TABLE [rest of string was truncated]&quot;;.
+        ///ALTER TABLE AttributeValue [rest of string was truncated]&quot;;.
         /// </summary>
         public static string _201506130028565_AttributeValueAsDateTimeIndex_CreateColumns {
             get {
@@ -213,7 +221,8 @@ namespace Rock.Migrations.Migrations {
         ///				ELSE
         ///					TRY_CAST( [value] as datetime )
         ///				END
-        ///		 [rest of string was truncated]&quot;;.
+        ///		END
+        ///    WHERE [I [rest of string was truncated]&quot;;.
         /// </summary>
         public static string _201506130028565_AttributeValueAsDateTimeIndex_CreateTrigger {
             get {
@@ -248,7 +257,7 @@ namespace Rock.Migrations.Migrations {
         /// <summary>
         ///   Looks up a localized string similar to -- child label w/ icons
         ///  UPDATE [BinaryFileData]
-        ///	SET [Content] = 0xEFBBBF1043547E7E43442C7E43435E7E43547E0D0A5E58417E54413030307E4A534E5E4C54305E4D4E575E4D54445E504F4E5E504D4E5E4C48302C305E4A4D415E5052362C367E534432345E4A55535E4C524E5E4349305E585A0D0A5E58410D0A5E4D4D540D0A5E50573831320D0A5E4C4C303430360D0A5E4C53300D0A5E46543435322C3131395E41304E2C3133352C3133345E46423333332C312C302C525E46485C5E46445757575E46530D0A5E465431322C3235345E41304E2C3133352C3134365E46485C5E4644355E46530D0A5E465431342C3330395E413 [rest of string was truncated]&quot;;.
+        ///	SET [Content] = 0xEFBBBF1043547E7E43442C7E43435E7E43547E0D0A5E58417E54413030307E4A534E5E4C54305E4D4E575E4D54445E504F4E5E504D4E5E4C48302C305E4A4D415E5052362C367E534432345E4A55535E4C524E5E4349305E585A0D0A5E58410D0A5E4D4D540D0A5E50573831320D0A5E4C4C303430360D0A5E4C53300D0A5E46543435322C3131395E41304E2C3133352C3133345E46423333332C312C302C525E46485C5E46445757575E46530D0A5E465431322C3235345E41304E2C3133352C3134365E46485C5E4644355E46530D0A5E465431342C3330395E41304 [rest of string was truncated]&quot;;.
         /// </summary>
         public static string _201506162223455_EnsurePersonAlias_UpdateCheckinLabels {
             get {
@@ -272,7 +281,7 @@ namespace Rock.Migrations.Migrations {
         ///    [PageTitle] = &apos;Calendar Item&apos;,
         ///    [BrowserTitle] = &apos;Calendar Item&apos;,
         ///    [IconCssClass] = &apos;fa fa-calendar-o&apos;,
-        ///    [BreadCru [rest of string was truncated]&quot;;.
+        ///    [BreadCrumbDisplayName]  [rest of string was truncated]&quot;;.
         /// </summary>
         public static string _201506170003272_UpdateCalendarBlocks {
             get {
@@ -291,7 +300,11 @@ namespace Rock.Migrations.Migrations {
         ///
         ///
         ///&lt;p&gt;
-        ///    {{ Person.NickName }},        /// [rest of string was truncated]&quot;;.
+        ///    {{ Person.NickName }},
+        ///&lt;/p&gt;
+        ///
+        ///&lt;p&gt;
+        /// [rest of string was truncated]&quot;;.
         /// </summary>
         public static string _201506242325188_GeoSpatialIndexes_AddSystemEmail {
             get {
@@ -317,7 +330,8 @@ namespace Rock.Migrations.Migrations {
         ///	, @MaxComplete decimal(18,2) = NULL
         ///	, @MinAmountGiven decimal(18,2) = NULL
         ///	, @MaxAmountGiven decimal(18,2) = NULL
-        ///	, @IncludeP [rest of string was truncated]&quot;;.
+        ///	, @IncludePledges bit = 1
+        ///	, [rest of string was truncated]&quot;;.
         /// </summary>
         public static string _201506281615197_GivingAnalyticsEmail_1 {
             get {
@@ -341,7 +355,13 @@ namespace Rock.Migrations.Migrations {
         ///	, @AccountIds varchar(max) = NULL
         ///	, @CurrencyTypeIds varchar(max) = NULL
         ///	, @SourceTypeIds varchar(max) = NULL
-        ///	, @ViewBy varchar(1) = &apos;G&apos;		-- G = Giving Leader, A = Adults, C = Children, F = Family [rest of string was truncated]&quot;;.
+        ///	, @ViewBy varchar(1) = &apos;G&apos;		-- G = Giving Leader, A = Adults, C = Children, F = Family
+        ///
+        ///AS
+        ///
+        ///BEGIN
+        ///
+        ///	- [rest of string was truncated]&quot;;.
         /// </summary>
         public static string _201506281615197_GivingAnalyticsEmail_2 {
             get {
@@ -359,7 +379,8 @@ namespace Rock.Migrations.Migrations {
         ///	            (0, &apos;Group Requirements Notification&apos;, &apos;Group Requirements Report | {{ &apos;&apos;Global&apos;&apos; | Attribute:&apos;&apos;OrganizationName&apos;&apos; }}&apos;, &apos;{{ &apos;&apos;Global&apos;&apos; | Attribute:&apos;&apos;EmailHeader&apos;&apos; }}
         ///
         ///&lt;p&gt;
-        ///    {{ Person.NickNa [rest of string was truncated]&quot;;.
+        ///    {{ Person.NickName }}:
+        ///&lt;/ [rest of string was truncated]&quot;;.
         /// </summary>
         public static string _201507062330051_GroupRequirementsNotificationEmail {
             get {
@@ -373,7 +394,7 @@ namespace Rock.Migrations.Migrations {
         ///DECLARE @InternalCalendarId int = SCOPE_IDENTITY()
         ///
         ///DECLARE @PublicCalendarId int = (SELECT TOP 1 [Id] FROM [EventCalendar] WHERE [Guid] = &apos;8A444668-19AF-4417-9C74-09F842572974&apos;)
-        ///DECLARE @CarPhotoId int = (SELECT TOP 1 [Id] FROM [BinaryFile] WHERE [Guid] =  [rest of string was truncated]&quot;;.
+        ///DECLARE @CarPhotoId int = (SELECT TOP 1 [Id] FROM [BinaryFile] WHERE [Guid] = &apos;8EE5 [rest of string was truncated]&quot;;.
         /// </summary>
         public static string _201507081827047_SampleCalendarEvents {
             get {
@@ -391,7 +412,7 @@ namespace Rock.Migrations.Migrations {
         ///	        (0, &apos;Registration Notification&apos;, &apos;{{ RegistrationInstance.Name }} Registration&apos;, &apos;{{ &apos;&apos;Global&apos;&apos; | Attribute:&apos;&apos;EmailHeader&apos;&apos; }}
         ///{% assign registrantCount = Registration.Registrants | Size %}
         ///&lt;p&gt;
-        ///    The following { [rest of string was truncated]&quot;;.
+        ///    The following {{ Registr [rest of string was truncated]&quot;;.
         /// </summary>
         public static string _201507121943445_RegistrationEmails {
             get {
@@ -413,7 +434,7 @@ namespace Rock.Migrations.Migrations {
         ///    [BreadCrumbDisplayName] = 1
         ///WHERE [GUID] = &apos;FC81099A-2F98-4EBA-AC5A-8300B2FE46C4&apos;
         ///
-        ///DECLARE @TemplateEntityTypeI [rest of string was truncated]&quot;;.
+        ///DECLARE @TemplateEntityTypeId int = ( SEL [rest of string was truncated]&quot;;.
         /// </summary>
         public static string _201507171137229_RegistrationInstanceContactPhone {
             get {
@@ -432,7 +453,7 @@ namespace Rock.Migrations.Migrations {
         ///DECLARE @ConnectionAdministrationGroupId int = ( SELECT TOP 1 [Id] FROM [Group] WHERE [Guid] = N&apos;060971D2-EAF9-4C0D-B6F6-F01725CAA5AC&apos;)
         ///
         ///DECLARE @ServingTeamGroupTypeId int = ( SELECT TOP 1 [Id] FROM [GroupType] WHERE [Guid] = N&apos;2C42B2D4-1C5F-4AD5-A9AD-08631B872AC4&apos;)
-        ///DECLARE @GeneralG [rest of string was truncated]&quot;;.
+        ///DECLARE @GeneralGroupTypeId [rest of string was truncated]&quot;;.
         /// </summary>
         public static string _201507181918494_ConnectionChangesAndSampleData {
             get {
@@ -454,7 +475,7 @@ namespace Rock.Migrations.Migrations {
         ///-- JE: Make Involvement Connection Type &quot;Enable Full Activity List&quot; = true
         ///UPDATE [ConnectionType]
         ///  SET [EnableFullActivityList] = 1
-        ///  WHERE [Guid] = &apos;DD565087-A4B [rest of string was truncated]&quot;;.
+        ///  WHERE [Guid] = &apos;DD565087-A4BE-4943-B123-B [rest of string was truncated]&quot;;.
         /// </summary>
         public static string _201507281546100_CalendarContentChannel {
             get {
@@ -474,7 +495,7 @@ namespace Rock.Migrations.Migrations {
         ///END
         ///go
         ///
-        /// [rest of string was truncated]&quot;;.
+        ///-- Create B [rest of string was truncated]&quot;;.
         /// </summary>
         public static string _201508010008536_BackgroundCheckExpiringSoon {
             get {
@@ -493,7 +514,9 @@ namespace Rock.Migrations.Migrations {
         ///
         /// -- JE: Fix Mime Type on Check-in Labels
         /// UPDATE [BinaryFile] SET [MimeType] = &apos;text/plain&apos;
-        /// WHERE [BinaryFileTypeId] = (SELECT TOP 1 [Id] FROM [BinaryFileType] WHERE [Guid] = &apos;DE0E5C50-234B-474C-940C-C571F385E65 [rest of string was truncated]&quot;;.
+        /// WHERE [BinaryFileTypeId] = (SELECT TOP 1 [Id] FROM [BinaryFileType] WHERE [Guid] = &apos;DE0E5C50-234B-474C-940C-C571F385E65F&apos;)
+        ///
+        ///-- JE [rest of string was truncated]&quot;;.
         /// </summary>
         public static string _201508041124356_RegistrationContact {
             get {
@@ -523,7 +546,7 @@ namespace Rock.Migrations.Migrations {
         ///		* CustomMessage1
         ///		* CustomMessage2
         ///	&lt;/returns&gt;
-        ///	&lt;par [rest of string was truncated]&quot;;.
+        ///	&lt;param name=&apos;StartDate&apos; d [rest of string was truncated]&quot;;.
         /// </summary>
         public static string _201508111253454_SiteMobilePage {
             get {
@@ -544,7 +567,9 @@ namespace Rock.Migrations.Migrations {
         ///WHERE D.[ForeignId] IS NOT NULL
         ///
         ///UPDATE [FinancialPaymentDetail]
-        ///SET [ForeignId] = NULL        /// [rest of string was truncated]&quot;;.
+        ///SET [ForeignId] = NULL
+        ///
+        ///-- Financia [rest of string was truncated]&quot;;.
         /// </summary>
         public static string _201508111636214_FinancialPaymentDetails {
             get {
@@ -567,7 +592,7 @@ namespace Rock.Migrations.Migrations {
         ///WHERE [SiteId] = @SiteId
         ///AND [FileName] = &apos;Error&apos;
         ///
-        ///-- Update the Blank layout on externa [rest of string was truncated]&quot;;.
+        ///-- Update the Blank layout on external website to b [rest of string was truncated]&quot;;.
         /// </summary>
         public static string _201508162108504_FollowingEventsSuggestions {
             get {
@@ -585,7 +610,7 @@ namespace Rock.Migrations.Migrations {
         ///    DECLARE @EntityId int
         ///
         ///    SET @EntityTypeId = ( SELECT TOP 1 [Id] FROM [EntityType] WHERE [Guid] = &apos;17DFDE21-0C1E-426F-8516-4BBA9ED28385&apos; )
-        ///	INSERT INTO [FollowingEventType] ( [Name], [Description], [EntityTypeId], [FollowedEntityTypeId], [IsActive], [SendOnWeekends], [I [rest of string was truncated]&quot;;.
+        ///	INSERT INTO [FollowingEventType] ( [Name], [Description], [EntityTypeId], [FollowedEntityTypeId], [IsActive], [SendOnWeekends], [IsNoticeRe [rest of string was truncated]&quot;;.
         /// </summary>
         public static string _201508171751190_FollowingEventNotification {
             get {
@@ -611,7 +636,8 @@ namespace Rock.Migrations.Migrations {
         ///	, @MaxComplete decimal(18,2) = NULL
         ///	, @MinAmountGiven decimal(18,2) = NULL
         ///	, @MaxAmountGiven decimal(18,2) = NULL
-        ///	, @IncludeP [rest of string was truncated]&quot;;.
+        ///	, @IncludePledges bit = 1
+        ///	, [rest of string was truncated]&quot;;.
         /// </summary>
         public static string _201508241735382_RegistrationPersonNote {
             get {
@@ -634,7 +660,8 @@ namespace Rock.Migrations.Migrations {
         ///        )
         ///
         ///UPDATE BinaryFile
-        ///SET BinaryFileTypeId = @binaryFileTypeContribu [rest of string was truncated]&quot;;.
+        ///SET BinaryFileTypeId = @binaryFileTypeContributionId
+        ///WHERE I [rest of string was truncated]&quot;;.
         /// </summary>
         public static string _201509022116398_EntitySetPurpose {
             get {
@@ -681,7 +708,7 @@ namespace Rock.Migrations.Migrations {
         ///        Example1 (specific person): Bob Smith 
         ///        Example2 (family with kids): Bill and Sally Jones
         ///        Example3 (different lastnames): Jim Jackson and Betty Sanders
-        ///        Example4 (just kids [rest of string was truncated]&quot;;.
+        ///        Example4 (just kids): Joey, [rest of string was truncated]&quot;;.
         /// </summary>
         public static string _201509022116398_EntitySetPurpose_ufnCrm_GetFamilyTitle {
             get {
@@ -701,7 +728,7 @@ namespace Rock.Migrations.Migrations {
         ///VALUES
         ///	(1, @SuggestionPageId, &apos;FollowingSuggestionList&apos;, &apos;3F3B0DE8-FDAB-499B-4706-68C36DD4DF84&apos;)
         ///
-        ///-- update the suggesti [rest of string was truncated]&quot;;.
+        ///-- update the suggestion system e [rest of string was truncated]&quot;;.
         /// </summary>
         public static string _201509032145388_PersonMergeRequests {
             get {
@@ -729,7 +756,9 @@ namespace Rock.Migrations.Migrations {
         ///    ,[MimeType]
         ///    ,[Description]
         ///    ,[StorageEntityTypeId]
-        ///   [rest of string was truncated]&quot;;.
+        ///    ,[Guid]
+        ///    )
+        ///VAL [rest of string was truncated]&quot;;.
         /// </summary>
         public static string _201509242206062_GroupAttendanceRoster_AddGroupRosterMergeTemplate {
             get {
@@ -751,7 +780,7 @@ namespace Rock.Migrations.Migrations {
         ///	&apos;[&apos; + char(13) + char(10) + 
         ///	char(9) + &apos;&quot;SecondaryAudiences&quot;,&apos; + char(13) + char(10) + 
         ///	char(9) + &apos;&quot;8&quot;,&apos; + char(13) + char(10) + 
-        ///	char(9) + &apos;&quot;&apos; + SUBSTRING( F.[Selection], 38, 36 ) + &apos;&quot;,&apos;  [rest of string was truncated]&quot;;.
+        ///	char(9) + &apos;&quot;&apos; + SUBSTRING( F.[Selection], 38, 36 ) + &apos;&quot;,&apos; + char(13) +  [rest of string was truncated]&quot;;.
         /// </summary>
         public static string _201509242206062_GroupAttendanceRoster_SecondaryAudience {
             get {
@@ -774,7 +803,7 @@ namespace Rock.Migrations.Migrations {
         ///            * Phone Type - Cell: &apos;AA8732FB-2CEA-4C76-8D6D-6AAA2C6A4303&apos;
         ///	&lt;/remarks&gt;
         ///	&lt;code&gt;
-        ///		EX [rest of string was truncated]&quot;;.
+        ///		EXEC [dbo].[spCr [rest of string was truncated]&quot;;.
         /// </summary>
         public static string _201509242206062_GroupAttendanceRoster_spCrm_PersonDuplicateFinder {
             get {
@@ -800,7 +829,8 @@ namespace Rock.Migrations.Migrations {
         ///WHERE [Id] IN (
         ///                SELECT A1.[EntityId]
         ///                FROM [Auth] A1
-        ///                INNER JOIN [Au [rest of string was truncated]&quot;;.
+        ///                INNER JOIN [Auth] A2
+        ///           [rest of string was truncated]&quot;;.
         /// </summary>
         public static string _201510082215386_ComputedSundayDate_PrivateNoteMigration {
             get {
@@ -815,7 +845,7 @@ namespace Rock.Migrations.Migrations {
         ///DECLARE @StaffGroupId int = (SELECT TOP 1 [Id] FROM [Group] WHERE [Guid] = &apos;2C112948-FF4C-46E7-981A-0257681EADF4&apos;)
         ///DECLARE @StaffLikeGroupId int = (SELECT TOP 1 [Id] FROM [Group] WHERE [Guid] = &apos;300BA2C8-49A3-44BA-A82A-82E3FD8C3745&apos;)
         ///
-        ///IF NOT EXISTS ( [rest of string was truncated]&quot;;.
+        ///IF NOT EXISTS (SELECT [rest of string was truncated]&quot;;.
         /// </summary>
         public static string _201510082215386_ComputedSundayDate_SecurityForGroupMemberNotes {
             get {
@@ -837,7 +867,7 @@ namespace Rock.Migrations.Migrations {
         ///		&lt;param name=&quot;New Id&quot; datatype=&quot;int&quot;&gt;The person id of the primary Person being merged&lt;/param&gt;
         ///		&lt;remarks&gt;	
         ///			Uses the following constants:
-        ///				* Group Type  [rest of string was truncated]&quot;;.
+        ///				* Group Type - Family: 790 [rest of string was truncated]&quot;;.
         /// </summary>
         public static string _201510082215386_ComputedSundayDate_spCrm_PersonMerge {
             get {
@@ -871,7 +901,9 @@ namespace Rock.Migrations.Migrations {
         ///BEGIN
         ///	DECLARE @DayOfWeek int
         ///	DECLARE @DaysToAdd int
-        ///	DECLARE @SundayDate datetime        /// [rest of string was truncated]&quot;;.
+        ///	DECLARE @SundayDate datetime
+        ///	
+        ///	-- from http://stackov [rest of string was truncated]&quot;;.
         /// </summary>
         public static string _201510082215386_ComputedSundayDate_ufnUtility_GetSundayDate {
             get {
@@ -884,7 +916,7 @@ namespace Rock.Migrations.Migrations {
         ///DECLARE @FinancePageId int = ( SELECT TOP 1 [Id] FROM [Page] WHERE [Guid] = &apos;7BEB7569-C485-40A0-A609-B0678F6F7240&apos; ) 
         ///DECLARE @FinanceFunctionsPageId int = ( SELECT TOP 1 [Id] FROM [Page] WHERE [Guid] = &apos;142627AE-6590-48E3-BFCA-3669260B8CF2&apos; ) 
         ///DECLARE @FinanceAdminPageId int = ( SELECT TOP 1 [Id] FROM [Page] WHERE [Guid] = &apos;18C9E5C3-3E28-4AA3-84F6-78CD4EA2DD3C&apos; ) 
-        ///DECLARE @BenevolenceGroupId int =  [rest of string was truncated]&quot;;.
+        ///DECLARE @BenevolenceGroupId int = ( SE [rest of string was truncated]&quot;;.
         /// </summary>
         public static string _201510141725294_GroupTypeShowConnectionStatus_BenevolenceSecurity {
             get {
@@ -946,7 +978,7 @@ namespace Rock.Migrations.Migrations {
         ///  
         ///  -- envelope
         ///  UPDATE [BinaryFileData]
-        ///		SET [Content] = 0x504B030414000600080000002100DFA4D26C5A01000020050000130008025B436F6E74656E745F54797065735D2E786D6C20A2040228A00002000000000000000000000000000000 [rest of string was truncated]&quot;;.
+        ///		SET [Content] = 0x504B030414000600080000002100DFA4D26C5A01000020050000130008025B436F6E74656E745F54797065735D2E786D6C20A2040228A0000200000000000000000000000000000000000 [rest of string was truncated]&quot;;.
         /// </summary>
         public static string _201511162216129_RecentRegistrationsLava_MergeTemplateUpdates {
             get {
@@ -1650,14 +1682,15 @@ namespace Rock.Migrations.Migrations {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to &lt;doc&gt;
+        ///   Looks up a localized string similar to /*
+        ///&lt;doc&gt;
         ///	&lt;summary&gt;
         /// 		This function returns either the FullName of the specified Person or a list of names of family members
         ///        In the case of a group (family), it will return the names of the adults of the family. If there are no adults in the family, the names of the non-adults will be listed
         ///        Example1 (specific person): Bob Smith 
         ///        Example2 (family with kids): Bill and Sally Jones
         ///        Example3 (different lastnames): Jim Jackson and Betty Sanders
-        ///        Example4 (just kids): J [rest of string was truncated]&quot;;.
+        ///        Example4 (just kids [rest of string was truncated]&quot;;.
         /// </summary>
         public static string _201605180005401_ScheduledTxnSource_GetFamilyTitle {
             get {
