@@ -1765,5 +1765,23 @@ namespace Rock.Migrations.Migrations {
                 return ResourceManager.GetString("_201606061302147_PledgeAnalyticsChildAccounts", resourceCulture);
             }
         }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to -- Add back defined value indexes that were removed
+        ///IF EXISTS ( SELECT * FROM sys.indexes WHERE name=&apos;IX_QualifierValueId&apos; AND object_id = OBJECT_ID(N&apos;[dbo].[Attendance]&apos;) )
+        ///DROP INDEX [IX_QualifierValueId] ON [dbo].[Attendance]
+        ///GO
+        ///
+        ///CREATE NONCLUSTERED INDEX [IX_QualifierValueId] ON [dbo].[Attendance] ( [QualifierValueId] ASC )
+        ///WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
+        ///GO
+        ///
+        ///I [rest of string was truncated]&quot;;.
+        /// </summary>
+        public static string _201606231511599_RegistrationWorkflow_Indexes {
+            get {
+                return ResourceManager.GetString("_201606231511599_RegistrationWorkflow_Indexes", resourceCulture);
+            }
+        }
     }
 }
