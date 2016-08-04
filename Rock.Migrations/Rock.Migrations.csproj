@@ -147,6 +147,10 @@
     <Compile Include="Migrations\201608020435091_DigitalSignature3.Designer.cs">
       <DependentUpon>201608020435091_DigitalSignature3.cs</DependentUpon>
     </Compile>
+    <Compile Include="Migrations\201608041757099_DigitalSignature4.cs" />
+    <Compile Include="Migrations\201608041757099_DigitalSignature4.Designer.cs">
+      <DependentUpon>201608041757099_DigitalSignature4.cs</DependentUpon>
+    </Compile>
     <Compile Include="Migrations\Version 0.0 %28Pre Beta%29\Version 0.0.2\201311251734059_CreateDatabase.cs" />
     <Compile Include="Migrations\Version 0.0 %28Pre Beta%29\Version 0.0.2\201311251734059_CreateDatabase.Designer.cs">
       <DependentUpon>201311251734059_CreateDatabase.cs</DependentUpon>
@@ -2203,6 +2207,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Migrations\201608020435091_DigitalSignature3.resx">
       <DependentUpon>201608020435091_DigitalSignature3.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Migrations\201608041757099_DigitalSignature4.resx">
+      <DependentUpon>201608041757099_DigitalSignature4.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Migrations\Version 0.0 %28Pre Beta%29\Version 0.0.2\201311251734059_CreateDatabase.resx">
       <DependentUpon>201311251734059_CreateDatabase.cs</DependentUpon>
