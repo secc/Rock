@@ -113,6 +113,8 @@ namespace RockWeb.Blocks.Core
         /// <param name="e">The <see cref="EventArgs" /> instance containing the event data.</param>
         protected void btnSave_Click( object sender, EventArgs e )
         {
+            bool inviteCancelled = false;
+
             var rockContext = new RockContext();
 
             int? documentTemplateId = ddlDocumentType.SelectedValueAsInt();
@@ -150,6 +152,7 @@ namespace RockWeb.Blocks.Core
             {
                 signatureDocument.Status = newStatus;
                 signatureDocument.LastStatusDate = RockDateTime.Now;
+                inviteCancelled = newStatus == SignatureDocumentStatus.Cancelled;
             }
 
             signatureDocument.AppliesToPersonAliasId = ppAppliesTo.PersonAliasId;
@@ -189,6 +192,15 @@ namespace RockWeb.Blocks.Core
             }
 
             rockContext.SaveChanges();
+
+            if ( inviteCancelled && !string.IsNullOrWhiteSpace( signatureDocument.DocumentKey ) )
+            {
+                var errorMessages = new List<string>();
+                if ( new SignatureDocumentTemplateService( rockContext ).CancelDocument( signatureDocument, out errorMessages ) )
+                {
+                    rockContext.SaveChanges();
+                }
+            }
 
             var qryParams = new Dictionary<string, string>();
             qryParams.Add( "SignatureDocumentTemplateId", PageParameter( "SignatureDocumentTemplateId" ) );
