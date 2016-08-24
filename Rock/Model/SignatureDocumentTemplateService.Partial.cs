@@ -270,6 +270,7 @@ namespace Rock.Model
         /// Updates the document status.
         /// </summary>
         /// <param name="signatureDocument">The signature document.</param>
+        /// <param name="tempFolderPath">The temporary folder path.</param>
         /// <param name="errorMessages">The error messages.</param>
         /// <returns></returns>
         public bool UpdateDocumentStatus( SignatureDocument signatureDocument, string tempFolderPath, out List<string> errorMessages )
@@ -297,7 +298,7 @@ namespace Rock.Model
                     var originalStatus = signatureDocument.Status;
                     if ( provider.UpdateDocumentStatus( signatureDocument, out errorMessages ) )
                     {
-                        if ( signatureDocument.Status != originalStatus && signatureDocument.Status == SignatureDocumentStatus.Signed )
+                        if ( signatureDocument.Status == SignatureDocumentStatus.Signed && !signatureDocument.BinaryFileId.HasValue )
                         {
                             using ( var rockContext = new RockContext() )
                             {
@@ -316,13 +317,17 @@ namespace Rock.Model
                                     rockContext.SaveChanges();
 
                                     signatureDocument.BinaryFileId = binaryFile.Id;
-                                    signatureDocument.Status = SignatureDocumentStatus.Signed;
-                                    signatureDocument.LastStatusDate = RockDateTime.Now;
 
                                     File.Delete( documentPath );
                                 }
                             }
                         }
+
+                        if ( signatureDocument.Status != originalStatus )
+                        {
+                            signatureDocument.LastStatusDate = RockDateTime.Now;
+                        }
+
                     }
 
                 }

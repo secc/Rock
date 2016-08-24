@@ -659,6 +659,7 @@
     <Compile Include="Transactions\GroupMemberChangeTransaction.cs" />
     <Compile Include="Transactions\SendRegistrationConfirmationTransaction.cs" />
     <Compile Include="Transactions\SendCommunicationApprovalEmail.cs" />
+	<Compile Include="Transactions\UpdateDigitalSignatureDocumentTransaction.cs" />
     <Compile Include="Transactions\RunJobNowTransaction.cs" />
     <Compile Include="Transactions\DeleteAttributeBinaryFile.cs" />
     <Compile Include="Transactions\SendRegistrationNotificationTransaction.cs" />
