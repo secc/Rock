@@ -55,7 +55,7 @@ namespace RockWeb.Blocks.Event
     [TextField( "Batch Name Prefix", "The batch prefix name to use when creating a new batch", false, "Event Registration", "", 3 )]
     [BooleanField( "Display Progress Bar", "Display a progress bar for the registration.", true, "", 4 )]
     [BooleanField( "Enable Debug", "Display the merge fields that are available for lava ( Success Page ).", false, "", 5 )]
-    [BooleanField( "Display Digital Signature Documents Inline", "If event requires a digiDisplay the merge fields that are available for lava ( Success Page ).", false, "", 6, "SignInline" )]
+    [BooleanField( "Allow InLine Digital Signature Documents", "Should inline digital documents be allowed? This requires that the registration template is configured to display the document inline", true, "", 6, "SignInline" )]
     [SystemEmailField( "Confirm Account Template", "Confirm Account Email Template", false, Rock.SystemGuid.SystemEmail.SECURITY_CONFIRM_ACCOUNT, "", 7 )]
     public partial class RegistrationEntry : RockBlock
     {
@@ -335,7 +335,7 @@ namespace RockWeb.Blocks.Event
             }
 
             SignInline = ViewState[SIGN_INLINE_KEY] as bool? ?? false;
-            DigitalSignatureComponentTypeName = ViewState[DIGITAL_SIGNATURE_COMPONENT_TYPE_NAME_KEY].ToString();
+            DigitalSignatureComponentTypeName = ViewState[DIGITAL_SIGNATURE_COMPONENT_TYPE_NAME_KEY] as string;
             if ( !string.IsNullOrWhiteSpace( DigitalSignatureComponentTypeName ))
             {
                 DigitalSignatureComponent = DigitalSignatureContainer.GetComponent( DigitalSignatureComponentTypeName );
@@ -729,6 +729,14 @@ namespace RockWeb.Blocks.Event
 
                 CurrentRegistrantIndex = RegistrationState != null ? RegistrationState.RegistrantCount - 1 : 0;
                 CurrentFormIndex = FormCount - 1;
+
+                tbDiscountCode.Text = string.Empty;
+                nbAmountPaid.Text = string.Empty;
+
+                RegistrationState.DiscountCode = string.Empty;
+                RegistrationState.DiscountPercentage = 0.0M;
+                RegistrationState.DiscountAmount = 0.0M;
+                RegistrationState.PaymentAmount = null;
 
                 ShowRegistrant();
             }
@@ -1273,7 +1281,7 @@ namespace RockWeb.Blocks.Event
                 var provider = DigitalSignatureContainer.GetComponent( RegistrationTemplate.RequiredSignatureDocumentTemplate.ProviderEntityType.Name );
                 if ( provider != null && provider.IsActive )
                 {
-                    SignInline = GetAttributeValue( "SignInline" ).AsBoolean();
+                    SignInline = GetAttributeValue( "SignInline" ).AsBoolean() && RegistrationTemplate.SignatureDocumentAction == SignatureDocumentAction.Embed;
                     DigitalSignatureComponentTypeName = RegistrationTemplate.RequiredSignatureDocumentTemplate.ProviderEntityType.Name;
                     DigitalSignatureComponent = provider;
                 }
@@ -2659,6 +2667,12 @@ namespace RockWeb.Blocks.Event
                             }
                         }
                     }
+
+                    if ( group.IsSecurityRole || group.GroupType.Guid.Equals( Rock.SystemGuid.GroupType.GROUPTYPE_SECURITY_ROLE.AsGuid() ) )
+                    {
+                        Rock.Security.Role.Flush( group.Id );
+                    }
+
                 }
             }
         }
