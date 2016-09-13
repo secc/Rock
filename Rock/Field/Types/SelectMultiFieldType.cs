@@ -334,29 +334,38 @@ namespace Rock.Field.Types
                 // OR ',' + Value + ',' like '%,lettuce,%'
                 // OR ',' + Value + ',' like '%,tomato,%'
 
-                // should be either "Contains" or "Not Contains"
+                // should be either "Equals", "Contains" or "Not Contains"
                 ComparisonType comparisonType = filterValues[0].ConvertToEnum<ComparisonType>( ComparisonType.Contains );
 
-                List<string> selectedValues = filterValues[1].Split( new char[] { ',' }, StringSplitOptions.RemoveEmptyEntries ).ToList();
-
-                foreach ( var selectedValue in selectedValues )
+                if ( comparisonType == ComparisonType.EqualTo )
                 {
-                    var searchValue = "," + selectedValue + ",";
-                    var qryToExtract = new AttributeValueService( new Data.RockContext() ).Queryable().Where( a => ( "," + a.Value + "," ).Contains( searchValue ) );
-                    var valueExpression = FilterExpressionExtractor.Extract<AttributeValue>( qryToExtract, parameterExpression, "a" );
+                    string value = filterValues[1];
+                    var qryToExtract = new AttributeValueService( new Data.RockContext() ).Queryable().Where( a => a.Value == value );
+                    comparison = FilterExpressionExtractor.Extract<AttributeValue>( qryToExtract, parameterExpression, "a" );
+                }
+                else
+                {
+                    List<string> selectedValues = filterValues[1].Split( new char[] { ',' }, StringSplitOptions.RemoveEmptyEntries ).ToList();
 
-                    if ( comparisonType != ComparisonType.Contains )
+                    foreach ( var selectedValue in selectedValues )
                     {
-                        valueExpression = Expression.Not( valueExpression );
-                    }
+                        var searchValue = "," + selectedValue + ",";
+                        var qryToExtract = new AttributeValueService( new Data.RockContext() ).Queryable().Where( a => ( "," + a.Value + "," ).Contains( searchValue ) );
+                        var valueExpression = FilterExpressionExtractor.Extract<AttributeValue>( qryToExtract, parameterExpression, "a" );
 
-                    if ( comparison == null )
-                    {
-                        comparison = valueExpression;
-                    }
-                    else
-                    {
-                        comparison = Expression.Or( comparison, valueExpression );
+                        if ( comparisonType != ComparisonType.Contains )
+                        {
+                            valueExpression = Expression.Not( valueExpression );
+                        }
+
+                        if ( comparison == null )
+                        {
+                            comparison = valueExpression;
+                        }
+                        else
+                        {
+                            comparison = Expression.Or( comparison, valueExpression );
+                        }
                     }
                 }
             }
