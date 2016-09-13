@@ -1247,6 +1247,12 @@ TransactionAcountDetails: [
                 phGiveAsOption.Visible = false;
             }
 
+            phGiveAsOption.Visible = person != null;
+            tglGiveAsOption.Checked = true;
+            phGiveAsPerson.Visible = true;
+            phGiveAsBusiness.Visible = false;
+            SetGiveAsOptions();
+
             // Evaluate if comment entry box should be displayed
             txtCommentEntry.Label = GetAttributeValue( "CommentEntryLabel" );
             txtCommentEntry.Visible = GetAttributeValue( "EnableCommentEntry" ).AsBoolean();
