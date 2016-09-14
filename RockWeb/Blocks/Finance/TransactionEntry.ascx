@@ -66,6 +66,7 @@
                                     <h3 class="panel-title">
                                         <asp:Literal ID="lPersonalInfoTitle" runat="server" />
                                         <div class="panel-labels">
+                                            <span class="panel-text"><asp:Literal ID="lBusinessLoginMsg" runat="server" Text="Login to give as a business" /></span>
                                             <asp:PlaceHolder ID="phGiveAsOption" runat="server">
                                                 <span class="panel-text">Give As &nbsp;</span>
                                                 <Rock:Toggle ID="tglGiveAsOption" runat="server" CssClass="pull-right" OnText="Person" OffText="Business" ButtonSizeCssClass="btn-xs" OnCheckedChanged="tglGiveAsOption_CheckedChanged" />
