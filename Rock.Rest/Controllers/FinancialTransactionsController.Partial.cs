@@ -250,6 +250,7 @@ namespace Rock.Rest.Controllers
             var selectQry = qry.Select( a => new
             {
                 a.TransactionDateTime,
+                a.TransactionCode,
                 CurrencyTypeValueName = a.FinancialPaymentDetail != null ? a.FinancialPaymentDetail.CurrencyTypeValue.Value : string.Empty,
                 a.Summary,
                 Details = a.TransactionDetails.Select( d => new
@@ -263,6 +264,7 @@ namespace Rock.Rest.Controllers
 
             DataTable dataTable = new DataTable( "contribution_transactions" );
             dataTable.Columns.Add( "TransactionDateTime", typeof( DateTime ) );
+            dataTable.Columns.Add( "TransactionCode" );
             dataTable.Columns.Add( "CurrencyTypeValueName" );
             dataTable.Columns.Add( "Summary" );
             dataTable.Columns.Add( "Amount", typeof( decimal ) );
@@ -300,6 +302,7 @@ namespace Rock.Rest.Controllers
 
                 var itemArray = new object[] {
                     fieldItems.TransactionDateTime,
+                    fieldItems.TransactionCode,
                     fieldItems.CurrencyTypeValueName,
                     fieldItems.Summary,
                     transactionDetails.Sum(a => a.Amount),
