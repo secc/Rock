@@ -237,6 +237,7 @@ namespace Rock.Web.UI.Controls
         /// </summary>
         protected override void CreateChildControls()
         {
+            this.EnableViewState = true;
             base.CreateChildControls();
             Controls.Clear();
             RockControlHelper.CreateChildControls( this, Controls );
@@ -288,7 +289,7 @@ namespace Rock.Web.UI.Controls
             BindTemplateDropDown();
             UpdateGroupsDisplay();
         }
-        
+
         /// <summary>
         /// Updates the picker when the template drop down is updated
         /// </summary>
@@ -406,35 +407,23 @@ namespace Rock.Web.UI.Controls
         /// </summary>
         private void BindTemplateDropDown()
         {
-            EnsureChildControls();
-
             RockContext rockContext = new RockContext();
             GroupTypeService groupTypeService = new GroupTypeService( rockContext );
 
             Guid templateTypeGuid = Rock.SystemGuid.DefinedValue.GROUPTYPE_PURPOSE_CHECKIN_TEMPLATE.AsGuid();
 
-            var source = Enumerable.Empty<object>()
-             .Select( r => new { Name = "", Id = 0 } ) // prototype of anonymous type
-             .ToList();
-
-            source.AddRange(
-                groupTypeService
+            var templates = groupTypeService
                     .Queryable().AsNoTracking()
                     .Where( t =>
                         t.GroupTypePurposeValue != null &&
                         t.GroupTypePurposeValue.Guid == templateTypeGuid )
-                    .OrderBy( t => t.Name )
-                    .Select( t => new
-                    {
-                        Name = t.Name,
-                        Id = t.Id
-                    } )
-                    .ToList()
-            );
-
-            templateDropDownList.DataSource = source;
-            templateDropDownList.DataBind();
-            templateDropDownList.Items.Insert( 0, new ListItem( "", "" ) );
+                    .OrderBy( t => t.Name );
+            templateDropDownList.Items.Clear();
+            templateDropDownList.Items.Add( new ListItem( "", "" ) );
+            foreach ( var template in templates )
+            {
+                templateDropDownList.Items.Add( new ListItem( template.Name, template.Id.ToString() ) );
+            }
         }
 
         /// <summary>
@@ -443,6 +432,7 @@ namespace Rock.Web.UI.Controls
         /// <param name="template"></param>
         private void BindGroupTypeDropDown( GroupType template )
         {
+            EnsureChildControls();
             groupDropDownList.Visible = false;
 
             _groupTypeOutput = new List<GroupType>();
@@ -451,12 +441,7 @@ namespace Rock.Web.UI.Controls
                 .Where( gt => gt.Groups.Any() )
                 .ToList();
 
-            var source = Enumerable.Empty<object>()
-             .Select( r => new { Name = "", Id = 0 } ) // prototype of anonymous type
-             .ToList();
-            source.AddRange( groupTypes.Select( gt => new { Name = gt.Name, Id = gt.Id } ) );
-
-            groupTypeDropDownList.DataSource = source;
+            groupTypeDropDownList.DataSource = groupTypes.Select( gt => new { Name = gt.Name, Id = gt.Id } ).ToList();
             groupTypeDropDownList.DataBind();
             groupTypeDropDownList.Items.Insert( 0, new ListItem( "", "" ) );
             groupTypeDropDownList.Visible = true;
@@ -468,15 +453,11 @@ namespace Rock.Web.UI.Controls
         /// <param name="groupType"></param>
         private void BindGroupDropDown( GroupType groupType )
         {
+            EnsureChildControls();
             addButton.Visible = false;
 
             List<Group> groups = GetChildGroups( groupType.Groups );
-            var source = Enumerable.Empty<object>()
-             .Select( r => new { Name = "", Id = 0 } ) // prototype of anonymous type
-             .ToList();
-            source.AddRange( groups.Select( gt => new { Name = gt.Name, Id = gt.Id } ) );
-
-            groupDropDownList.DataSource = source;
+            groupDropDownList.DataSource = groups.Select( gt => new { Name = gt.Name, Id = gt.Id } ).ToList();
             groupDropDownList.DataBind();
             groupDropDownList.Items.Insert( 0, new ListItem( "", "" ) );
             groupDropDownList.Visible = true;
@@ -545,7 +526,24 @@ namespace Rock.Web.UI.Controls
             writer.RenderEndTag();
         }
 
-        public bool AllowMultiSelect { get; set; }
+        public bool AllowMultiSelect
+        {
+            get
+            {
+                EnsureChildControls();
+                if ( ViewState["AllowMultiSelect"] != null )
+                {
+                    var output  = ( bool ) ViewState["AllowMultiSelect"];
+                    return output;
+                }
+                return false;
+            }
+            set
+            {
+                EnsureChildControls();
+                ViewState["AllowMultiSelect"] = value;
+            }
+        }
 
         /// <summary>
         /// Gets the selected group.
@@ -585,7 +583,7 @@ namespace Rock.Web.UI.Controls
                     if ( template != null )
                     {
                         templateDropDownList.SelectedValue = template.Id.ToString();
-                        BindGroupTypeDropDown(template);
+                        BindGroupTypeDropDown( template );
                         groupTypeDropDownList.SelectedValue = groupType.Id.ToString();
                         BindGroupDropDown( groupType );
                         groupDropDownList.SelectedValue = group.Id.ToString();
@@ -628,6 +626,7 @@ namespace Rock.Web.UI.Controls
             {
                 if ( !AllowMultiSelect )
                 {
+
                     throw new InvalidOperationException( "SelectedGroups not valid in Single-Select mode. Use SelectedGroup" );
                 }
                 ViewState["Groups"] = value.Select( g => g.Id ).ToList();
