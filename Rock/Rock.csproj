@@ -233,6 +233,7 @@
     <Compile Include="Attribute\AccountFieldAttribute.cs" />
     <Compile Include="Attribute\AccountsFieldAttribute.cs" />
     <Compile Include="Attribute\AddressFieldAttribute.cs" />
+    <Compile Include="Attribute\CheckinGroupFieldAttribute.cs" />
     <Compile Include="Attribute\AttributeCategoryFieldAttribute.cs" />
     <Compile Include="Attribute\AttributeFieldAttribute.cs" />
     <Compile Include="Attribute\BinaryFileFieldAttribute.cs" />
@@ -420,6 +421,7 @@
     <Compile Include="Field\Types\AccountFieldType.cs" />
     <Compile Include="Field\Types\AccountsFieldType.cs" />
     <Compile Include="Field\Types\AddressFieldType.cs" />
+    <Compile Include="Field\Types\CheckinGroupFieldType.cs" />
     <Compile Include="Field\Types\AttributeFieldType.cs" />
     <Compile Include="Field\Types\AudioFileFieldType.cs" />
     <Compile Include="Field\Types\AudioUrlFieldType.cs" />
@@ -1420,6 +1422,7 @@
     <Compile Include="Web\UI\Controls\Pickers\CampusesPicker.cs" />
     <Compile Include="Web\UI\Controls\Pickers\CampusPicker.cs" />
     <Compile Include="Web\UI\Controls\Pickers\CategoryPicker.cs" />
+    <Compile Include="Web\UI\Controls\Pickers\CheckinGroupPicker.cs" />
     <Compile Include="Web\UI\Controls\Pickers\ComponentPicker.cs" />
     <Compile Include="Web\UI\Controls\Pickers\ComponentsPicker.cs" />
     <Compile Include="Web\UI\Controls\Pickers\ConnectionRequestPicker.cs" />
