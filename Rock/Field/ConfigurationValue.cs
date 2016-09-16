@@ -84,5 +84,21 @@ namespace Rock.Field
             Description = description;
             Value = value;
         }
+
+        public override bool Equals( object obj )
+        {
+            if (obj is ConfigurationValue)
+            {
+                ConfigurationValue value = ( obj as ConfigurationValue );
+                // Booleans can be "False" or ""
+                if ( (this.Value == "False" && value.Value == string.Empty)
+                    || (this.Value == string.Empty && value.Value == "False"))
+                {
+                    return true;
+                }
+                return value.Value == this.Value;
+            }
+            return false;
+        }
     }
 }

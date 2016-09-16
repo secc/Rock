@@ -188,7 +188,7 @@ namespace Rock.Field.Types
         /// <param name="value">The value.</param>
         public override void SetEditValue( System.Web.UI.Control control, Dictionary<string, ConfigurationValue> configurationValues, string value )
         {
-
+            
             var picker = control as CheckinGroupPicker;
 
             if ( picker != null )
