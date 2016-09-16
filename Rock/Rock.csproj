@@ -168,6 +168,7 @@
     <Compile Include="Address\VerificationComponent.cs" />
     <Compile Include="Address\Bing.cs" />
     <Compile Include="Attribute\AddressFieldAttribute.cs" />
+    <Compile Include="Attribute\CheckinGroupFieldAttribute.cs" />
     <Compile Include="Attribute\ContentChannelTypesFieldAttribute.cs" />
     <Compile Include="Attribute\PhoneNumberFieldAttribute.cs" />
     <Compile Include="Attribute\DataViewFieldAttribute.cs" />
@@ -279,6 +280,7 @@
     <Compile Include="Data\Udf\DbMetadataExtensions.cs" />
     <Compile Include="Data\Udf\RockUdfHelper.cs" />
     <Compile Include="Field\Types\AddressFieldType.cs" />
+    <Compile Include="Field\Types\CheckinGroupFieldType.cs" />
     <Compile Include="Field\Types\ContentChannelTypesFieldType.cs" />
     <Compile Include="Field\Types\PhoneNumberFieldType.cs" />
     <Compile Include="Field\Types\DataViewFieldType.cs" />
@@ -605,6 +607,7 @@
     <Compile Include="Web\UI\Controls\Checkin Configuration Controls\CheckinGroup.cs" />
     <Compile Include="Web\UI\Controls\Checkin Configuration Controls\CheckinGroupRow.cs" />
     <Compile Include="Web\UI\Controls\IRockControlAdditionalRendering.cs" />
+    <Compile Include="Web\UI\Controls\Pickers\CheckinGroupPicker.cs" />
     <Compile Include="Web\UI\Controls\Pickers\DefinedValuesPicker.cs" />
     <Compile Include="Web\UI\Controls\Pickers\DefinedValuePicker.cs" />
     <Compile Include="Web\UI\RockTheme.cs" />
@@ -659,7 +662,7 @@
     <Compile Include="Transactions\GroupMemberChangeTransaction.cs" />
     <Compile Include="Transactions\SendRegistrationConfirmationTransaction.cs" />
     <Compile Include="Transactions\SendCommunicationApprovalEmail.cs" />
-	<Compile Include="Transactions\UpdateDigitalSignatureDocumentTransaction.cs" />
+    <Compile Include="Transactions\UpdateDigitalSignatureDocumentTransaction.cs" />
     <Compile Include="Transactions\RunJobNowTransaction.cs" />
     <Compile Include="Transactions\DeleteAttributeBinaryFile.cs" />
     <Compile Include="Transactions\SendRegistrationNotificationTransaction.cs" />

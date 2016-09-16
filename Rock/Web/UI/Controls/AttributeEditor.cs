@@ -149,12 +149,12 @@ namespace Rock.Web.UI.Controls
         /// </value>
         public string ActionTitle
         {
-            get 
+            get
             {
                 EnsureChildControls();
                 return _lAttributeActionTitle.Text;
             }
-            set 
+            set
             {
                 EnsureChildControls();
                 _lAttributeActionTitle.Text = value;
@@ -400,9 +400,27 @@ namespace Rock.Web.UI.Controls
             }
             set
             {
+                // Iterate through the viewstate qualifiers and the ones being set to see if they are equal.
+                var qualifiers = ViewState["Qualifiers"] as Dictionary<string, ConfigurationValue>;
+                if (qualifiers.Count != value.Count)
+                {
+                    _qualifiersChanged = true;
+                } else
+                { 
+                    foreach ( var entry in value )
+                    {
+                        if ( !( qualifiers.ContainsKey( entry.Key ) && qualifiers[entry.Key].Equals( entry.Value ) ) )
+                        {
+                            _qualifiersChanged = true;
+                            break;
+                        }
+                    }
+                }
                 ViewState["Qualifiers"] = value;
             }
         }
+
+        private bool _qualifiersChanged = false;
 
         /// <summary>
         /// Gets or sets the default value.
@@ -430,9 +448,9 @@ namespace Rock.Web.UI.Controls
         /// </value>
         public string ValidationGroup
         {
-            get 
-            { 
-                return ViewState["ValidationGroup"] as string; 
+            get
+            {
+                return ViewState["ValidationGroup"] as string;
             }
             set
             {
@@ -449,12 +467,12 @@ namespace Rock.Web.UI.Controls
         public List<string> ReservedKeyNames
         {
             get
-            { 
-                return ViewState["ReservedKeyNames"] as List<string> ?? new List<string>(); 
+            {
+                return ViewState["ReservedKeyNames"] as List<string> ?? new List<string>();
             }
-            set 
-            { 
-                ViewState["ReservedKeyNames"] = value; 
+            set
+            {
+                ViewState["ReservedKeyNames"] = value;
             }
         }
 
@@ -526,8 +544,8 @@ namespace Rock.Web.UI.Controls
                 _validationSummary.ID = "valiationSummary";
                 _validationSummary.CssClass = "alert alert-danger";
                 _validationSummary.HeaderText = "Please Correct the Following";
-                Controls.Add( _validationSummary ); 
-                
+                Controls.Add( _validationSummary );
+
                 _tbName = new RockTextBox();
                 _tbName.ID = "tbName";
                 _tbName.Label = "Name";
@@ -571,7 +589,7 @@ namespace Rock.Web.UI.Controls
                 Controls.Add( _tbIconCssClass );
 
                 _cbRequired = new RockCheckBox();
-                _cbRequired.ID ="cbRequired";
+                _cbRequired.ID = "cbRequired";
                 _cbRequired.Label = "Required";
                 _cbRequired.Text = "Require a value";
                 Controls.Add( _cbRequired );
@@ -650,10 +668,9 @@ namespace Rock.Web.UI.Controls
 
                 DefaultValue = _phDefaultValue.Controls.Count >= 1 ?
                     field.GetEditValue( _phDefaultValue.Controls[0], Qualifiers ) : string.Empty;
-
                 Qualifiers = field.ConfigurationValues( qualifierControls );
             }
-            
+
         }
 
         /// <summary>
@@ -666,7 +683,10 @@ namespace Rock.Web.UI.Controls
 
             // Recreate the qualifiers and default control in case they changed due to new field type or
             // new qualifier values
-            CreateFieldTypeDetailControls( FieldTypeId, true );
+            if ( FieldTypeId != ( ViewState["FieldTypeId"] as int? ) || _qualifiersChanged )
+            {
+                CreateFieldTypeDetailControls( FieldTypeId, true );
+            }
 
             // Set the validation group for all controls
             string validationGroup = ValidationGroup;
@@ -685,7 +705,7 @@ namespace Rock.Web.UI.Controls
             {
                 if ( control is IRockControl )
                 {
-                    ( (IRockControl)control ).ValidationGroup = validationGroup;
+                    ( ( IRockControl ) control ).ValidationGroup = validationGroup;
                 }
             }
             foreach ( var control in _phDefaultValue.Controls )
@@ -712,8 +732,8 @@ namespace Rock.Web.UI.Controls
             writer.RenderEndTag();
 
             var existingKeyNames = new List<string>();
-            ReservedKeyNames.ForEach( n => existingKeyNames.Add(n));
-            ObjectPropertyNames.ForEach( n => existingKeyNames.Add(n));
+            ReservedKeyNames.ForEach( n => existingKeyNames.Add( n ) );
+            ObjectPropertyNames.ForEach( n => existingKeyNames.Add( n ) );
             _hfExistingKeyNames.Value = existingKeyNames.ToJson();
             _hfExistingKeyNames.RenderControl( writer );
 
@@ -773,7 +793,7 @@ namespace Rock.Web.UI.Controls
             writer.RenderEndTag();
 
             writer.RenderEndTag();
-            
+
             writer.RenderEndTag();
 
             // row 3 col 2
@@ -826,7 +846,7 @@ namespace Rock.Web.UI.Controls
         /// <param name="args">The <see cref="ServerValidateEventArgs"/> instance containing the event data.</param>
         protected void cvKey_ServerValidate( object source, ServerValidateEventArgs args )
         {
-            args.IsValid = 
+            args.IsValid =
                 !ReservedKeyNames.Contains( _tbKey.Text.Trim(), StringComparer.CurrentCultureIgnoreCase ) &&
                 !ObjectPropertyNames.Contains( _tbKey.Text.Trim(), StringComparer.CurrentCultureIgnoreCase );
         }
@@ -867,7 +887,7 @@ namespace Rock.Web.UI.Controls
                 CancelClick( sender, e );
             }
         }
-        
+
         #endregion
 
         #region Public Methods
@@ -966,7 +986,7 @@ namespace Rock.Web.UI.Controls
         /// </summary>
         /// <param name="fieldTypeId">The field type id.</param>
         /// <param name="recreate">if set to <c>true</c> [recreate].</param>
-        private void CreateFieldTypeDetailControls(int? fieldTypeId, bool recreate = false )
+        private void CreateFieldTypeDetailControls( int? fieldTypeId, bool recreate = false )
         {
             EnsureChildControls();
 
@@ -987,7 +1007,7 @@ namespace Rock.Web.UI.Controls
                 }
 
                 int i = 0;
-                foreach(var control in configControls )
+                foreach ( var control in configControls )
                 {
                     control.ID = string.Format( "qualifier_{0}", i++ );
                     _phQualifiers.Controls.Add( control );
@@ -998,7 +1018,7 @@ namespace Rock.Web.UI.Controls
                 var defaultControl = field.EditControl( Qualifiers, string.Format( "defaultValue_{0}", fieldTypeId.Value ) );
                 if ( defaultControl != null )
                 {
-                    if (recreate)
+                    if ( recreate )
                     {
                         field.SetEditValue( defaultControl, Qualifiers, DefaultValue );
                     }
