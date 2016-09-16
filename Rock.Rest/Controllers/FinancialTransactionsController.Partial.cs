@@ -256,9 +256,8 @@ namespace Rock.Rest.Controllers
                 Details = a.TransactionDetails.Select( d => new
                 {
                     d.AccountId,
-                    AccountName = d.Account.Name,
                     ParentAccountId = d.Account != null?d.Account.ParentAccountId:null,
-                    ParentAccountName = d.Account != null && d.Account.ParentAccount != null ? d.Account.ParentAccount.Name : null,
+                    AccountName = d.Account.Name,
                     d.Summary,
                     d.Amount
                 } ).OrderBy( x => x.AccountName ),
@@ -279,9 +278,8 @@ namespace Rock.Rest.Controllers
             {
                 DataTable detailTable = new DataTable( "transaction_details" );
                 detailTable.Columns.Add( "AccountId", typeof( int ) );
-                detailTable.Columns.Add( "AccountName" );
                 detailTable.Columns.Add( "ParentAccountId", typeof( int ) );
-                detailTable.Columns.Add( "ParentAccountName" );
+                detailTable.Columns.Add( "AccountName" );
                 detailTable.Columns.Add( "Summary" );
                 detailTable.Columns.Add( "Amount", typeof( decimal ) );
                 var transactionDetails = fieldItems.Details.ToList();
@@ -296,15 +294,15 @@ namespace Rock.Rest.Controllers
                 {
                     var detailArray = new object[] {
                         detail.AccountId,
-                        detail.AccountName,
                         detail.ParentAccountId,
-                        detail.ParentAccountName,
+                        detail.AccountName,
                         detail.Summary,
                         detail.Amount
                     };
 
                     detailTable.Rows.Add( detailArray );
                 }
+
                 var itemArray = new object[] {
                     fieldItems.TransactionDateTime,
                     fieldItems.TransactionCode,
