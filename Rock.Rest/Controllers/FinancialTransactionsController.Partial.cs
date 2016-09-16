@@ -256,6 +256,7 @@ namespace Rock.Rest.Controllers
                 Details = a.TransactionDetails.Select( d => new
                 {
                     d.AccountId,
+                    ParentAccountId = d.Account != null?d.Account.ParentAccountId:null,
                     AccountName = d.Account.Name,
                     d.Summary,
                     d.Amount
@@ -277,6 +278,7 @@ namespace Rock.Rest.Controllers
             {
                 DataTable detailTable = new DataTable( "transaction_details" );
                 detailTable.Columns.Add( "AccountId", typeof( int ) );
+                detailTable.Columns.Add( "ParentAccountId", typeof( int ) );
                 detailTable.Columns.Add( "AccountName" );
                 detailTable.Columns.Add( "Summary" );
                 detailTable.Columns.Add( "Amount", typeof( decimal ) );
@@ -292,6 +294,7 @@ namespace Rock.Rest.Controllers
                 {
                     var detailArray = new object[] {
                         detail.AccountId,
+                        detail.ParentAccountId,
                         detail.AccountName,
                         detail.Summary,
                         detail.Amount
