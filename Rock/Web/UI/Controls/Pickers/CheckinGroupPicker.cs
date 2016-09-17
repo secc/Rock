@@ -237,7 +237,6 @@ namespace Rock.Web.UI.Controls
         /// </summary>
         protected override void CreateChildControls()
         {
-            this.EnableViewState = true;
             base.CreateChildControls();
             Controls.Clear();
             RockControlHelper.CreateChildControls( this, Controls );
@@ -302,22 +301,21 @@ namespace Rock.Web.UI.Controls
             addButton.Visible = false;
 
             var templateId = templateDropDownList.SelectedValue.AsInteger();
-            if ( templateId == 0 )
+            if ( templateId != 0 )
             {
-                return;
+                RockContext rockContext = new RockContext();
+                var template = new GroupTypeService( rockContext ).Get( templateId );
+                if ( template != null )
+                {
+                    BindGroupTypeDropDown( template );
+                }
+                else
+                {
+                    //If the user was able to select a template that doesn't exist the ddl is probably stale
+                    BindTemplateDropDown();
+                }
             }
-
-            RockContext rockContext = new RockContext();
-            var template = new GroupTypeService( rockContext ).Get( templateId );
-            if ( template != null )
-            {
-                BindGroupTypeDropDown( template );
-            }
-            else
-            {
-                //If the user was able to select a template that doesn't exist the ddl is probably stale
-                BindTemplateDropDown();
-            }
+            UpdateGroupsDisplay();
         }
 
         /// <summary>
@@ -332,22 +330,21 @@ namespace Rock.Web.UI.Controls
 
             var groupTypeId = groupTypeDropDownList.SelectedValue.AsInteger();
 
-            if ( groupTypeId == 0 )
+            if ( groupTypeId != 0 )
             {
-                return;
+                RockContext rockContext = new RockContext();
+                var groupType = new GroupTypeService( rockContext ).Get( groupTypeId );
+                if ( groupType != null )
+                {
+                    BindGroupDropDown( groupType );
+                }
+                else
+                {
+                    //If the user was able to select a groupType that doesn't exist the ddl is probably stale
+                    BindTemplateDropDown();
+                }
             }
-
-            RockContext rockContext = new RockContext();
-            var groupType = new GroupTypeService( rockContext ).Get( groupTypeId );
-            if ( groupType != null )
-            {
-                BindGroupDropDown( groupType );
-            }
-            else
-            {
-                //If the user was able to select a groupType that doesn't exist the ddl is probably stale
-                BindTemplateDropDown();
-            }
+            UpdateGroupsDisplay();
         }
 
         /// <summary>
@@ -362,6 +359,7 @@ namespace Rock.Web.UI.Controls
             {
                 addButton.Visible = groupId != 0;
             }
+            UpdateGroupsDisplay();
         }
 
         /// <summary>
@@ -370,18 +368,12 @@ namespace Rock.Web.UI.Controls
         /// <param name="group">Group to add</param>
         private void AddGroupToList( Group group )
         {
-            if ( AllowMultiSelect )
+            if ( AllowMultiSelect && !this.SelectedGroups.Select( g => g.Id ).Contains( group.Id ) )
             {
-                if ( this.SelectedGroups.Select( g => g.Id ).Contains( group.Id ) )
-                {
-                    UpdateGroupsDisplay();
-                    return;
-                }
                 var selectedGroups = SelectedGroups.ToList();
                 selectedGroups.Add( group );
                 this.SelectedGroups = selectedGroups;
             }
-            UpdateGroupsDisplay();
         }
 
         /// <summary>
@@ -400,6 +392,7 @@ namespace Rock.Web.UI.Controls
                     AddGroupToList( group );
                 }
             }
+            UpdateGroupsDisplay();
         }
 
         /// <summary>
@@ -412,18 +405,15 @@ namespace Rock.Web.UI.Controls
 
             Guid templateTypeGuid = Rock.SystemGuid.DefinedValue.GROUPTYPE_PURPOSE_CHECKIN_TEMPLATE.AsGuid();
 
-            var templates = groupTypeService
+            templateDropDownList.DataSource = groupTypeService
                     .Queryable().AsNoTracking()
                     .Where( t =>
                         t.GroupTypePurposeValue != null &&
                         t.GroupTypePurposeValue.Guid == templateTypeGuid )
-                    .OrderBy( t => t.Name );
-            templateDropDownList.Items.Clear();
-            templateDropDownList.Items.Add( new ListItem( "", "" ) );
-            foreach ( var template in templates )
-            {
-                templateDropDownList.Items.Add( new ListItem( template.Name, template.Id.ToString() ) );
-            }
+                    .OrderBy( t => t.Name ).ToList();
+            templateDropDownList.DataBind();
+            templateDropDownList.Items.Insert( 0, new ListItem( "", "" ) );
+
         }
 
         /// <summary>
@@ -432,16 +422,12 @@ namespace Rock.Web.UI.Controls
         /// <param name="template"></param>
         private void BindGroupTypeDropDown( GroupType template )
         {
-            EnsureChildControls();
             groupDropDownList.Visible = false;
 
             _groupTypeOutput = new List<GroupType>();
             GetChildGroupTypes( template );
-            var groupTypes = _groupTypeOutput
-                .Where( gt => gt.Groups.Any() )
-                .ToList();
 
-            groupTypeDropDownList.DataSource = groupTypes.Select( gt => new { Name = gt.Name, Id = gt.Id } ).ToList();
+            groupTypeDropDownList.DataSource = _groupTypeOutput.Where( gt => gt.Groups.Any() ).ToList();
             groupTypeDropDownList.DataBind();
             groupTypeDropDownList.Items.Insert( 0, new ListItem( "", "" ) );
             groupTypeDropDownList.Visible = true;
@@ -456,8 +442,7 @@ namespace Rock.Web.UI.Controls
             EnsureChildControls();
             addButton.Visible = false;
 
-            List<Group> groups = GetChildGroups( groupType.Groups );
-            groupDropDownList.DataSource = groups.Select( gt => new { Name = gt.Name, Id = gt.Id } ).ToList();
+            groupDropDownList.DataSource = GetChildGroups( groupType.Groups ).ToList();
             groupDropDownList.DataBind();
             groupDropDownList.Items.Insert( 0, new ListItem( "", "" ) );
             groupDropDownList.Visible = true;
@@ -526,24 +511,10 @@ namespace Rock.Web.UI.Controls
             writer.RenderEndTag();
         }
 
-        public bool AllowMultiSelect
-        {
-            get
-            {
-                EnsureChildControls();
-                if ( ViewState["AllowMultiSelect"] != null )
-                {
-                    var output  = ( bool ) ViewState["AllowMultiSelect"];
-                    return output;
-                }
-                return false;
-            }
-            set
-            {
-                EnsureChildControls();
-                ViewState["AllowMultiSelect"] = value;
-            }
-        }
+        /// <summary>
+        /// Property to allow multiple groups to be selected
+        /// </summary>
+        public bool AllowMultiSelect { get; set; }
 
         /// <summary>
         /// Gets the selected group.
@@ -646,14 +617,17 @@ namespace Rock.Web.UI.Controls
                 groupsDisplay.Controls.Clear();
 
                 Panel header = new Panel();
+                header.ID = string.Format( "HEADER{0}", this.ID );
                 header.CssClass = "panel-heading";
                 groupsDisplay.Controls.Add( header );
 
                 Literal headerText = new Literal();
+                headerText.ID = string.Format( "HEADERTEXT{0}", this.ID );
                 headerText.Text = "Selected Check-in Groups";
                 header.Controls.Add( headerText );
 
                 Panel body = new Panel();
+                body.ID = string.Format( "BODY{0}", this.ID );
                 body.CssClass = "panel-body";
                 groupsDisplay.Controls.Add( body );
 
