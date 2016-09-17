@@ -402,17 +402,24 @@ namespace Rock.Web.UI.Controls
             {
                 // Iterate through the viewstate qualifiers and the ones being set to see if they are equal.
                 var qualifiers = ViewState["Qualifiers"] as Dictionary<string, ConfigurationValue>;
-                if (qualifiers.Count != value.Count)
+                if (qualifiers == null && value != null || value != null && qualifiers == null)
                 {
                     _qualifiersChanged = true;
-                } else
+                }
+                else if ( qualifiers  != null && value != null)
                 { 
-                    foreach ( var entry in value )
+                    if (qualifiers.Count != value.Count)
                     {
-                        if ( !( qualifiers.ContainsKey( entry.Key ) && qualifiers[entry.Key].Equals( entry.Value ) ) )
+                        _qualifiersChanged = true;
+                    } else
+                    { 
+                        foreach ( var entry in value )
                         {
-                            _qualifiersChanged = true;
-                            break;
+                            if ( !( qualifiers.ContainsKey( entry.Key ) && qualifiers[entry.Key].Equals( entry.Value ) ) )
+                            {
+                                _qualifiersChanged = true;
+                                break;
+                            }
                         }
                     }
                 }
