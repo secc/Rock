@@ -31,6 +31,7 @@ using Rock.Web.Cache;
 using Rock.Web.UI;
 using Rock.Web.UI.Controls;
 using Rock.Communication;
+using System.Data.Entity;
 
 namespace RockWeb.Blocks.Finance
 {
@@ -321,7 +322,7 @@ TransactionAcountDetails: [
             if ( !Page.IsPostBack )
             {
                 hfTransactionGuid.Value = Guid.NewGuid().ToString();
-                
+
                 SetControlOptions();
 
                 SetPage( 1 );
@@ -429,7 +430,7 @@ TransactionAcountDetails: [
 
             if ( !oneTime && ( !dtpStartDate.SelectedDate.HasValue || dtpStartDate.SelectedDate.Value.Date <= RockDateTime.Today ) )
             {
-                dtpStartDate.SelectedDate = RockDateTime.Today.AddDays( 1 ); 
+                dtpStartDate.SelectedDate = RockDateTime.Today.AddDays( 1 );
             }
 
             using ( var rockContext = new RockContext() )
@@ -439,6 +440,34 @@ TransactionAcountDetails: [
 
             SetPage( 1 );
 
+        }
+
+        /// <summary>
+        /// Handles the CheckedChanged event of the tglGiveAsOption control.
+        /// </summary>
+        /// <param name="sender">The source of the event.</param>
+        /// <param name="e">The <see cref="EventArgs"/> instance containing the event data.</param>
+        protected void tglGiveAsOption_CheckedChanged( object sender, EventArgs e )
+        {
+            SetGiveAsOptions();
+            if ( tglGiveAsOption.Checked )
+            {
+                ShowPersonal( GetPerson( false ) );
+            }
+            else
+            {
+                ShowBusiness();
+            }
+        }
+
+        /// <summary>
+        /// Handles the SelectedIndexChanged event of the cblBusinessOption control.
+        /// </summary>
+        /// <param name="sender">The source of the event.</param>
+        /// <param name="e">The <see cref="EventArgs"/> instance containing the event data.</param>
+        protected void cblBusinessOption_SelectedIndexChanged( object sender, EventArgs e )
+        {
+            ShowBusiness();
         }
 
         /// <summary>
@@ -642,7 +671,7 @@ TransactionAcountDetails: [
 
                         string errorMessage = string.Empty;
 
-                        PersonAlias authorizedPersonAlias = null;
+                        var person = GetPerson( false );
                         string referenceNumber = string.Empty;
                         FinancialPaymentDetail paymentDetail = null;
                         int? currencyTypeValueId = isACHTxn ? achCurrencyType.Id : ccCurrencyType.Id;
@@ -652,7 +681,6 @@ TransactionAcountDetails: [
                             var transaction = new FinancialTransactionService( rockContext ).GetByTransactionCode( TransactionCode );
                             if ( transaction != null && transaction.AuthorizedPersonAlias != null )
                             {
-                                authorizedPersonAlias = transaction.AuthorizedPersonAlias;
                                 if ( transaction.FinancialGateway != null )
                                 {
                                     transaction.FinancialGateway.LoadAttributes( rockContext );
@@ -666,7 +694,6 @@ TransactionAcountDetails: [
                             var scheduledTransaction = new FinancialScheduledTransactionService( rockContext ).GetByScheduleId( ScheduleId );
                             if ( scheduledTransaction != null )
                             {
-                                authorizedPersonAlias = scheduledTransaction.AuthorizedPersonAlias;
                                 if ( scheduledTransaction.FinancialGateway != null )
                                 {
                                     scheduledTransaction.FinancialGateway.LoadAttributes( rockContext );
@@ -676,13 +703,13 @@ TransactionAcountDetails: [
                             }
                         }
 
-                        if ( authorizedPersonAlias != null && authorizedPersonAlias.Person != null && paymentDetail != null )
+                        if ( person != null && paymentDetail != null )
                         {
                             if ( phCreateLogin.Visible )
                             {
                                 var user = UserLoginService.Create(
                                     rockContext,
-                                    authorizedPersonAlias.Person,
+                                    person,
                                     Rock.Model.AuthenticationServiceType.Internal,
                                     EntityTypeCache.Read( Rock.SystemGuid.EntityType.AUTHENTICATION_DATABASE.AsGuid() ).Id,
                                     txtUserName.Text,
@@ -692,13 +719,13 @@ TransactionAcountDetails: [
                                 var mergeFields = Rock.Lava.LavaHelper.GetCommonMergeFields( this.RockPage, this.CurrentPerson );
                                 mergeFields.Add( "ConfirmAccountUrl", RootPath + "ConfirmAccount" );
 
-                                var personDictionary = authorizedPersonAlias.Person.ToLiquid() as Dictionary<string, object>;
+                                var personDictionary = person.ToLiquid() as Dictionary<string, object>;
                                 mergeFields.Add( "Person", personDictionary );
 
                                 mergeFields.Add( "User", user );
 
                                 var recipients = new List<Rock.Communication.RecipientData>();
-                                recipients.Add( new Rock.Communication.RecipientData( authorizedPersonAlias.Person.Email, mergeFields ) );
+                                recipients.Add( new Rock.Communication.RecipientData( person.Email, mergeFields ) );
 
                                 Rock.Communication.Email.Send( GetAttributeValue( "ConfirmAccountTemplate" ).AsGuid(), recipients, ResolveRockUrl( "~/" ), ResolveRockUrl( "~~/" ), false );
                             }
@@ -712,37 +739,34 @@ TransactionAcountDetails: [
                             }
                             else
                             {
-                                if ( authorizedPersonAlias != null )
-                                {
-                                    var savedAccount = new FinancialPersonSavedAccount();
-                                    savedAccount.PersonAliasId = authorizedPersonAlias.Id;
-                                    savedAccount.ReferenceNumber = referenceNumber;
-                                    savedAccount.Name = txtSaveAccount.Text;
-                                    savedAccount.TransactionCode = TransactionCode;
-                                    savedAccount.FinancialGatewayId = financialGateway.Id;
-                                    savedAccount.FinancialPaymentDetail = new FinancialPaymentDetail();
-                                    savedAccount.FinancialPaymentDetail.AccountNumberMasked = paymentDetail.AccountNumberMasked;
-                                    savedAccount.FinancialPaymentDetail.CurrencyTypeValueId = paymentDetail.CurrencyTypeValueId;
-                                    savedAccount.FinancialPaymentDetail.CreditCardTypeValueId = paymentDetail.CreditCardTypeValueId;
-                                    savedAccount.FinancialPaymentDetail.NameOnCardEncrypted = paymentDetail.NameOnCardEncrypted;
-                                    savedAccount.FinancialPaymentDetail.ExpirationMonthEncrypted = paymentDetail.ExpirationMonthEncrypted;
-                                    savedAccount.FinancialPaymentDetail.ExpirationYearEncrypted = paymentDetail.ExpirationYearEncrypted;
-                                    savedAccount.FinancialPaymentDetail.BillingLocationId = paymentDetail.BillingLocationId;
+                                var savedAccount = new FinancialPersonSavedAccount();
+                                savedAccount.PersonAliasId = person.PrimaryAliasId;
+                                savedAccount.ReferenceNumber = referenceNumber;
+                                savedAccount.Name = txtSaveAccount.Text;
+                                savedAccount.TransactionCode = TransactionCode;
+                                savedAccount.FinancialGatewayId = financialGateway.Id;
+                                savedAccount.FinancialPaymentDetail = new FinancialPaymentDetail();
+                                savedAccount.FinancialPaymentDetail.AccountNumberMasked = paymentDetail.AccountNumberMasked;
+                                savedAccount.FinancialPaymentDetail.CurrencyTypeValueId = paymentDetail.CurrencyTypeValueId;
+                                savedAccount.FinancialPaymentDetail.CreditCardTypeValueId = paymentDetail.CreditCardTypeValueId;
+                                savedAccount.FinancialPaymentDetail.NameOnCardEncrypted = paymentDetail.NameOnCardEncrypted;
+                                savedAccount.FinancialPaymentDetail.ExpirationMonthEncrypted = paymentDetail.ExpirationMonthEncrypted;
+                                savedAccount.FinancialPaymentDetail.ExpirationYearEncrypted = paymentDetail.ExpirationYearEncrypted;
+                                savedAccount.FinancialPaymentDetail.BillingLocationId = paymentDetail.BillingLocationId;
 
-                                    var savedAccountService = new FinancialPersonSavedAccountService( rockContext );
-                                    savedAccountService.Add( savedAccount );
-                                    rockContext.SaveChanges();
+                                var savedAccountService = new FinancialPersonSavedAccountService( rockContext );
+                                savedAccountService.Add( savedAccount );
+                                rockContext.SaveChanges();
 
-                                    cbSaveAccount.Visible = false;
-                                    txtSaveAccount.Visible = false;
-                                    phCreateLogin.Visible = false;
-                                    divSaveActions.Visible = false;
+                                cbSaveAccount.Visible = false;
+                                txtSaveAccount.Visible = false;
+                                phCreateLogin.Visible = false;
+                                divSaveActions.Visible = false;
 
-                                    nbSaveAccount.Title = "Success";
-                                    nbSaveAccount.Text = "The account has been saved for future use";
-                                    nbSaveAccount.NotificationBoxType = NotificationBoxType.Success;
-                                    nbSaveAccount.Visible = true;
-                                }
+                                nbSaveAccount.Title = "Success";
+                                nbSaveAccount.Text = "The account has been saved for future use";
+                                nbSaveAccount.NotificationBoxType = NotificationBoxType.Success;
+                                nbSaveAccount.Visible = true;
                             }
                         }
                         else
@@ -848,7 +872,7 @@ TransactionAcountDetails: [
 
         }
 
-        private string GetSavedAcccountFreqSupported ( GatewayComponent component )
+        private string GetSavedAcccountFreqSupported( GatewayComponent component )
         {
             if ( component != null )
             {
@@ -887,7 +911,7 @@ TransactionAcountDetails: [
         }
 
         private GatewayComponent GetGatewayComponent( RockContext rockContext, FinancialGateway gateway )
-        { 
+        {
             if ( gateway != null )
             {
                 gateway.LoadAttributes( rockContext );
@@ -925,8 +949,8 @@ TransactionAcountDetails: [
                 var ccSavedAccountIds = new List<int>();
                 var ccCurrencyType = DefinedValueCache.Read( new Guid( Rock.SystemGuid.DefinedValue.CURRENCY_TYPE_CREDIT_CARD ) );
                 if ( _ccGateway != null &&
-                    _ccGatewayComponent != null && 
-                    _ccGatewayComponent.SupportsSavedAccount( !oneTime ) && 
+                    _ccGatewayComponent != null &&
+                    _ccGatewayComponent.SupportsSavedAccount( !oneTime ) &&
                     _ccGatewayComponent.SupportsSavedAccount( ccCurrencyType ) )
                 {
                     ccSavedAccountIds = savedAccounts
@@ -1010,57 +1034,24 @@ TransactionAcountDetails: [
             tdPhoneReceipt.Visible = displayPhone;
 
             var person = GetPerson( false );
-            if ( person != null )
-            {
-                txtCurrentName.Text = person.FullName;
-                txtEmail.Text = person.Email;
+            ShowPersonal( person );
 
-                var rockContext = new RockContext();
-                var personService = new PersonService( rockContext );
-
-                if ( displayPhone )
-                {
-                    var phoneNumber = personService.GetPhoneNumber( person, DefinedValueCache.Read( new Guid( Rock.SystemGuid.DefinedValue.PERSON_PHONE_TYPE_HOME ) ) );
-
-                    // If person did not have a home phone number, read the cell phone number (which would then
-                    // get saved as a home number also if they don't change it, which is ok ).
-                    if ( phoneNumber == null || string.IsNullOrWhiteSpace( phoneNumber.Number ) )
-                    {
-                        phoneNumber = personService.GetPhoneNumber( person, DefinedValueCache.Read( new Guid( Rock.SystemGuid.DefinedValue.PERSON_PHONE_TYPE_MOBILE ) ) );
-                    }
-
-                    if ( phoneNumber != null )
-                    {
-                        pnbPhone.CountryCode = phoneNumber.CountryCode;
-                        pnbPhone.Number = phoneNumber.ToString();
-                    }
-                    else
-                    {
-                        pnbPhone.CountryCode = PhoneNumber.DefaultCountryCode();
-                        pnbPhone.Number = string.Empty;
-                    }
-                }
-                Guid addressTypeGuid = Guid.Empty;
-                if ( !Guid.TryParse( GetAttributeValue( "AddressType" ), out addressTypeGuid ) )
-                {
-                    addressTypeGuid = new Guid( Rock.SystemGuid.DefinedValue.GROUP_LOCATION_TYPE_HOME );
-                }
-
-                var groupLocation = personService.GetFirstLocation( person.Id, DefinedValueCache.Read( addressTypeGuid ).Id );
-                if ( groupLocation != null )
-                {
-                    GroupLocationId = groupLocation.Id;
-                    acAddress.SetValues( groupLocation.Location );
-                }
-                else
-                {
-                    acAddress.SetValues( null );
-                }
-            }
-
+            // Set personal display
             txtCurrentName.Visible = person != null;
             txtFirstName.Visible = person == null;
             txtLastName.Visible = person == null;
+
+            // Set Give As Person/Business display
+            var loginPageRef = RockPage.Site.LoginPageReference;
+            loginPageRef.Parameters.Add( "returnurl", Context.Server.UrlEncode( Context.Request.RawUrl ) );
+            lBusinessLoginMsg.Text = string.Format( "<a href='{0}'>Login</a> to give as a business", loginPageRef.BuildUrl() );
+            lBusinessLoginMsg.Visible = person == null;
+
+            phGiveAsOption.Visible = person != null;
+            tglGiveAsOption.Checked = true;
+            phGiveAsPerson.Visible = true;
+            phGiveAsBusiness.Visible = false;
+            SetGiveAsOptions();
 
             // Evaluate if comment entry box should be displayed
             txtCommentEntry.Label = GetAttributeValue( "CommentEntryLabel" );
@@ -1162,6 +1153,160 @@ TransactionAcountDetails: [
         }
 
         /// <summary>
+        /// Sets the give as options.
+        /// </summary>
+        private void SetGiveAsOptions()
+        {
+            bool showBusinessOption = CurrentPerson != null && !tglGiveAsOption.Checked;
+            phGiveAsPerson.Visible = !showBusinessOption;
+            phGiveAsBusiness.Visible = showBusinessOption;
+
+            if ( showBusinessOption )
+            {
+                if ( hfBusinessesLoaded.ValueAsInt() != CurrentPerson.Id )
+                {
+                    cblBusiness.Items.Clear();
+                    using ( var rockContext = new RockContext() )
+                    {
+                        var personService = new PersonService( rockContext );
+                        var businesses = personService.GetBusinesses( CurrentPerson.Id ).ToList();
+                        if ( businesses.Any() )
+                        {
+                            foreach ( var business in businesses )
+                            {
+                                cblBusiness.Items.Add( new ListItem( business.LastName, business.Id.ToString() ) );
+                            }
+
+                            cblBusiness.Items.Add( new ListItem( "New Business", "" ) );
+
+                            cblBusiness.Visible = true;
+                            cblBusiness.SelectedIndex = 0;
+                        }
+                        else
+                        {
+                            cblBusiness.Visible = false;
+                        }
+                    }
+
+                    hfBusinessesLoaded.Value = CurrentPerson.Id.ToString();
+                }
+
+                lPersonalInfoTitle.Text = "Business Information";
+            }
+            else
+            {
+                lPersonalInfoTitle.Text = GetAttributeValue( "PersonalInfoTitle" );
+            }
+        }
+
+        private void ShowPersonal( Person person )
+        {
+            if ( person != null )
+            {
+                txtCurrentName.Text = person.FullName;
+                txtEmail.Text = person.Email;
+
+                var rockContext = new RockContext();
+                var personService = new PersonService( rockContext );
+
+                if ( GetAttributeValue( "DisplayPhone" ).AsBoolean() )
+                {
+                    var phoneNumber = personService.GetPhoneNumber( person, DefinedValueCache.Read( new Guid( Rock.SystemGuid.DefinedValue.PERSON_PHONE_TYPE_HOME ) ) );
+
+                    // If person did not have a home phone number, read the cell phone number (which would then
+                    // get saved as a home number also if they don't change it, which is ok ).
+                    if ( phoneNumber == null || string.IsNullOrWhiteSpace( phoneNumber.Number ) )
+                    {
+                        phoneNumber = personService.GetPhoneNumber( person, DefinedValueCache.Read( new Guid( Rock.SystemGuid.DefinedValue.PERSON_PHONE_TYPE_MOBILE ) ) );
+                    }
+
+                    if ( phoneNumber != null )
+                    {
+                        pnbPhone.CountryCode = phoneNumber.CountryCode;
+                        pnbPhone.Number = phoneNumber.ToString();
+                    }
+                    else
+                    {
+                        pnbPhone.CountryCode = PhoneNumber.DefaultCountryCode();
+                        pnbPhone.Number = string.Empty;
+                    }
+                }
+                Guid addressTypeGuid = Guid.Empty;
+                if ( !Guid.TryParse( GetAttributeValue( "AddressType" ), out addressTypeGuid ) )
+                {
+                    addressTypeGuid = new Guid( Rock.SystemGuid.DefinedValue.GROUP_LOCATION_TYPE_HOME );
+                }
+
+                var groupLocation = personService.GetFirstLocation( person.Id, DefinedValueCache.Read( addressTypeGuid ).Id );
+                if ( groupLocation != null )
+                {
+                    GroupLocationId = groupLocation.Id;
+                    acAddress.SetValues( groupLocation.Location );
+                }
+                else
+                {
+                    acAddress.SetValues( null );
+                }
+            }
+            else
+            {
+                txtLastName.Text = string.Empty;
+                txtFirstName.Text = string.Empty;
+                txtEmail.Text = string.Empty;
+                pnbPhone.CountryCode = PhoneNumber.DefaultCountryCode();
+                pnbPhone.Number = string.Empty;
+                acAddress.SetValues( null );
+            }
+        }
+
+        private void ShowBusiness()
+        {
+            int? businessId = cblBusiness.SelectedValueAsInt();
+            if ( businessId.HasValue )
+            {
+                using ( var rockContext = new RockContext() )
+                {
+                    var personService = new PersonService( rockContext );
+                    var business = personService.Get( businessId.Value );
+                    ShowBusiness( personService, business );
+                }
+            }
+            else
+            {
+                ShowBusiness( null, null );
+            }
+        }
+
+        private void ShowBusiness( PersonService personService, Person business )
+        {
+            if ( personService != null && business != null )
+            {
+                txtBusinessName.Text = business.LastName;
+                txtEmail.Text = business.Email;
+
+                Guid addressTypeGuid = Rock.SystemGuid.DefinedValue.GROUP_LOCATION_TYPE_WORK.AsGuid();
+                var groupLocation = personService.GetFirstLocation( business.Id, DefinedValueCache.Read( addressTypeGuid ).Id );
+                if ( groupLocation != null )
+                {
+                    GroupLocationId = groupLocation.Id;
+                    acAddress.SetValues( groupLocation.Location );
+                }
+                else
+                {
+                    GroupLocationId = null;
+                    acAddress.SetValues( null );
+                }
+            }
+            else
+            {
+                txtBusinessName.Text = string.Empty;
+                txtEmail.Text = string.Empty;
+                GroupLocationId = null;
+                acAddress.SetValues( null );
+            }
+        }
+
+        /// <summary>
         /// Gets the person.
         /// </summary>
         /// <param name="create">if set to <c>true</c> [create].</param>
@@ -1185,7 +1330,7 @@ TransactionAcountDetails: [
                 person = personService.Get( personId );
             }
 
-            if ( create )
+            if ( create && tglGiveAsOption.Checked )  // If tglGiveOption is not checked, then person should not be null
             {
                 if ( person == null )
                 {
@@ -1286,6 +1431,175 @@ TransactionAcountDetails: [
             return person;
         }
 
+        private Person GetPersonOrBusiness( Person person )
+        {
+            if ( person != null && !tglGiveAsOption.Checked )
+            {
+                var rockContext = new RockContext();
+                var personService = new PersonService( rockContext );
+                var groupService = new GroupService( rockContext );
+                var groupMemberService = new GroupMemberService( rockContext );
+
+                Group familyGroup = null;
+
+                Person business = null;
+                int? businessId = cblBusiness.SelectedValueAsInt();
+                if ( businessId.HasValue )
+                {
+                    business = personService.Get( businessId.Value );
+                }
+
+                if ( business == null )
+                {
+                    DefinedValueCache dvcConnectionStatus = DefinedValueCache.Read( GetAttributeValue( "ConnectionStatus" ).AsGuid() );
+                    DefinedValueCache dvcRecordStatus = DefinedValueCache.Read( GetAttributeValue( "RecordStatus" ).AsGuid() );
+
+                    // Create Person
+                    business = new Person();
+                    business.LastName = txtLastName.Text;
+                    business.IsEmailActive = true;
+                    business.EmailPreference = EmailPreference.EmailAllowed;
+                    business.RecordTypeValueId = DefinedValueCache.Read( Rock.SystemGuid.DefinedValue.PERSON_RECORD_TYPE_BUSINESS.AsGuid() ).Id;
+                    if ( dvcConnectionStatus != null )
+                    {
+                        business.ConnectionStatusValueId = dvcConnectionStatus.Id;
+                    }
+
+                    if ( dvcRecordStatus != null )
+                    {
+                        business.RecordStatusValueId = dvcRecordStatus.Id;
+                    }
+
+                    // Create Person/Family
+                    familyGroup = PersonService.SaveNewPerson( business, rockContext, null, false );
+
+                    // Get the relationship roles to use
+                    var knownRelationshipGroupType = GroupTypeCache.Read( Rock.SystemGuid.GroupType.GROUPTYPE_KNOWN_RELATIONSHIPS.AsGuid() );
+                    int businessContactRoleId = knownRelationshipGroupType.Roles
+                        .Where( r =>
+                            r.Guid.Equals( Rock.SystemGuid.GroupRole.GROUPROLE_KNOWN_RELATIONSHIPS_BUSINESS_CONTACT.AsGuid() ) )
+                        .Select( r => r.Id )
+                        .FirstOrDefault();
+                    int businessRoleId = knownRelationshipGroupType.Roles
+                        .Where( r =>
+                            r.Guid.Equals( Rock.SystemGuid.GroupRole.GROUPROLE_KNOWN_RELATIONSHIPS_BUSINESS.AsGuid() ) )
+                        .Select( r => r.Id )
+                        .FirstOrDefault();
+                    int ownerRoleId = knownRelationshipGroupType.Roles
+                        .Where( r =>
+                            r.Guid.Equals( Rock.SystemGuid.GroupRole.GROUPROLE_KNOWN_RELATIONSHIPS_OWNER.AsGuid() ) )
+                        .Select( r => r.Id )
+                        .FirstOrDefault();
+
+                    if ( ownerRoleId > 0 && businessContactRoleId > 0 && businessRoleId > 0 )
+                    {
+                        // get the known relationship group of the business contact
+                        // add the business as a group member of that group using the group role of GROUPROLE_KNOWN_RELATIONSHIPS_BUSINESS
+                        var contactKnownRelationshipGroup = groupMemberService.Queryable()
+                            .Where( g =>
+                                g.GroupRoleId == ownerRoleId &&
+                                g.PersonId == person.Id )
+                            .Select( g => g.Group )
+                            .FirstOrDefault();
+                        if ( contactKnownRelationshipGroup == null )
+                        {
+                            // In some cases person may not yet have a know relationship group type
+                            contactKnownRelationshipGroup = new Group();
+                            groupService.Add( contactKnownRelationshipGroup );
+                            contactKnownRelationshipGroup.Name = "Known Relationship";
+                            contactKnownRelationshipGroup.GroupTypeId = knownRelationshipGroupType.Id;
+
+                            var ownerMember = new GroupMember();
+                            ownerMember.PersonId = person.Id;
+                            ownerMember.GroupRoleId = ownerRoleId;
+                            contactKnownRelationshipGroup.Members.Add( ownerMember );
+                        }
+                        var groupMember = new GroupMember();
+                        groupMember.PersonId = business.Id;
+                        groupMember.GroupRoleId = businessRoleId;
+                        contactKnownRelationshipGroup.Members.Add( groupMember );
+
+                        // get the known relationship group of the business
+                        // add the business contact as a group member of that group using the group role of GROUPROLE_KNOWN_RELATIONSHIPS_BUSINESS_CONTACT
+                        var businessKnownRelationshipGroup = groupMemberService.Queryable()
+                            .Where( g =>
+                                g.GroupRole.Guid.Equals( new Guid( Rock.SystemGuid.GroupRole.GROUPROLE_KNOWN_RELATIONSHIPS_OWNER ) ) &&
+                                g.PersonId == business.Id )
+                            .Select( g => g.Group )
+                            .FirstOrDefault();
+                        if ( businessKnownRelationshipGroup == null )
+                        {
+                            // In some cases business may not yet have a know relationship group type
+                            businessKnownRelationshipGroup = new Group();
+                            groupService.Add( businessKnownRelationshipGroup );
+                            businessKnownRelationshipGroup.Name = "Known Relationship";
+                            businessKnownRelationshipGroup.GroupTypeId = knownRelationshipGroupType.Id;
+
+                            var ownerMember = new GroupMember();
+                            ownerMember.PersonId = business.Id;
+                            ownerMember.GroupRoleId = ownerRoleId;
+                            businessKnownRelationshipGroup.Members.Add( ownerMember );
+                        }
+                        var businessGroupMember = new GroupMember();
+                        businessGroupMember.PersonId = person.Id;
+                        businessGroupMember.GroupRoleId = businessContactRoleId;
+                        businessKnownRelationshipGroup.Members.Add( businessGroupMember );
+
+                        rockContext.SaveChanges();
+                    }
+                }
+
+                business.LastName = txtBusinessName.Text;
+                business.Email = txtEmail.Text;
+
+                if ( GetAttributeValue( "DisplayPhone" ).AsBooleanOrNull() ?? false )
+                {
+                    var numberTypeId = DefinedValueCache.Read( new Guid( Rock.SystemGuid.DefinedValue.PERSON_PHONE_TYPE_WORK ) ).Id;
+                    var phone = business.PhoneNumbers.FirstOrDefault( p => p.NumberTypeValueId == numberTypeId );
+                    if ( phone == null )
+                    {
+                        phone = new PhoneNumber();
+                        business.PhoneNumbers.Add( phone );
+                        phone.NumberTypeValueId = numberTypeId;
+                    }
+                    phone.CountryCode = PhoneNumber.CleanNumber( pnbPhone.CountryCode );
+                    phone.Number = PhoneNumber.CleanNumber( pnbPhone.Number );
+                }
+
+                if ( familyGroup == null )
+                {
+                    var groupLocationService = new GroupLocationService( rockContext );
+                    if ( GroupLocationId.HasValue )
+                    {
+                        familyGroup = groupLocationService.Queryable()
+                            .Where( gl => gl.Id == GroupLocationId.Value )
+                            .Select( gl => gl.Group )
+                            .FirstOrDefault();
+                    }
+                    else
+                    {
+                        familyGroup = personService.GetFamilies( business.Id ).FirstOrDefault();
+                    }
+                }
+
+                rockContext.SaveChanges();
+
+                if ( familyGroup != null )
+                {
+                    GroupService.AddNewGroupAddress(
+                        rockContext,
+                        familyGroup,
+                        Rock.SystemGuid.DefinedValue.GROUP_LOCATION_TYPE_WORK,
+                        acAddress.Street1, acAddress.Street2, acAddress.City, acAddress.State, acAddress.PostalCode, acAddress.Country,
+                        false );
+                }
+
+                return business;
+            }
+
+            return person;
+        }
+
         /// <summary>
         /// Processes the payment information.
         /// </summary>
@@ -1357,6 +1671,7 @@ TransactionAcountDetails: [
 
             if ( !_using3StepGateway )
             {
+
                 if ( rblSavedAccount.Items.Count <= 0 || ( rblSavedAccount.SelectedValueAsInt() ?? 0 ) <= 0 )
                 {
                     bool isACHTxn = hfPaymentTab.Value == "ACH";
@@ -1424,22 +1739,29 @@ TransactionAcountDetails: [
 
             PaymentInfo paymentInfo = GetPaymentInfo();
 
-            if ( txtCurrentName.Visible )
+            if ( tglGiveAsOption.Checked )
             {
-                Person person = GetPerson( false );
-                if ( person != null )
+                if ( txtCurrentName.Visible )
                 {
-                    paymentInfo.FirstName = person.FirstName;
-                    paymentInfo.LastName = person.LastName;
+                    Person person = GetPerson( false );
+                    if ( person != null )
+                    {
+                        paymentInfo.FirstName = person.FirstName;
+                        paymentInfo.LastName = person.LastName;
+                    }
+                }
+                else
+                {
+                    paymentInfo.FirstName = txtFirstName.Text;
+                    paymentInfo.LastName = txtLastName.Text;
                 }
             }
             else
             {
-                paymentInfo.FirstName = txtFirstName.Text;
-                paymentInfo.LastName = txtLastName.Text;
+                paymentInfo.LastName = txtBusinessName.Text;
             }
 
-            tdNameConfirm.Description = paymentInfo.FullName;
+            tdNameConfirm.Description = paymentInfo.FullName.Trim();
             tdPhoneConfirm.Description = paymentInfo.Phone;
             tdEmailConfirm.Description = paymentInfo.Email;
             tdAddressConfirm.Description = string.Format( "{0} {1}, {2} {3}", paymentInfo.Street1, paymentInfo.City, paymentInfo.State, paymentInfo.PostalCode );
@@ -1458,7 +1780,9 @@ TransactionAcountDetails: [
             }
 
             tdWhenConfirm.Description = schedule != null ? schedule.ToString() : "Today";
-            
+
+            btnConfirmationPrev.Visible = !_using3StepGateway;
+
             return true;
         }
 
@@ -1664,7 +1988,7 @@ TransactionAcountDetails: [
             if ( string.IsNullOrWhiteSpace( TransactionCode ) )
             {
                 var transactionGuid = hfTransactionGuid.Value.AsGuid();
-                
+
                 bool isACHTxn = hfPaymentTab.Value == "ACH";
                 var financialGateway = isACHTxn ? _achGateway : _ccGateway;
                 var gateway = isACHTxn ? _achGatewayComponent : _ccGatewayComponent;
@@ -1688,7 +2012,9 @@ TransactionAcountDetails: [
                     return false;
                 }
 
-                PaymentInfo paymentInfo = GetTxnPaymentInfo( person, out errorMessage );
+                Person BusinessOrPerson = GetPersonOrBusiness( person );
+
+                PaymentInfo paymentInfo = GetTxnPaymentInfo( BusinessOrPerson, out errorMessage );
                 if ( paymentInfo == null )
                 {
                     return false;
@@ -1717,7 +2043,7 @@ TransactionAcountDetails: [
                     // manually assign the Guid that we generated at the beginning of the transaction UI entry to help make duplicate scheduled transactions impossible
                     scheduledTransaction.Guid = transactionGuid;
 
-                    SaveScheduledTransaction( financialGateway, gateway, person, paymentInfo, schedule, scheduledTransaction, rockContext );
+                    SaveScheduledTransaction( financialGateway, gateway, BusinessOrPerson, paymentInfo, schedule, scheduledTransaction, rockContext );
                     paymentDetail = scheduledTransaction.FinancialPaymentDetail.Clone( false );
                 }
                 else
@@ -1739,7 +2065,7 @@ TransactionAcountDetails: [
                     // manually assign the Guid that we generated at the beginning of the transaction UI entry to help make duplicate transactions impossible
                     transaction.Guid = transactionGuid;
 
-                    SaveTransaction( financialGateway, gateway, person, paymentInfo, transaction, rockContext );
+                    SaveTransaction( financialGateway, gateway, BusinessOrPerson, paymentInfo, transaction, rockContext );
                     paymentDetail = transaction.FinancialPaymentDetail.Clone( false );
                 }
 
@@ -1759,10 +2085,10 @@ TransactionAcountDetails: [
         private bool ProcessStep3( string resultQueryString, out string errorMessage )
         {
             var rockContext = new RockContext();
-            
+
 
             var transactionGuid = hfTransactionGuid.Value.AsGuid();
-            
+
             bool isACHTxn = hfPaymentTab.Value == "ACH";
             var financialGateway = isACHTxn ? _achGateway : _ccGateway;
             var gateway = ( isACHTxn ? _achGatewayComponent : _ccGatewayComponent ) as ThreeStepGatewayComponent;
@@ -1785,6 +2111,8 @@ TransactionAcountDetails: [
                 errorMessage = "There was a problem creating the person's primary alias";
                 return false;
             }
+
+            Person BusinessOrPerson = GetPersonOrBusiness( person );
 
             PaymentInfo paymentInfo = GetPaymentInfo();
             if ( paymentInfo == null )
@@ -1832,7 +2160,7 @@ TransactionAcountDetails: [
                 }
 
                 paymentDetail = scheduledTransaction.FinancialPaymentDetail.Clone( false );
-                SaveScheduledTransaction( financialGateway, gateway, person, paymentInfo, schedule, scheduledTransaction, rockContext );
+                SaveScheduledTransaction( financialGateway, gateway, BusinessOrPerson, paymentInfo, schedule, scheduledTransaction, rockContext );
             }
             else
             {
@@ -1846,7 +2174,7 @@ TransactionAcountDetails: [
                 transaction.Guid = transactionGuid;
 
                 paymentDetail = transaction.FinancialPaymentDetail.Clone( false );
-                SaveTransaction( financialGateway, gateway, person, paymentInfo, transaction, rockContext );
+                SaveTransaction( financialGateway, gateway, BusinessOrPerson, paymentInfo, transaction, rockContext );
             }
 
             ShowSuccess( gateway, person, paymentInfo, schedule, paymentDetail, rockContext );
@@ -2285,7 +2613,7 @@ TransactionAcountDetails: [
 
     // sets the scroll position to the top of the page after partial postbacks
     // without this the scroll position is the bottom of the page.
-    setTimeout('window.scrollTo(0,0)',0);
+    // setTimeout('window.scrollTo(0,0)',0);
 
     // Posts the iframe (step 2)
     $('#aStep2Submit').on('click', function(e) {{
@@ -2354,7 +2682,7 @@ TransactionAcountDetails: [
     }});
 
 ";
-            string script = string.Format( 
+            string script = string.Format(
                 scriptFormat,
                 divCCPaymentInfo.ClientID,      // {0} 
                 hfPaymentTab.ClientID,          // {1}
@@ -2377,7 +2705,7 @@ TransactionAcountDetails: [
                 txtCardFirstName.ClientID,      // {18}
                 txtCardLastName.ClientID,       // {19}
                 txtCardName.ClientID            // {20}
-            ); 
+            );
 
             ScriptManager.RegisterStartupScript( upPayment, this.GetType(), "giving-profile", script, true );
 
@@ -2406,8 +2734,8 @@ TransactionAcountDetails: [
         /// Lightweight object for each contribution item
         /// </summary>
         [Serializable]
-        [DotLiquid.LiquidType("Id", "Order", "Name", "CampusId", "Amount", "PublicName", "AmountFormatted")]
-        protected class AccountItem 
+        [DotLiquid.LiquidType( "Id", "Order", "Name", "CampusId", "Amount", "PublicName", "AmountFormatted" )]
+        protected class AccountItem
         {
             public int Id { get; set; }
 
