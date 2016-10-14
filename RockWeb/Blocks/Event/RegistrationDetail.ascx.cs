@@ -365,7 +365,7 @@ namespace RockWeb.Blocks.Event
                     if ( newRegistration )
                     {
                         var pageRef = CurrentPageReference;
-                        pageRef.Parameters.AddOrReplace("RegistrationId", registration.Id.ToString());
+                        pageRef.Parameters.AddOrReplace( "RegistrationId", registration.Id.ToString() );
                         NavigateToPage( pageRef );
                     }
                     else
@@ -375,7 +375,7 @@ namespace RockWeb.Blocks.Event
 
                         if ( groupChanged && Registration.GroupId.HasValue )
                         {
-                            foreach( var registrant in Registration.Registrants.Where( r => !r.GroupMemberId.HasValue ) )
+                            foreach ( var registrant in Registration.Registrants.Where( r => !r.GroupMemberId.HasValue ) )
                             {
                                 AddRegistrantToGroup( registrant.Id );
                             }
@@ -383,7 +383,7 @@ namespace RockWeb.Blocks.Event
                             // ...Add, reload again
                             Registration = GetRegistration( Registration.Id );
                         }
-                        
+
                         lWizardRegistrationName.Text = Registration.ToString();
                         ShowReadonlyDetails( Registration );
                     }
@@ -438,8 +438,8 @@ namespace RockWeb.Blocks.Event
                         .FirstOrDefault();
                 }
             }
-            
-            if ( pageCache != null && pageCache.ParentPage != null && pageCache.ParentPage.ParentPage != null  )
+
+            if ( pageCache != null && pageCache.ParentPage != null && pageCache.ParentPage.ParentPage != null )
             {
                 qryParams.Add( "RegistrationTemplateId", templateId.ToString() );
                 NavigateToPage( pageCache.ParentPage.ParentPage.Guid, qryParams );
@@ -455,7 +455,7 @@ namespace RockWeb.Blocks.Event
         {
             var qryParams = new Dictionary<string, string>();
             var pageCache = PageCache.Read( RockPage.PageId );
-            var instanceId = Registration != null ? Registration.RegistrationInstanceId.ToString() : PageParameter("RegistrationInstanceId");
+            var instanceId = Registration != null ? Registration.RegistrationInstanceId.ToString() : PageParameter( "RegistrationInstanceId" );
             if ( pageCache != null && pageCache.ParentPage != null )
             {
                 qryParams.Add( "RegistrationInstanceId", instanceId );
@@ -614,7 +614,7 @@ namespace RockWeb.Blocks.Event
                                     newGroupMember = groupMemberService.Get( newGroupMember.Id );
                                     newGroupMember.LoadAttributes();
 
-                                    foreach( var attr in newGroupMember.Attributes )
+                                    foreach ( var attr in newGroupMember.Attributes )
                                     {
                                         if ( existingAttributeValues.ContainsKey( attr.Key ) )
                                         {
@@ -630,6 +630,10 @@ namespace RockWeb.Blocks.Event
                             }
                         }
                     }
+                }
+                else
+                {
+                    rockContext.SaveChanges();
                 }
 
                 // Reload registration
@@ -693,10 +697,10 @@ namespace RockWeb.Blocks.Event
                 }
             }
 
-            nbDiscountPercentage.Text = discount != null && discount.DiscountPercentage != 0.0m ? (discount.DiscountPercentage * 100.0m).ToString("N0") : "";
+            nbDiscountPercentage.Text = discount != null && discount.DiscountPercentage != 0.0m ? ( discount.DiscountPercentage * 100.0m ).ToString( "N0" ) : "";
             cbDiscountAmount.Text = discount != null && discount.DiscountAmount != 0.0m ? discount.DiscountAmount.ToString( "N2" ) : "";
         }
-        
+
         protected void lbResendConfirmation_Click( object sender, EventArgs e )
         {
             if ( RegistrationId.HasValue )
@@ -727,7 +731,7 @@ namespace RockWeb.Blocks.Event
             }
         }
 
-        protected void lbViewPaymentDetails_Click( object sender, EventArgs e)
+        protected void lbViewPaymentDetails_Click( object sender, EventArgs e )
         {
             BindPaymentsGrid();
             pnlCosts.Visible = false;
@@ -981,10 +985,10 @@ namespace RockWeb.Blocks.Event
                     using ( var rockContext = new RockContext() )
                     {
                         var registrant = new RegistrationRegistrantService( rockContext ).Get( registrantId.Value );
-                        if ( registrant != null && 
+                        if ( registrant != null &&
                             registrant.PersonAlias != null &&
                             registrant.PersonAlias.Person != null &&
-                            Registration != null && 
+                            Registration != null &&
                             Registration.RegistrationInstance != null &&
                             Registration.RegistrationInstance.RegistrationTemplate != null )
                         {
@@ -1016,7 +1020,7 @@ namespace RockWeb.Blocks.Event
                             var sendErrorMessages = new List<string>();
                             if ( new SignatureDocumentTemplateService( rockContext ).SendDocument(
                                 Registration.RegistrationInstance.RegistrationTemplate.RequiredSignatureDocumentTemplate,
-                                registrant.PersonAlias.Person, 
+                                registrant.PersonAlias.Person,
                                 assignedTo,
                                 Registration.RegistrationInstance.Name,
                                 email,
@@ -1095,7 +1099,7 @@ namespace RockWeb.Blocks.Event
                             registrantService.Delete( registrant );
 
                             rockContext.SaveChanges();
-                        });
+                        } );
                     }
 
                     // Reload registration
@@ -1307,14 +1311,14 @@ namespace RockWeb.Blocks.Event
             var discountCodes = new Dictionary<string, string>();
             if ( RegistrationTemplateState != null )
             {
-                foreach( var discount in RegistrationTemplateState.Discounts.OrderBy( d => d.Code ) )
+                foreach ( var discount in RegistrationTemplateState.Discounts.OrderBy( d => d.Code ) )
                 {
                     discountCodes.AddOrIgnore( discount.Code, discount.Code + ( string.IsNullOrWhiteSpace( discount.DiscountString ) ? "" :
                         string.Format( " ({0})", discount.DiscountString ) ) );
                 }
             }
 
-            if ( !string.IsNullOrWhiteSpace( registration.DiscountCode ))
+            if ( !string.IsNullOrWhiteSpace( registration.DiscountCode ) )
             {
                 discountCodes.AddOrIgnore( registration.DiscountCode, registration.DiscountCode );
             }
@@ -1325,7 +1329,7 @@ namespace RockWeb.Blocks.Event
                 registration.RegistrationInstance.Linkages != null &&
                 registration.RegistrationInstance.Linkages.Any() )
             {
-                foreach( var group in registration.RegistrationInstance.Linkages
+                foreach ( var group in registration.RegistrationInstance.Linkages
                     .Where( l => l.Group != null )
                     .OrderBy( l => l.Group.Name )
                     .Select( l => l.Group ) )
@@ -1391,7 +1395,7 @@ namespace RockWeb.Blocks.Event
             lDiscountCode.Text = registration.DiscountCode;
 
             lDiscountPercent.Visible = registration.DiscountPercentage > 0.0m;
-            lDiscountPercent.Text = registration.DiscountPercentage.ToString("P0");
+            lDiscountPercent.Text = registration.DiscountPercentage.ToString( "P0" );
 
             lDiscountAmount.Visible = registration.DiscountAmount > 0.0m;
             lDiscountAmount.Text = registration.DiscountAmount.FormatAsCurrency();
@@ -1399,7 +1403,7 @@ namespace RockWeb.Blocks.Event
             RegistrantsState = new List<RegistrantInfo>();
             registration.Registrants.ToList().ForEach( r => RegistrantsState.Add( new RegistrantInfo( r, rockContext ) ) );
 
-            if ( registration.RegistrationInstance != null && 
+            if ( registration.RegistrationInstance != null &&
                 registration.RegistrationInstance.RegistrationTemplate != null &&
                 registration.RegistrationInstance.RegistrationTemplate.RequiredSignatureDocumentTemplateId.HasValue )
             {
@@ -1414,11 +1418,11 @@ namespace RockWeb.Blocks.Event
                     .OrderByDescending( d => d.LastStatusDate )
                     .ToList();
 
-                foreach( var registrantInfo in RegistrantsState )
+                foreach ( var registrantInfo in RegistrantsState )
                 {
                     var document = documents.Where( d => d.AppliesToPersonAlias.PersonId == registrantInfo.PersonId ).FirstOrDefault();
-                    registrantInfo.SignatureDocumentId = document != null ? document.BinaryFileId : (int?)null;
-                    registrantInfo.SignatureDocumentLastSent = document != null ? document.LastInviteDate : (DateTime?)null;
+                    registrantInfo.SignatureDocumentId = document != null ? document.BinaryFileId : ( int? ) null;
+                    registrantInfo.SignatureDocumentLastSent = document != null ? document.LastInviteDate : ( DateTime? ) null;
                 }
             }
 
@@ -1427,7 +1431,7 @@ namespace RockWeb.Blocks.Event
 
             pnlPaymentDetails.Visible = false;
             pnlPaymentInfo.Visible = false;
-            
+
             BuildRegistrationControls( true );
 
             bool anyPayments = registration.Payments.Any();
@@ -1456,7 +1460,7 @@ namespace RockWeb.Blocks.Event
                 decimal balanceDue = registration.BalanceDue;
                 hlBalance.Visible = true;
                 hlBalance.Text = balanceDue.FormatAsCurrency();
-                hlBalance.LabelType = balanceDue > 0 ? LabelType.Danger : 
+                hlBalance.LabelType = balanceDue > 0 ? LabelType.Danger :
                     balanceDue < 0 ? LabelType.Warning : LabelType.Success;
             }
             else
@@ -1609,7 +1613,7 @@ namespace RockWeb.Blocks.Event
             if ( transaction != null )
             {
                 transaction.Summary = tbSummary.Text;
-                
+
                 History.EvaluateChange( txnChanges, "Transaction Code", string.Empty, transaction.TransactionCode );
 
                 transaction.AuthorizedPersonAliasId = personAliasId;
@@ -1648,9 +1652,20 @@ namespace RockWeb.Blocks.Event
 
                 var batchService = new FinancialBatchService( rockContext );
 
+                // determine batch prefix
+                string batchPrefix = string.Empty;
+                if ( !string.IsNullOrWhiteSpace( RegistrationTemplateState.BatchNamePrefix ) )
+                {
+                    batchPrefix = RegistrationTemplateState.BatchNamePrefix;
+                }
+                else
+                {
+                    batchPrefix = GetAttributeValue( "BatchNamePrefix" );
+                }
+
                 // Get the batch
                 var batch = batchService.Get(
-                    GetAttributeValue( "BatchNamePrefix" ),
+                    batchPrefix,
                     dvCurrencyType,
                     dvCredCardType,
                     transaction.TransactionDateTime.Value,
@@ -1702,7 +1717,7 @@ namespace RockWeb.Blocks.Event
                     registration.Id,
                     registrationChanges
                 );
-                    
+
                 return true;
             }
             else
@@ -1721,7 +1736,7 @@ namespace RockWeb.Blocks.Event
         /// </summary>
         private void BindPaymentsGrid()
         {
-            if ( Registration != null  )
+            if ( Registration != null )
             {
                 using ( var rockContext = new RockContext() )
                 {
@@ -1733,7 +1748,7 @@ namespace RockWeb.Blocks.Event
                     // Get all the transactions related to this registration
                     var qry = new FinancialTransactionService( rockContext )
                         .Queryable().AsNoTracking()
-                        .Where( t => 
+                        .Where( t =>
                             t.TransactionDateTime.HasValue &&
                             t.TransactionDetails
                                 .Any( d =>
@@ -1749,11 +1764,11 @@ namespace RockWeb.Blocks.Event
                         {
                             if ( sortProperty.Direction == SortDirection.Ascending )
                             {
-                                qry = qry.OrderBy( t => t.TransactionDetails.Sum( d => (decimal?)d.Amount ) ?? 0.00M );
+                                qry = qry.OrderBy( t => t.TransactionDetails.Sum( d => ( decimal? ) d.Amount ) ?? 0.00M );
                             }
                             else
                             {
-                                qry = qry.OrderByDescending( t => t.TransactionDetails.Sum( d => (decimal?)d.Amount ) ?? 0.0M );
+                                qry = qry.OrderByDescending( t => t.TransactionDetails.Sum( d => ( decimal? ) d.Amount ) ?? 0.0M );
                             }
                         }
                         else
@@ -1771,7 +1786,8 @@ namespace RockWeb.Blocks.Event
                         TransactionDateTime = p.TransactionDateTime.Value.ToShortDateString() + "<br/>" +
                             p.TransactionDateTime.Value.ToShortTimeString(),
                         Details = FormatDetails( p ),
-                        p.TotalAmount });
+                        p.TotalAmount
+                    } );
                     gPayments.DataBind();
                 }
             }
@@ -1780,7 +1796,7 @@ namespace RockWeb.Blocks.Event
         private string FormatDetails( FinancialTransaction txn )
         {
             var details = new List<string>();
-            
+
             if ( txn.AuthorizedPersonAlias != null && txn.AuthorizedPersonAlias.Person != null )
             {
                 details.Add( txn.AuthorizedPersonAlias.Person.FullNameFormalReversed );
@@ -1831,10 +1847,10 @@ namespace RockWeb.Blocks.Event
 
                 var instances = otherRegistrationInstances
                         .Select( i => new
-                            {
-                                Value = i.Id,
-                                Text = i.Name
-                            } )
+                        {
+                            Value = i.Id,
+                            Text = i.Name
+                        } )
                         .ToList();
 
                 ddlNewRegistrationInstance.DataSource = instances;
@@ -1953,7 +1969,8 @@ namespace RockWeb.Blocks.Event
                     registration.RegistrationInstance != null &&
                     registration.RegistrationInstance.AccountId.HasValue &&
                     registration.PersonAliasId.HasValue &&
-                    RegistrationTemplateState != null )
+                    RegistrationTemplateState != null &&
+                    EditAllowed )
                 {
                     lbAddPayment.Visible = true;
                     lbProcessPayment.Visible = RegistrationTemplateState.FinancialGateway != null;
@@ -2022,7 +2039,7 @@ namespace RockWeb.Blocks.Event
             if ( registrant.PersonId.HasValue )
             {
                 var aProfileLink = new HtmlAnchor();
-                aProfileLink.HRef = ResolveRockUrl( string.Format( "~/Person/{0}", registrant.PersonId.Value ) ); 
+                aProfileLink.HRef = ResolveRockUrl( string.Format( "~/Person/{0}", registrant.PersonId.Value ) );
                 divLabels.Controls.Add( aProfileLink );
                 aProfileLink.AddCssClass( "btn btn-default btn-xs margin-l-sm" );
                 var iProfileLink = new HtmlGenericControl( "i" );
@@ -2089,11 +2106,11 @@ namespace RockWeb.Blocks.Event
             divBody.Controls.Add( divRow );
 
             var divLeftColumn = new HtmlGenericControl( "div" );
-            divLeftColumn.AddCssClass( "col-md-6");
+            divLeftColumn.AddCssClass( "col-md-6" );
             divRow.Controls.Add( divLeftColumn );
 
             var divRightColumn = new HtmlGenericControl( "div" );
-            divRightColumn.AddCssClass( "col-md-6");
+            divRightColumn.AddCssClass( "col-md-6" );
             divRow.Controls.Add( divRightColumn );
 
             if ( RegistrationTemplateState != null &&
@@ -2140,9 +2157,9 @@ namespace RockWeb.Blocks.Event
                 }
             }
 
-            foreach( var form in RegistrationTemplateState.Forms.OrderBy( f => f.Order ) )
+            foreach ( var form in RegistrationTemplateState.Forms.OrderBy( f => f.Order ) )
             {
-                foreach( var field in form.Fields.OrderBy( f => f.Order ) )
+                foreach ( var field in form.Fields.OrderBy( f => f.Order ) )
                 {
                     var fieldControl = BuildRegistrantFieldControl( field, registrant, setValues );
                     if ( fieldControl != null )
@@ -2152,7 +2169,7 @@ namespace RockWeb.Blocks.Event
                 }
             }
 
-            if ( registrant.Cost > 0.0m)
+            if ( registrant.Cost > 0.0m )
             {
                 var rlCost = new RockLiteral();
                 rlCost.ID = string.Format( "rlCost_{0}", registrant.Id );

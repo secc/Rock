@@ -369,7 +369,7 @@ namespace RockWeb.Blocks.CheckIn.Config
                         return;
                     }
 
-                    groupService.Delete( group );
+                    group.IsActive = false;
                     rockContext.SaveChanges();
 
                     Rock.CheckIn.KioskDevice.FlushAll();
@@ -613,6 +613,16 @@ namespace RockWeb.Blocks.CheckIn.Config
             hfIsDirty.Value = "false";
         }
 
+        /// <summary>
+        /// Handles the the Check Changed event of the Show Inactive button.
+        /// </summary>
+        /// <param name="sender">The source of the event.</param>
+        /// <param name="e">The <see cref="EventArgs"/> instance containing the event data.</param>
+        protected void cbShowInactive_CheckedChanged( object sender, EventArgs e )
+        {
+            BuildRows( true );
+        }
+
         #endregion
 
         #endregion
@@ -692,12 +702,20 @@ namespace RockWeb.Blocks.CheckIn.Config
 
                 // Find the groups of this type, who's parent is null, or another group type ( "root" groups ).
                 var allGroupIds = groupType.Groups.Select( g => g.Id ).ToList();
-                foreach ( var childGroup in groupType.Groups
+                IEnumerable<Group> childGroups = groupType.Groups
                     .Where( g =>
-                        !g.ParentGroupId.HasValue ||
-                        !allGroupIds.Contains( g.ParentGroupId.Value ) )
+                         !g.ParentGroupId.HasValue ||
+                        !allGroupIds.Contains( g.ParentGroupId.Value ) );
+
+                if ( !cbShowInactive.Checked )
+                {
+                    childGroups = childGroups.Where( g => g.IsActive );
+                }
+                childGroups = childGroups
                     .OrderBy( a => a.Order )
-                    .ThenBy( a => a.Name ) )
+                    .ThenBy( a => a.Name );
+
+                foreach ( var childGroup in childGroups )
                 {
                     BuildCheckinGroupRow( childGroup, checkinAreaRow, setValues );
                 }
@@ -721,11 +739,19 @@ namespace RockWeb.Blocks.CheckIn.Config
                     checkinGroupRow.Expanded = true; // _expandedRows.Contains( group.Guid );
                     checkinGroupRow.Selected = checkinGroup.Visible && _currentGroupGuid.HasValue && group.Guid.Equals( _currentGroupGuid.Value );
                 }
+                IEnumerable<Group> childGroups = group.Groups
+                    .Where( g => g.GroupTypeId == group.GroupTypeId );
 
-                foreach ( var childGroup in group.Groups
-                    .Where( g => g.GroupTypeId == group.GroupTypeId )
+                if ( !cbShowInactive.Checked )
+                {
+                    childGroups = childGroups.Where( g => g.IsActive );
+                }
+
+                childGroups = childGroups
                     .OrderBy( a => a.Order )
-                    .ThenBy( a => a.Name ) )
+                    .ThenBy( a => a.Name );
+
+                foreach ( var childGroup in childGroups )
                 {
                     BuildCheckinGroupRow( childGroup, checkinGroupRow, setValues );
                 }
@@ -805,7 +831,7 @@ namespace RockWeb.Blocks.CheckIn.Config
                 rockContext.SaveChanges();
             }
 
-            foreach( int id in groupTypeIds )
+            foreach ( int id in groupTypeIds )
             {
                 GroupTypeCache.Flush( id );
             }
@@ -819,11 +845,11 @@ namespace RockWeb.Blocks.CheckIn.Config
         {
             if ( groupRow.Parent is CheckinGroupRow )
             {
-                ( (CheckinGroupRow)groupRow.Parent ).Expanded = true;
+                ( ( CheckinGroupRow ) groupRow.Parent ).Expanded = true;
             }
             else if ( groupRow.Parent is CheckinAreaRow )
             {
-                ( (CheckinAreaRow)groupRow.Parent ).Expanded = true;
+                ( ( CheckinAreaRow ) groupRow.Parent ).Expanded = true;
             }
         }
 
@@ -1018,6 +1044,5 @@ namespace RockWeb.Blocks.CheckIn.Config
 
         }
         #endregion
-
     }
 }
