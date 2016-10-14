@@ -38,7 +38,9 @@
     <ContentTemplate>
 
         <asp:Panel ID="pnlDetails" runat="server" CssClass="panel panel-block">
-            <div class="panel-heading"><h3 class="panel-title"><i class="fa fa-list"></i> Areas and Groups</h3></div>
+            <div class="panel-heading"><h3 class="panel-title"><i class="fa fa-list"></i> Areas and Groups</h3>
+                <div class="pull-right"><asp:CheckBox Text="Show Inactive Groups" ID="cbShowInactive" AutoPostBack="true" OnCheckedChanged="cbShowInactive_CheckedChanged" runat="server" /></div>
+            </div>
             <div class="panel-body">
     
                 <Rock:NotificationBox ID="nbDeleteWarning" runat="server" NotificationBoxType="Warning" />
