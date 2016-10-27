@@ -1044,7 +1044,7 @@ namespace Rock.Migrations.Migrations {
         ///		* MonthDate
         ///		* Year Date
         ///	&lt;/returns&gt;
-        ///	&lt;param name=&apos;GroupTypeId&apos; datatype=&apos;int&apos;&gt;The C [rest of string was truncated]&quot;;.
+        ///	&lt;param name=&apos;GroupTypeId&apos; datatype=&apos;int&apos;&gt;The Check-in Area Gro [rest of string was truncated]&quot;;.
         /// </summary>
         public static string _201602161036322_AttendanceAnalyticsQuery_AttendeeDates {
             get {
@@ -1068,7 +1068,7 @@ namespace Rock.Migrations.Migrations {
         ///		* TimeAttending
         ///		* SundayDate
         ///	&lt;/returns&gt;
-        ///	&lt;param [rest of string was truncated]&quot;;.
+        ///	&lt;param name=&apos;GroupTyp [rest of string was truncated]&quot;;.
         /// </summary>
         public static string _201602161036322_AttendanceAnalyticsQuery_AttendeeFirstDates {
             get {
@@ -1091,7 +1091,7 @@ namespace Rock.Migrations.Migrations {
         ///		* TimeAttending
         ///		* SundayDate
         ///	&lt;/returns&gt;
-        ///	 [rest of string was truncated]&quot;;.
+        ///	&lt;param name=&apos;G [rest of string was truncated]&quot;;.
         /// </summary>
         public static string _201602161036322_AttendanceAnalyticsQuery_AttendeeLastAttendance {
             get {
@@ -1115,7 +1115,7 @@ namespace Rock.Migrations.Migrations {
         ///		* NickName
         ///		* LastName
         ///	&lt;/returns&gt;
-        ///	&lt;param name=&apos;GroupTypeId&apos; datatype=&apos;int&apos;&gt;The Check-in Area Group Type Id (only attendance for this a [rest of string was truncated]&quot;;.
+        ///	&lt;param name=&apos;GroupTypeId&apos; datatype=&apos;int&apos;&gt;The Check-in Area Group Type Id (only attendance for this are will be incl [rest of string was truncated]&quot;;.
         /// </summary>
         public static string _201602161036322_AttendanceAnalyticsQuery_Attendees {
             get {
@@ -1146,7 +1146,7 @@ namespace Rock.Migrations.Migrations {
         ///	&lt;/code&gt;
         ///&lt;/doc&gt;
         ///*/
-        ///CREATE VI [rest of string was truncated]&quot;;.
+        ///CREATE VIEW [vCheckin_GroupType [rest of string was truncated]&quot;;.
         /// </summary>
         public static string _201602161036322_AttendanceAnalyticsQuery_GroupTypeAttendance {
             get {
@@ -1165,7 +1165,7 @@ namespace Rock.Migrations.Migrations {
         ///DROP INDEX [IX_CreatedByPersonAliasId] ON [dbo].[Attendance]
         ///GO
         ///
-        ///IF EXISTS ( SELECT * FROM sys.indexes WHERE name=&apos;IX_DeviceId&apos; AND object_id = OBJECT_ID(N&apos;[dbo].[ [rest of string was truncated]&quot;;.
+        ///IF EXISTS ( SELECT * FROM sys.indexes WHERE name=&apos;IX_DeviceId&apos; AND object_id = OBJECT_ID(N&apos;[dbo].[Attendance [rest of string was truncated]&quot;;.
         /// </summary>
         public static string _201602161036322_AttendanceAnalyticsQuery_Indexes {
             get {
@@ -1187,7 +1187,7 @@ namespace Rock.Migrations.Migrations {
         ///		* PersonId 
         ///		* SundayDate - Last time attended
         ///	&lt;/returns&gt;
-        ///	&lt;param name=&apos;GroupTypeId&apos; datatyp [rest of string was truncated]&quot;;.
+        ///	&lt;param name=&apos;GroupTypeId&apos; datatype=&apos;int&apos;&gt;The C [rest of string was truncated]&quot;;.
         /// </summary>
         public static string _201602161036322_AttendanceAnalyticsQuery_NonAttendees {
             get {
@@ -1287,7 +1287,7 @@ namespace Rock.Migrations.Migrations {
         ///		* MonthDate
         ///		* Year Date
         ///	&lt;/returns&gt;
-        ///	&lt;param name=&apos;GroupTypeId&apos; datatype=&apos;int&apos;&gt;The C [rest of string was truncated]&quot;;.
+        ///	&lt;param name=&apos;GroupTypeId&apos; datatype=&apos;int&apos;&gt;The Check-in Area Gro [rest of string was truncated]&quot;;.
         /// </summary>
         public static string _201603241157527_AttendanceAnalyticsScheduleFilter_AttendeeDates {
             get {
@@ -1311,7 +1311,7 @@ namespace Rock.Migrations.Migrations {
         ///		* TimeAttending
         ///		* SundayDate
         ///	&lt;/returns&gt;
-        ///	&lt;param [rest of string was truncated]&quot;;.
+        ///	&lt;param name=&apos;GroupTyp [rest of string was truncated]&quot;;.
         /// </summary>
         public static string _201603241157527_AttendanceAnalyticsScheduleFilter_AttendeeFirstDates {
             get {
@@ -1334,7 +1334,7 @@ namespace Rock.Migrations.Migrations {
         ///		* TimeAttending
         ///		* SundayDate
         ///	&lt;/returns&gt;
-        ///	 [rest of string was truncated]&quot;;.
+        ///	&lt;param name=&apos;G [rest of string was truncated]&quot;;.
         /// </summary>
         public static string _201603241157527_AttendanceAnalyticsScheduleFilter_AttendeeLastAttendance {
             get {
@@ -1358,7 +1358,7 @@ namespace Rock.Migrations.Migrations {
         ///		* NickName
         ///		* LastName
         ///	&lt;/returns&gt;
-        ///	&lt;param name=&apos;GroupTypeId&apos; datatype=&apos;int&apos;&gt;The Check-in Area Group Type Id (only attendance for this a [rest of string was truncated]&quot;;.
+        ///	&lt;param name=&apos;GroupTypeId&apos; datatype=&apos;int&apos;&gt;The Check-in Area Group Type Id (only attendance for this are will be incl [rest of string was truncated]&quot;;.
         /// </summary>
         public static string _201603241157527_AttendanceAnalyticsScheduleFilter_Attendees {
             get {
@@ -1380,7 +1380,7 @@ namespace Rock.Migrations.Migrations {
         ///		* PersonId 
         ///		* SundayDate - Last time attended
         ///	&lt;/returns&gt;
-        ///	&lt;param name=&apos;GroupTypeId&apos; datatyp [rest of string was truncated]&quot;;.
+        ///	&lt;param name=&apos;GroupTypeId&apos; datatype=&apos;int&apos;&gt;The C [rest of string was truncated]&quot;;.
         /// </summary>
         public static string _201603241157527_AttendanceAnalyticsScheduleFilter_NonAttendees {
             get {
@@ -1402,7 +1402,8 @@ namespace Rock.Migrations.Migrations {
         ///
         ///	&lt;returns&gt;
         ///	&lt;/returns&gt;
-        ///	&lt;param name=&quot;Old Id&quot; datatype=&quot;int&quot;&gt;The person id of the non-primary Person being merged&lt;/param&gt;        /// [rest of string was truncated]&quot;;.
+        ///	&lt;param name=&quot;Old Id&quot; datatype=&quot;int&quot;&gt;The person id of the non-primary Person being merged&lt;/param&gt;
+        ///	&lt;param name= [rest of string was truncated]&quot;;.
         /// </summary>
         public static string _201603241157527_spCrm_PersonMerge {
             get {
@@ -1421,7 +1422,7 @@ namespace Rock.Migrations.Migrations {
         ///GO
         ///
         ///IF EXISTS ( SELECT * FROM sys.indexes WHERE name=&apos;IX_ForeignGuid&apos; AND object_id = OBJECT_ID(N&apos;[dbo].[History]&apos;) )
-        ///DR [rest of string was truncated]&quot;;.
+        ///DROP INDEX [ [rest of string was truncated]&quot;;.
         /// </summary>
         public static string _201603241157527_UpdateIndexes {
             get {
@@ -1437,7 +1438,7 @@ namespace Rock.Migrations.Migrations {
         ///
         ///    UPDATE [Attribute] SET [EntityTypeQualifierValue] = CAST( @CheckInTemplatePurposeId AS varchar) 
         ///    WHERE [EntityTypeId] = @GroupTypeEntityTypeId
-        ///    AND [EntityT [rest of string was truncated]&quot;;.
+        ///    AND [EntityTypeQual [rest of string was truncated]&quot;;.
         /// </summary>
         public static string _201604251529438_CheckinEnhancement {
             get {
@@ -1456,7 +1457,8 @@ namespace Rock.Migrations.Migrations {
         ///        ,&apos;320864D0-8872-4E94-A0C0-B53E03645EE4&apos;
         ///        ,&apos;B89605CF-C111-4A1B-9228-29A78EA9DA25&apos;
         ///        ,&apos;8458375D-3F98-461C-ACF1-1A1CF08806B8&apos;
-        ///        ,&apos;939ADB18-D2A9-4444-BB07-4E33C1 [rest of string was truncated]&quot;;.
+        ///        ,&apos;939ADB18-D2A9-4444-BB07-4E33C14EFCFD&apos;
+        ///   [rest of string was truncated]&quot;;.
         /// </summary>
         public static string _201604251529438_UpdateLegacyLava {
             get {
@@ -1480,7 +1482,7 @@ namespace Rock.Migrations.Migrations {
         ///		* TimeAttending
         ///		* SundayDate
         ///	&lt;/returns&gt;
-        ///	&lt;param [rest of string was truncated]&quot;;.
+        ///	&lt;param name=&apos;GroupTyp [rest of string was truncated]&quot;;.
         /// </summary>
         public static string _201604281205403_AttendanceAnalyticsGroupTypes_AttendeeFirstDates {
             get {
@@ -1511,7 +1513,7 @@ namespace Rock.Migrations.Migrations {
         ///	&lt;/code&gt;
         ///&lt;/doc&gt;
         ///*/
-        ///CREATE VI [rest of string was truncated]&quot;;.
+        ///CREATE VIEW [vCheckin_GroupType [rest of string was truncated]&quot;;.
         /// </summary>
         public static string _201604281205403_AttendanceAnalyticsGroupTypes_GroupTypeAttendance {
             get {
@@ -1533,7 +1535,7 @@ namespace Rock.Migrations.Migrations {
         ///		* PersonId 
         ///		* SundayDate - Last time attended
         ///	&lt;/returns&gt;
-        ///	&lt;param name=&apos;GroupTypeIds&apos; dataty [rest of string was truncated]&quot;;.
+        ///	&lt;param name=&apos;GroupTypeIds&apos; datatype=&apos;varchar(m [rest of string was truncated]&quot;;.
         /// </summary>
         public static string _201604281205403_AttendanceAnalyticsGroupTypes_NonAttendee {
             get {
@@ -1553,7 +1555,8 @@ namespace Rock.Migrations.Migrations {
         ///		people from being an eRA. It should not be modified as it will be updated in the
         ///		future to meet additional requirements.
         ///
-        ///		The goal of the query is to return both those that meet the eRA requiremen [rest of string was truncated]&quot;;.
+        ///		The goal of the query is to return both those that meet the eRA requirements as well
+        /// [rest of string was truncated]&quot;;.
         /// </summary>
         public static string _201605021826400_FamilyAnalyticsUpdates_spCrm_FamilyAnalyticsEraDataset {
             get {
@@ -1582,7 +1585,7 @@ namespace Rock.Migrations.Migrations {
         ///&lt;/doc&gt;
         ///*/
         ///
-        ///CREATE PROCEDURE [dbo [rest of string was truncated]&quot;;.
+        ///CREATE PROCEDURE [dbo].[spCrm_FamilyAnaly [rest of string was truncated]&quot;;.
         /// </summary>
         public static string _201605021826400_FamilyAnalyticsUpdates_spCrm_spCrm_FamilyAnalyticsAttendance {
             get {
@@ -1602,7 +1605,7 @@ namespace Rock.Migrations.Migrations {
         ///		attributes. Below are a few points of interest on the logic.
         ///
         ///		+ A child&apos;s date will only be calculated looking at their check-in data.
-        ///		+ An adult&apos;s date will be calculated looking at t [rest of string was truncated]&quot;;.
+        ///		+ An adult&apos;s date will be calculated looking at the check-in [rest of string was truncated]&quot;;.
         /// </summary>
         public static string _201605021826400_FamilyAnalyticsUpdates_spCrm_spCrm_FamilyAnalyticsUpdateVisitDates {
             get {
@@ -1620,7 +1623,7 @@ namespace Rock.Migrations.Migrations {
         ///	&lt;summary&gt;
         /// 		This function returns the attendance data needed for the Attendance Badge. If no family role (adult/child)
         ///		is given it is looked up.  If the individual is an adult it will return family attendance if it&apos;s a child
-        ///		it will return the individual&apos;s attendance. If a person is in two families once a [rest of string was truncated]&quot;;.
+        ///		it will return the individual&apos;s attendance. If a person is in two families once as a chil [rest of string was truncated]&quot;;.
         /// </summary>
         public static string _201605022007364_AttendanceBadgeSpUpdates_spCheckin_BadgeAttendance {
             get {
@@ -1643,7 +1646,8 @@ namespace Rock.Migrations.Migrations {
         ///	    &lt;returns&gt;
         ///		    * Number of weeks
         ///	    &lt;/returns&gt;
-        ///	    &lt;param name=&quot;&quot;PersonId&quot;&quot; datatype=&quot;&quot;int&quot;&quot;&gt;The person id to use [rest of string was truncated]&quot;;.
+        ///	    &lt;param name=&quot;&quot;PersonId&quot;&quot; datatype=&quot;&quot;int&quot;&quot;&gt;The person id to use&lt;/param&gt;
+        ///	     [rest of string was truncated]&quot;;.
         /// </summary>
         public static string _201605022007364_AttendanceBadgeSpUpdates_spCheckin_WeeksAttendedInDuration {
             get {
@@ -1673,7 +1677,7 @@ namespace Rock.Migrations.Migrations {
         ///		* CustomMessage1
         ///		* CustomMessage2
         ///	&lt;/returns&gt;
-        ///	&lt;par [rest of string was truncated]&quot;;.
+        ///	&lt;param name=&apos;StartDate&apos; d [rest of string was truncated]&quot;;.
         /// </summary>
         public static string _201605180005401_ScheduledTxnSource_ContributionStatementQuery {
             get {
@@ -1690,7 +1694,7 @@ namespace Rock.Migrations.Migrations {
         ///        Example1 (specific person): Bob Smith 
         ///        Example2 (family with kids): Bill and Sally Jones
         ///        Example3 (different lastnames): Jim Jackson and Betty Sanders
-        ///        Example4 (just kids [rest of string was truncated]&quot;;.
+        ///        Example4 (just kids): Joey, [rest of string was truncated]&quot;;.
         /// </summary>
         public static string _201605180005401_ScheduledTxnSource_GetFamilyTitle {
             get {
@@ -1708,7 +1712,7 @@ namespace Rock.Migrations.Migrations {
         ///-- Fix the ordering of the Person Search workflow activity
         ///DECLARE @ActivityTypeId int = ( SELECT TOP 1 [Id] FROM [WorkflowActivityType] WHERE [Guid] = &apos;EB744DF1-E454-482C-B111-80A54EF8A674&apos; )
         ///
-        ///DECLARE @EntityTypeId int = ( SELECT TOP 1 [Id] FROM [EntityType] WHERE [Name] = &apos;Rock.Workflow.Action.CheckIn.LoadLo [rest of string was truncated]&quot;;.
+        ///DECLARE @EntityTypeId int = ( SELECT TOP 1 [Id] FROM [EntityType] WHERE [Name] = &apos;Rock.Workflow.Action.CheckIn.LoadLocations&apos;  [rest of string was truncated]&quot;;.
         /// </summary>
         public static string _201605232234462_FamilyCheckinType {
             get {
@@ -1733,7 +1737,7 @@ namespace Rock.Migrations.Migrations {
         ///	, @EndDate datetime = NULL
         ///	, @MinAmount decimal(18,2) = NULL
         ///	, @MaxAmount decimal(18,2) = NULL
-        ///	, @ [rest of string was truncated]&quot;;.
+        ///	, @AccountIds varch [rest of string was truncated]&quot;;.
         /// </summary>
         public static string _201605311330117_GivingAnalyticsLastGift {
             get {
@@ -1758,7 +1762,7 @@ namespace Rock.Migrations.Migrations {
         ///	, @StartDate datetime = NULL
         ///	, @EndDate datetime = NULL
         ///	, @MinAmountPledged decimal(18,2) = NULL
-        ///	, @MaxAmountP [rest of string was truncated]&quot;;.
+        ///	, @MaxAmountPledged decimal(1 [rest of string was truncated]&quot;;.
         /// </summary>
         public static string _201606061302147_PledgeAnalyticsChildAccounts {
             get {
@@ -1776,11 +1780,25 @@ namespace Rock.Migrations.Migrations {
         ///WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
         ///GO
         ///
-        ///I [rest of string was truncated]&quot;;.
+        ///IF EXISTS  [rest of string was truncated]&quot;;.
         /// </summary>
         public static string _201606231511599_RegistrationWorkflow_Indexes {
             get {
                 return ResourceManager.GetString("_201606231511599_RegistrationWorkflow_Indexes", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to /****** Object:  StoredProcedure [dbo].[spCheckin_AttendanceAnalyticsQuery_AttendeeLastAttendance]    Script Date: 10/27/2016 9:07:30 AM ******/
+        ///IF EXISTS ( SELECT * FROM [sysobjects] WHERE [id] = OBJECT_ID(N&apos;[dbo].[spCheckin_AttendanceAnalyticsQuery_AttendeeLastAttendance]&apos;) AND OBJECTPROPERTY([id], N&apos;IsProcedure&apos;) = 1 )
+        ///DROP PROCEDURE [dbo].[spCheckin_AttendanceAnalyticsQuery_AttendeeLastAttendance]
+        ///GO
+        ///
+        ////****** Object:  StoredProcedure [dbo].[spCheckin_AttendanceAnalyticsQuery_AttendeeLastAttendance] [rest of string was truncated]&quot;;.
+        /// </summary>
+        public static string _201610271014123_AttendeeLastAttendance {
+            get {
+                return ResourceManager.GetString("_201610271014123_AttendeeLastAttendance", resourceCulture);
             }
         }
     }
