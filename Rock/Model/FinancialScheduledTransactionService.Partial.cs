@@ -273,6 +273,7 @@ namespace Rock.Model
                 var batchTxnChanges = new Dictionary<Guid, List<string>>();
                 var batchBatchChanges = new Dictionary<Guid, List<string>>();
                 var scheduledTransactionIds = new List<int>();
+                List<FinancialTransaction> transactionsWithAttributes = new List<FinancialTransaction>();
 
                 foreach ( var payment in payments.Where( p => p.Amount > 0.0M ) )
                 {
@@ -295,6 +296,7 @@ namespace Rock.Model
                             scheduledTransaction.IsActive = payment.ScheduleActive;
 
                             var transaction = new FinancialTransaction();
+
                             transaction.FinancialPaymentDetail = new FinancialPaymentDetail();
 
                             transaction.Guid = Guid.NewGuid();
@@ -312,6 +314,17 @@ namespace Rock.Model
                             if ( txnAmount < 0.0M )
                             {
                                 transaction.Summary = "Reversal for previous transaction that failed during processing." + Environment.NewLine;
+                            }
+
+                            // Set the attributes of the transaction
+                            if (payment.Attributes != null && payment.Attributes.Count > 0)
+                            {
+                                transaction.LoadAttributes();
+                                foreach ( var attribute in payment.Attributes )
+                                {
+                                    transaction.SetAttributeValue( attribute.Key, attribute.Value );
+                                }
+                                transactionsWithAttributes.Add( transaction );
                             }
 
                             var currencyTypeValue = payment.CurrencyTypeValue;
@@ -466,6 +479,15 @@ namespace Rock.Model
                 }
 
                 rockContext.SaveChanges();
+
+                if ( transactionsWithAttributes.Count > 0 )
+                { 
+                    foreach( var transaction in transactionsWithAttributes)
+                    {
+                        transaction.SaveAttributeValues( rockContext );
+                    }
+                    rockContext.SaveChanges();
+                }
 
                 // Queue a transaction to update the status of all affected scheduled transactions
                 var updatePaymentStatusTxn = new Rock.Transactions.UpdatePaymentStatusTransaction( gateway.Id, scheduledTransactionIds );
