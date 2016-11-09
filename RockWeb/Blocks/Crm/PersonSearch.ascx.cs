@@ -259,6 +259,10 @@ namespace RockWeb.Blocks.Crm
                         }
                 }
 
+                var personIdList = people.Select( p => p.Id ).ToList();
+
+                people = personService.Queryable(true).Where( p => personIdList.Contains( p.Id ) );
+				
                 SortProperty sortProperty = gPeople.SortProperty;
                 if ( sortProperty != null )
                 {

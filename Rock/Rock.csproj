@@ -328,6 +328,7 @@
     <Compile Include="Model\CodeGenerated\ConnectionActivityTypeService.cs" />
     <Compile Include="Model\CodeGenerated\ConnectionOpportunityCampusService.cs" />
     <Compile Include="Model\CodeGenerated\ConnectionOpportunityConnectorGroupService.cs" />
+    <Compile Include="Model\CodeGenerated\ConnectionOpportunityGroupConfigService.cs" />
     <Compile Include="Model\CodeGenerated\ConnectionOpportunityGroupService.cs" />
     <Compile Include="Model\CodeGenerated\ConnectionOpportunityService.cs" />
     <Compile Include="Model\CodeGenerated\ConnectionRequestActivityService.cs" />
@@ -406,9 +407,10 @@
     <Compile Include="Model\CodeGenerated\SignatureDocumentTemplateService.cs" />
     <Compile Include="Model\CommunicationService.Partial.cs" />
     <Compile Include="Model\ConnectionOpportunityCampus.cs" />
+    <Compile Include="Model\ConnectionOpportunityConnectorGroup.cs" />
+    <Compile Include="Model\ConnectionOpportunityGroupConfig.cs" />
     <Compile Include="Model\ConnectionRequest.cs" />
     <Compile Include="Model\ConnectionOpportunityGroup.cs" />
-    <Compile Include="Model\ConnectionOpportunityConnectorGroups.cs" />
     <Compile Include="Model\ConnectionActivityType.cs">
       <SubType>Code</SubType>
     </Compile>
@@ -608,6 +610,7 @@
     <Compile Include="Web\UI\Controls\Checkin Configuration Controls\CheckinGroup.cs" />
     <Compile Include="Web\UI\Controls\Checkin Configuration Controls\CheckinGroupRow.cs" />
     <Compile Include="Web\UI\Controls\IRockControlAdditionalRendering.cs" />
+    <Compile Include="Web\UI\Controls\PanelDrawer.cs" />
     <Compile Include="Web\UI\Controls\Pickers\CheckinGroupPicker.cs" />
     <Compile Include="Web\UI\Controls\Pickers\DefinedValuesPicker.cs" />
     <Compile Include="Web\UI\Controls\Pickers\DefinedValuePicker.cs" />

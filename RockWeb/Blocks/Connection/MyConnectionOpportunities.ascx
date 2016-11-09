@@ -25,12 +25,8 @@
                     My Connection Requests</h1>
 
                 <div class="pull-right">
-                    <div class="pull-left badge-legend padding-r-md">
-                        <span class="pull-left badge badge-info js-legend-badge" data-toggle="tooltip" data-original-title="Assigned To You">&nbsp;</span>
-                        <span class="pull-left badge badge-warning js-legend-badge" data-toggle="tooltip" data-original-title="Unassigned Item">&nbsp;</span>
-                        <span class="pull-left badge badge-critical js-legend-badge" data-toggle="tooltip" data-original-title="Critical Status">&nbsp;</span>
-                        <asp:Literal ID="lIdleToolTip" runat="server" />
-                    </div>
+                    <asp:Literal ID="lStatusBarContent" runat="server" />
+                   
                     <Rock:Toggle ID="tglMyOpportunities" CssClass="margin-r-md pull-left" runat="server" OnText="My Requests" ActiveButtonCssClass="btn-info" ButtonSizeCssClass="btn-xs" OffText="All Requests" AutoPostBack="true" OnCheckedChanged="tglMyOpportunities_CheckedChanged" Checked="true" />
                     <asp:LinkButton ID="lbConnectionTypes" runat="server" CssClass=" pull-right" OnClick="lbConnectionTypes_Click" CausesValidation="false"><i class="fa fa-gear"></i></asp:LinkButton>
                 </div>
@@ -46,16 +42,9 @@
                             <ul>
                                 <asp:Repeater ID="rptConnectionOpportunities" runat="server" OnItemCommand="rptConnectionOpportunities_ItemCommand">
                                     <ItemTemplate>
-                                        <li class='<%# SelectedOpportunityId.HasValue && (int)Eval("Id") == SelectedOpportunityId.Value ? "active" : "" %> block-status'>
+                                        <li class='<%# SelectedOpportunityId.HasValue && (int)Eval("Id") == SelectedOpportunityId.Value ? "selected" : "" %> block-status <%# (bool)Eval("IsActive") ? "" : "inactive-item"  %>' title='<%# (bool)Eval("IsActive") ? "" : "This opportunity is inactive."  %>' >
                                             <asp:LinkButton ID="lbConnectionOpportunity" runat="server" CommandArgument='<%# Eval("Id") %>' CommandName="Display">
-                                                <i class='<%# Eval("IconCssClass") %>'></i>
-                                                <h3><%# Eval("Name") %> </h3>
-                                                <div class="status-list">
-                                                    <span class="badge badge-info"><%# ((int)Eval("AssignedToYou")).ToString("#,###,###") %></span>
-                                                    <span class="badge badge-warning"><%# ((int)Eval("UnassignedCount")).ToString("#,###,###") %></span>
-                                                    <span class="badge badge-critical"><%# ((int)Eval("CriticalCount")).ToString("#,###,###") %></span>
-                                                    <span class="badge badge-danger"><%# ((int)Eval("IdleCount")).ToString("#,###,###") %></span>
-                                                </div>
+                                                <%# this.GetOpportunitySummaryHtml( Container.DataItem as OpportunitySummary ) %>
                                             </asp:LinkButton>
                                         </li>
                                     </ItemTemplate>
@@ -93,7 +82,11 @@
                             <Rock:SelectField />
                             <Rock:RockBoundField DataField="Name" HeaderText="Name" SortExpression="PersonAlias.Person.LastName,PersonAlias.Person.NickName" />
                             <Rock:RockBoundField DataField="Campus" HeaderText="Campus" SortExpression="Campus.Name" />
-                            <Rock:RockBoundField DataField="Group" HeaderText="Group" SortExpression="AssignedGroup.Name" />
+                            <Rock:RockTemplateField HeaderText="Group" SortExpression="AssignedGroup.Name">
+                                <ItemTemplate>
+                                    <%# FormatGroupName( Eval("Group"), Eval("GroupRole"), Eval("GroupStatus") )  %>
+                                </ItemTemplate>
+                            </Rock:RockTemplateField>
                             <Rock:RockBoundField DataField="Connector" HeaderText="Connector" SortExpression="Connector.PersonAlias.Person.LastName,Connector.PersonAlias.Person.NickName" />
                             <Rock:RockBoundField DataField="LastActivity" HeaderText="Last Activity" HtmlEncode="false" />
                             <Rock:RockBoundField DataField="LastActivityNote" HeaderText="Last Activity Note" HtmlEncode="false" />

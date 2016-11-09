@@ -54,6 +54,7 @@ namespace RockWeb.Blocks.Communication
     [IntegerField( "Display Count", "The initial number of recipients to display prior to expanding list", false, 0, "", 3  )]
     [BooleanField( "Send When Approved", "Should communication be sent once it's approved (vs. just being queued for scheduled job to send)?", true, "", 4 )]
     [CustomDropdownListField("Mode", "The mode to use ( 'Simple' mode will prevent uers from searching/adding new people to communication).", "Full,Simple", true, "Full", "", 5)]
+    [BooleanField( "Allow CC/Bcc", "Allow CC and Bcc addresses to be entered for email communications?", false, "", 6, "AllowCcBcc" )]
     public partial class CommunicationEntry : RockBlock
     {
 
@@ -906,6 +907,10 @@ namespace RockWeb.Blocks.Communication
             if (component != null)
             {
                 var mediumControl = component.GetControl( !_fullMode );
+                if (mediumControl is Rock.Web.UI.Controls.Communication.Email  )
+                {
+                    ( ( Rock.Web.UI.Controls.Communication.Email ) mediumControl ).AllowCcBcc = GetAttributeValue( "AllowCcBcc" ).AsBoolean();
+                }
                 mediumControl.ID = "commControl";
                 mediumControl.IsTemplate = false;
                 mediumControl.AdditionalMergeFields = this.AdditionalMergeFields.ToList();

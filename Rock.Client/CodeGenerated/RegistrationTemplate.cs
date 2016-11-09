@@ -139,6 +139,9 @@ namespace Rock.Client
         public string RegistrationTerm { get; set; }
 
         /// <summary />
+        public int? RegistrationWorkflowTypeId { get; set; }
+
+        /// <summary />
         public string ReminderEmailTemplate { get; set; }
 
         /// <summary />
@@ -160,6 +163,9 @@ namespace Rock.Client
         public bool? SetCostOnInstance { get; set; }
 
         /// <summary />
+        public bool ShowCurrentFamilyMembers { get; set; }
+
+        /// <summary />
         public Rock.Client.Enums.SignatureDocumentAction SignatureDocumentAction { get; set; }
 
         /// <summary />
@@ -167,6 +173,21 @@ namespace Rock.Client
 
         /// <summary />
         public string SuccessTitle { get; set; }
+
+        /// <summary />
+        public bool WaitListEnabled { get; set; }
+
+        /// <summary />
+        public string WaitListTransitionEmailTemplate { get; set; }
+
+        /// <summary />
+        public string WaitListTransitionFromEmail { get; set; }
+
+        /// <summary />
+        public string WaitListTransitionFromName { get; set; }
+
+        /// <summary />
+        public string WaitListTransitionSubject { get; set; }
 
         /// <summary>
         /// Leave this as NULL to let Rock set this
@@ -235,6 +256,7 @@ namespace Rock.Client
             this.RegistrantsSameFamily = source.RegistrantsSameFamily;
             this.RegistrantTerm = source.RegistrantTerm;
             this.RegistrationTerm = source.RegistrationTerm;
+            this.RegistrationWorkflowTypeId = source.RegistrationWorkflowTypeId;
             this.ReminderEmailTemplate = source.ReminderEmailTemplate;
             this.ReminderFromEmail = source.ReminderFromEmail;
             this.ReminderFromName = source.ReminderFromName;
@@ -242,9 +264,15 @@ namespace Rock.Client
             this.RequestEntryName = source.RequestEntryName;
             this.RequiredSignatureDocumentTemplateId = source.RequiredSignatureDocumentTemplateId;
             this.SetCostOnInstance = source.SetCostOnInstance;
+            this.ShowCurrentFamilyMembers = source.ShowCurrentFamilyMembers;
             this.SignatureDocumentAction = source.SignatureDocumentAction;
             this.SuccessText = source.SuccessText;
             this.SuccessTitle = source.SuccessTitle;
+            this.WaitListEnabled = source.WaitListEnabled;
+            this.WaitListTransitionEmailTemplate = source.WaitListTransitionEmailTemplate;
+            this.WaitListTransitionFromEmail = source.WaitListTransitionFromEmail;
+            this.WaitListTransitionFromName = source.WaitListTransitionFromName;
+            this.WaitListTransitionSubject = source.WaitListTransitionSubject;
             this.CreatedDateTime = source.CreatedDateTime;
             this.ModifiedDateTime = source.ModifiedDateTime;
             this.CreatedByPersonAliasId = source.CreatedByPersonAliasId;
