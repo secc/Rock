@@ -521,6 +521,7 @@
     <Compile Include="PersonProfile\Badge\AlertNote.cs" />
     <Compile Include="PersonProfile\Badge\GeofencedByGroup.cs" />
     <Compile Include="PersonProfile\Badge\DISC.cs" />
+    <Compile Include="PersonProfile\Badge\InDataView.cs" />
     <Compile Include="PersonProfile\Badge\InGroupWithPurpose.cs" />
     <Compile Include="Plugin\HotFixes\003_FixSystemEmailQuote.cs" />
     <Compile Include="Plugin\HotFixes\002_CheckinGradeRequired.cs" />
