@@ -56,7 +56,7 @@ namespace RockWeb.Blocks.Event
     [BooleanField( "Display Progress Bar", "Display a progress bar for the registration.", true, "", 4 )]
     [BooleanField( "Enable Debug", "Display the merge fields that are available for lava ( Success Page ).", false, "", 5 )]
     [BooleanField( "Allow InLine Digital Signature Documents", "Should inline digital documents be allowed? This requires that the registration template is configured to display the document inline", true, "", 6, "SignInline" )]
-    [CustomDropdownListField( "Digital Signature Embed Mode", "Whether to use an Iframe or open a new tab for the signature request.", "Iframe,New Tab", true, "Iframe","", 6, "SignInlineEmbedMode" )]
+    [CustomDropdownListField( "Digital Signature Embed Mode", "Whether to use an Iframe or open a new tab for the signature request.", "Iframe,New Tab", true, "Iframe", "", 6, "SignInlineEmbedMode" )]
     [SystemEmailField( "Confirm Account Template", "Confirm Account Email Template", false, Rock.SystemGuid.SystemEmail.SECURITY_CONFIRM_ACCOUNT, "", 7 )]
     public partial class RegistrationEntry : RockBlock
     {
@@ -338,7 +338,7 @@ namespace RockWeb.Blocks.Event
 
             SignInline = ViewState[SIGN_INLINE_KEY] as bool? ?? false;
             DigitalSignatureComponentTypeName = ViewState[DIGITAL_SIGNATURE_COMPONENT_TYPE_NAME_KEY] as string;
-            if ( !string.IsNullOrWhiteSpace( DigitalSignatureComponentTypeName ))
+            if ( !string.IsNullOrWhiteSpace( DigitalSignatureComponentTypeName ) )
             {
                 DigitalSignatureComponent = DigitalSignatureContainer.GetComponent( DigitalSignatureComponentTypeName );
             }
@@ -374,6 +374,23 @@ namespace RockWeb.Blocks.Event
         protected override void OnLoad( EventArgs e )
         {
             base.OnLoad( e );
+
+            if ( !string.IsNullOrEmpty( PageParameter( "document_id" ) ) && !string.IsNullOrEmpty( PageParameter( "registration_key" ) ) )
+            {
+                Session[PageParameter( "registration_key" )] = "?document_id=" + PageParameter( "document_id" );
+
+                string returnUrl = GlobalAttributesCache.Read().GetValue( "PublicApplicationRoot" ).EnsureTrailingForwardslash() +
+                    ResolveRockUrl( "~/Blocks/Event/DocumentReturn.html" ).TrimStart( '/' );
+                Response.Redirect( returnUrl );
+                Response.Flush();
+                Response.End();
+            }
+            else if ( !string.IsNullOrEmpty( PageParameter( "registration_key" ) ) )
+            {
+                Response.Flush();
+                Response.Write( Session[PageParameter( "registration_key" )] );
+                Response.End();
+            }
 
             // Reset warning/error messages
             nbMain.Visible = false;
@@ -714,7 +731,7 @@ namespace RockWeb.Blocks.Event
             {
                 ShowError( "Invalid or Missing Document Signature",
                     string.Format( "This {0} requires that you sign a {1} for each registrant, but it appears that you may have cancelled or skipped signing this document.",
-                        RegistrationTemplate.RegistrationTerm, RegistrationTemplate.RequiredSignatureDocumentTemplate.Name ) ); 
+                        RegistrationTemplate.RegistrationTerm, RegistrationTemplate.RequiredSignatureDocumentTemplate.Name ) );
             }
         }
 
@@ -1584,11 +1601,11 @@ namespace RockWeb.Blocks.Event
                     }
                     catch { }
 
-                    return (int?)null;
+                    return ( int? ) null;
                 }
             }
 
-            return registration != null ? registration.Id : (int?)null;
+            return registration != null ? registration.Id : ( int? ) null;
         }
 
         private void ProcessPostSave( bool isNewRegistration, Registration registration, List<int> previousRegistrantIds, RockContext rockContext )
@@ -1873,7 +1890,7 @@ namespace RockWeb.Blocks.Event
                 }
 
                 registrar = SavePerson( rockContext, person, RegistrationState.FamilyGuid, CampusId, null, adultRoleId, childRoleId, multipleFamilyGroupIds, ref singleFamilyId );
-                registration.PersonAliasId = registrar != null ? registrar.PrimaryAliasId : (int?)null;
+                registration.PersonAliasId = registrar != null ? registrar.PrimaryAliasId : ( int? ) null;
 
                 History.EvaluateChange( registrationChanges, "Registrar", string.Empty, registrar.FullName );
             }
@@ -2346,7 +2363,7 @@ namespace RockWeb.Blocks.Event
                             Rock.Transactions.RockQueue.TransactionQueue.Enqueue( updateDocumentTxn );
                         }
                     }
-                    catch( System.Exception ex )
+                    catch ( System.Exception ex )
                     {
                         ExceptionLogService.LogException( ex, Context, this.RockPage.PageId, this.RockPage.Site.Id, CurrentPersonAlias );
                     }
@@ -2693,7 +2710,7 @@ namespace RockWeb.Blocks.Event
 
                         rockContext.SaveChanges();
 
-                        registrant.GroupMemberId = groupMember != null ? groupMember.Id : (int?)null;
+                        registrant.GroupMemberId = groupMember != null ? groupMember.Id : ( int? ) null;
                         rockContext.SaveChanges();
 
                         // Set any of the template's group member attributes 
@@ -3182,8 +3199,9 @@ namespace RockWeb.Blocks.Event
                     if ( !string.IsNullOrWhiteSpace( inviteLink ) )
                     {
                         string returnUrl = GlobalAttributesCache.Read().GetValue( "PublicApplicationRoot" ).EnsureTrailingForwardslash() +
-                            ResolveRockUrl( "~/Blocks/Event/DocumentReturn.html" ).TrimStart('/');
+                            ResolveRockUrl( Request.RawUrl + "?registration_key=" + RegistrationState.Registrants[CurrentRegistrantIndex].Guid ).TrimStart( '/' );
                         hfRequiredDocumentLinkUrl.Value = string.Format( "{0}?redirect_uri={1}", inviteLink, returnUrl );
+                        hfRegistrantGuid.Value = RegistrationState.Registrants[CurrentRegistrantIndex].Guid.ToString();
                     }
                     else
                     {
@@ -3580,12 +3598,14 @@ namespace RockWeb.Blocks.Event
         }}
     }});
 
+
+
     // Evaluates the current url whenever the iframe is loaded and if it includes a qrystring parameter
     $('#iframeRequiredDocument').on('load', function(e) {{
         var location = this.contentWindow.location;
         if (location) {{
             var qryString = this.contentWindow.location.search;
-            window.processIframeReturn(qryString);
+            //window.processIframeReturn(qryString);
         }}
     }});
 
@@ -3599,9 +3619,34 @@ namespace RockWeb.Blocks.Event
         }}
     }};
 
+    poll = function() {{
+       setTimeout(function(){{
+          $.ajax({{ 
+            url: '{22}?registration_key='+$('#hfRegistrantGuid').val(), 
+            success: function(data){{
+                //
+                if (data != ''&& data.startsWith('?document_id') ) {{
+                    $('#{19}').val(data);
+                    {20};
+                }}
+                else 
+                {{
+                    //Setup the next poll 
+                    poll();
+                }}
+            }}
+        }});
+      }}, 5000);
+    }}
+
     if ($('#{21}').val() != '' ) {{
         $('#iframeRequiredDocument').attr('src', $('#{21}').val() );
     }}
+    if ($('#hfRegistrantGuid').length > 0 && $('#hfRegistrantGuid').val() != '' ) {{
+        $.ajaxSetup({{ cache: false }});
+        poll();
+    }}
+
 
 ", nbAmountPaid.ClientID                 // {0}
             ,hfTotalCost.ClientID                   // {1}
@@ -3625,6 +3670,7 @@ namespace RockWeb.Blocks.Event
             ,hfRequiredDocumentQueryString.ClientID // {19}
             ,this.Page.ClientScript.GetPostBackEventReference( lbRequiredDocumentNext, "" ) // {20}
             ,hfRequiredDocumentLinkUrl.ClientID     // {21}
+            ,this.Request.RawUrl // {22}
 );
 
             ScriptManager.RegisterStartupScript( Page, Page.GetType(), "registrationEntry", script, true );
