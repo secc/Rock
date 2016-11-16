@@ -444,6 +444,14 @@ Registration By: {0} Total Cost/Fees:{1}
         public int? RegistrationId { get; set; }
 
         /// <summary>
+        /// Gets or sets the slots available.
+        /// </summary>
+        /// <value>
+        /// The slots available.
+        /// </value>
+        public int? SlotsAvailable { get; set; }
+
+        /// <summary>
         /// Gets or sets your first name.
         /// </summary>
         /// <value>
@@ -597,6 +605,7 @@ Registration By: {0} Total Cost/Fees:{1}
                 DiscountAmount = registration.DiscountAmount;
                 TotalCost = registration.TotalCost;
                 DiscountedCost = registration.DiscountedCost;
+                SlotsAvailable = registration.Registrants.Where( r => !r.OnWaitList ).Count();
 
                 if ( registration.PersonAlias != null && registration.PersonAlias.Person != null )
                 {
@@ -766,6 +775,11 @@ Registration By: {0} Total Cost/Fees:{1}
         {
             get
             {
+                if ( OnWaitList )
+                {
+                    return 0.0M;
+                }
+
                 var cost = Cost;
                 if ( FeeValues != null )
                 {
