@@ -250,7 +250,7 @@ namespace RockWeb.Blocks.Finance
 
             gTransactions.Columns
                 .Cast<Rock.Web.UI.Controls.RockBoundField>()
-                .FirstOrDefault( c => c.HeaderText == "Transaction Code" ).Visible = GetAttributeValue( "ShowTransactionCode" ).AsBoolean() ;
+                .FirstOrDefault( c => c.HeaderText == "Transaction Code" ).Visible = GetAttributeValue( "ShowTransactionCode" ).AsBoolean();
 
             gTransactions.DataBind();
         }
