@@ -39,6 +39,8 @@ namespace RockWeb.Blocks.Finance
     [TextField( "Transaction Label", "The label to use to describe the transactions (e.g. 'Gifts', 'Donations', etc.)", true, "Gifts", "", 1 )]
     [TextField( "Account Label", "The label to use to describe accounts.", true, "Accounts", "", 2 )]
     [AccountsField( "Accounts", "List of accounts to allow the person to view", false, "", "", 3 )]
+    [BooleanField( "Show Transaction Code", "Show the transaction code column in the table.", true, "", 4, "ShowTransactionCode" )]
+    [DefinedValueField( Rock.SystemGuid.DefinedType.FINANCIAL_TRANSACTION_TYPE, "Transaction Types", "Optional list of transation types to limit the list to (if none are selected all types will be included).", false, true, "", "", 5 )]
     public partial class TransactionReport : Rock.Web.UI.RockBlock
     {
         #region Base Control Methods
@@ -59,6 +61,8 @@ namespace RockWeb.Blocks.Finance
             gTransactions.RowItemText = GetAttributeValue( "TransactionLabel" );
             gTransactions.EmptyDataText = string.Format( "No {0} found with the provided criteria.", GetAttributeValue( "TransactionLabel" ).ToLower() );
             gTransactions.GridRebind += gTransactions_GridRebind;
+
+            gTransactions.Actions.ShowMergeTemplate = false;
         }
 
         /// <summary>
@@ -202,6 +206,16 @@ namespace RockWeb.Blocks.Finance
                 qry = qry.Where( t => t.TransactionDateTime.Value < lastDate );
             }
 
+            // Transaction Types
+            var transactionTypeValueIdList = GetAttributeValue( "TransactionTypes" ).SplitDelimitedValues().AsGuidList().Select( a => DefinedValueCache.Read( a ) ).Where( a => a != null ).Select( a => a.Id ).ToList();
+
+            if ( transactionTypeValueIdList.Any() )
+            {
+                qry = qry.Where( t => transactionTypeValueIdList.Contains( t.TransactionTypeValueId ) );
+            }
+
+            qry = qry.OrderByDescending( a => a.TransactionDateTime );
+
             var txns = qry.ToList();
 
             // get account totals
@@ -242,9 +256,14 @@ namespace RockWeb.Blocks.Finance
                 t.Id,
                 t.TransactionDateTime,
                 CurrencyType = FormatCurrencyType( t ),
+                t.TransactionCode,
                 Summary = FormatSummary( t ),
                 t.TotalAmount
             } ).ToList();
+
+            gTransactions.Columns
+                .Cast<Rock.Web.UI.Controls.RockBoundField>()
+                .FirstOrDefault( c => c.HeaderText == "Transaction Code" ).Visible = GetAttributeValue( "ShowTransactionCode" ).AsBoolean();
 
             gTransactions.DataBind();
         }
