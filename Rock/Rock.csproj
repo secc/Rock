@@ -1364,7 +1364,6 @@
     <Compile Include="Web\UI\Controls\ImageUploader.cs" />
     <Compile Include="Web\UI\Controls\IRockControl.cs" />
     <Compile Include="Web\UI\Controls\IRockControlAdditionalRendering.cs" />
-    <Compile Include="Web\UI\Controls\PanelDrawer.cs" />
     <Compile Include="Web\UI\Controls\KeyValueList.cs" />
     <Compile Include="Web\UI\Controls\MarkdownEditor.cs" />
     <Compile Include="Web\UI\Controls\ModalAlert.cs" />
