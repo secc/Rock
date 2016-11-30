@@ -62,6 +62,14 @@
     <Compile Include="HotFixMigrations\004_FixBaptismBadge.cs" />
     <Compile Include="HotFixMigrations\005_ValueAsNumeric.cs" />
     <Compile Include="HotFixMigrations\006_StatementProcs.cs" />
+    <Compile Include="Migrations\201610271014123_AttendeeLastAttendance.cs" />
+    <Compile Include="Migrations\201610271014123_AttendeeLastAttendance.Designer.cs">
+      <DependentUpon>201610271014123_AttendeeLastAttendance.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Migrations\201610312310571_ConnectionGroupConfig.cs" />
+    <Compile Include="Migrations\201610312310571_ConnectionGroupConfig.Designer.cs">
+      <DependentUpon>201610312310571_ConnectionGroupConfig.cs</DependentUpon>
+    </Compile>
     <Compile Include="Migrations\Version 6.0\Version 1.6.0\201609282147388_WaitList.cs" />
     <Compile Include="Migrations\Version 6.0\Version 1.6.0\201609282147388_WaitList.Designer.cs">
       <DependentUpon>201609282147388_WaitList.cs</DependentUpon>
@@ -75,7 +83,7 @@
       <DependentUpon>201609221415156_PreventDupCheckin.cs</DependentUpon>
     </Compile>
     <Compile Include="Migrations\201609140843400_PhoneNumberReversed.cs" />
-	 <Compile Include="Migrations\201609140843400_PhoneNumberReversed.Designer.cs">
+    <Compile Include="Migrations\201609140843400_PhoneNumberReversed.Designer.cs">
       <DependentUpon>201609140843400_PhoneNumberReversed.cs</DependentUpon>
     </Compile>
     <Compile Include="Migrations\Version 6.0\Version 1.6.0\201609221633157_BodyPageCSS-ContentChannelNoContent.cs" />
@@ -2265,6 +2273,12 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
+    <EmbeddedResource Include="Migrations\201610271014123_AttendeeLastAttendance.resx">
+      <DependentUpon>201610271014123_AttendeeLastAttendance.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Migrations\201610312310571_ConnectionGroupConfig.resx">
+      <DependentUpon>201610312310571_ConnectionGroupConfig.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="Migrations\Version 6.0\Version 1.6.0\201609282147388_WaitList.resx">
       <DependentUpon>201609282147388_WaitList.cs</DependentUpon>
     </EmbeddedResource>
@@ -3914,6 +3928,15 @@
     </EmbeddedResource>
   </ItemGroup>
   <ItemGroup>
+    <Content Include="Migrations\201610271014123_AttendeeLastAttendance.sql" />
+    <Content Include="Migrations\201610312310571_ConnectionGroupConfig_DropIndexes.sql" />
+    <Content Include="Migrations\201610312310571_ConnectionGroupConfig_spCheckin_AttendanceAnalyticsQuery_AttendeeLastAttendance.sql" />
+    <Content Include="Migrations\201610312310571_ConnectionGroupConfig_ufnCrm_GetAge.sql" />
+    <Content Include="Migrations\201610312310571_ConnectionGroupConfig_ufnCrm_GetGradeOffset.sql" />
+    <Content Include="Migrations\201610312310571_ConnectionGroupConfig_ufnCrm_GetParentEmails.sql" />
+    <Content Include="Migrations\201610312310571_ConnectionGroupConfig_ufnCrm_GetParentNames.sql" />
+    <Content Include="Migrations\201610312310571_ConnectionGroupConfig_ufnCrm_GetParentPhones.sql" />
+    <Content Include="Migrations\201610312310571_ConnectionGroupConfig_ufnUtility_CsvToTable.sql" />
     <Content Include="Migrations\Version 6.0\Version 1.6.0\201608171937068_GivingAnalyticsAccounts_AccountTotals.sql" />
     <Content Include="Migrations\Version 6.0\Version 1.6.0\201608171937068_GivingAnalyticsAccounts_FirstLastEverDates.sql" />
     <Content Include="Migrations\Version 6.0\Version 1.6.0\201608171937068_GivingAnalyticsAccounts_PersonSummary.sql" />
