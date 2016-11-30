@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 Rock McKinley 6.0
 
 CALENDAR
@@ -108,6 +109,18 @@ MISC
 + Updated the database authentication provider to use BCrypt when hashing new passwords, and to convert existing HMACSHA1 hashed passwords to BCrypt next time each user logs in.
 + Added new Startup interface that custom plugins can use to run custom code during Rock startup.
 + Fixed the currency field type to return a formatted value that is a currency.
+=======
+Rock McKinley 5.5
+
++ Updated the RockUpdate block to deal with servers that are reporting the .Net framework incorrectly.
+
+>>>>>>> 759ae0b... - Updated version and readme files.
+
+
+Rock McKinley 5.5
+
++ Updated the RockUpdate block to deal with servers that are reporting the .Net framework incorrectly.
+
 
 Rock McKinley 5.4
 

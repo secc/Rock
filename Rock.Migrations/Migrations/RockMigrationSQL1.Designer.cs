@@ -2034,5 +2034,347 @@ namespace Rock.Migrations.Migrations {
                 return ResourceManager.GetString("_201608172242214_Podcasting", resourceCulture);
             }
         }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to /****** Object:  StoredProcedure [dbo].[spCheckin_AttendanceAnalyticsQuery_AttendeeLastAttendance]    Script Date: 10/27/2016 9:07:30 AM ******/
+        ///IF EXISTS ( SELECT * FROM [sysobjects] WHERE [id] = OBJECT_ID(N&apos;[dbo].[spCheckin_AttendanceAnalyticsQuery_AttendeeLastAttendance]&apos;) AND OBJECTPROPERTY([id], N&apos;IsProcedure&apos;) = 1 )
+        ///DROP PROCEDURE [dbo].[spCheckin_AttendanceAnalyticsQuery_AttendeeLastAttendance]
+        ///GO
+        ///
+        ////****** Object:  StoredProcedure [dbo].[spCheckin_AttendanceAnalyticsQuery_AttendeeLastAttendance] [rest of string was truncated]&quot;;.
+        /// </summary>
+        public static string _201610271014123_AttendeeLastAttendance {
+            get {
+                return ResourceManager.GetString("_201610271014123_AttendeeLastAttendance", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to // &lt;copyright&gt;
+        ///// Copyright by the Spark Development Network
+        /////
+        ///// Licensed under the Rock Community License (the &quot;License&quot;);
+        ///// you may not use this file except in compliance with the License.
+        ///// You may obtain a copy of the License at
+        /////
+        ///// http://www.rockrms.com/license
+        /////
+        ///// Unless required by applicable law or agreed to in writing, software
+        ///// distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+        ///// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+        ///// See  [rest of string was truncated]&quot;;.
+        /// </summary>
+        public static string _201610312310571_ConnectionGroupConfig {
+            get {
+                return ResourceManager.GetString("_201610312310571_ConnectionGroupConfig", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to // &lt;auto-generated /&gt;
+        ///namespace Rock.Migrations
+        ///{
+        ///    using System.CodeDom.Compiler;
+        ///    using System.Data.Entity.Migrations;
+        ///    using System.Data.Entity.Migrations.Infrastructure;
+        ///    using System.Resources;
+        ///    
+        ///    [GeneratedCode(&quot;EntityFramework.Migrations&quot;, &quot;6.1.3-40302&quot;)]
+        ///    public sealed partial class ConnectionGroupConfig : IMigrationMetadata
+        ///    {
+        ///        private readonly ResourceManager Resources = new ResourceManager(typeof(ConnectionGroupConfig));
+        ///        
+        ///        string IMigratio [rest of string was truncated]&quot;;.
+        /// </summary>
+        public static string _201610312310571_ConnectionGroupConfig_Designer {
+            get {
+                return ResourceManager.GetString("_201610312310571_ConnectionGroupConfig_Designer", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to IF EXISTS(SELECT * FROM sys.indexes WHERE name=&apos;IX_ForeignId&apos; AND object_id = OBJECT_ID(&apos;Note&apos;))
+        ///BEGIN
+        ///	DROP INDEX [IX_ForeignId] ON [Note]
+        ///END
+        ///IF EXISTS(SELECT * FROM sys.indexes WHERE name=&apos;IX_ForeignGuid&apos; AND object_id = OBJECT_ID(&apos;Note&apos;))
+        ///BEGIN
+        ///	DROP INDEX [IX_ForeignGuid] ON [Note]
+        ///END
+        ///IF EXISTS(SELECT * FROM sys.indexes WHERE name=&apos;IX_ForeignKey&apos; AND object_id = OBJECT_ID(&apos;Note&apos;))
+        ///BEGIN
+        ///	DROP INDEX [IX_ForeignKey] ON [Note]
+        ///END
+        ///IF EXISTS(SELECT * FROM sys.indexes WHERE name=&apos;IX_ForeignId&apos;  [rest of string was truncated]&quot;;.
+        /// </summary>
+        public static string _201610312310571_ConnectionGroupConfig_DropIndexes {
+            get {
+                return ResourceManager.GetString("_201610312310571_ConnectionGroupConfig_DropIndexes", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to /****** Object:  StoredProcedure [dbo].[spCheckin_AttendanceAnalyticsQuery_AttendeeLastAttendance]    Script Date: 10/27/2016 9:07:30 AM ******/
+        ///IF EXISTS ( SELECT * FROM [sysobjects] WHERE [id] = OBJECT_ID(N&apos;[dbo].[spCheckin_AttendanceAnalyticsQuery_AttendeeLastAttendance]&apos;) AND OBJECTPROPERTY([id], N&apos;IsProcedure&apos;) = 1 )
+        ///DROP PROCEDURE [dbo].[spCheckin_AttendanceAnalyticsQuery_AttendeeLastAttendance]
+        ///GO
+        ///
+        ////****** Object:  StoredProcedure [dbo].[spCheckin_AttendanceAnalyticsQuery_AttendeeLastAttendance] [rest of string was truncated]&quot;;.
+        /// </summary>
+        public static string _201610312310571_ConnectionGroupConfig_spCheckin_AttendanceAnalyticsQuery_AttendeeLastAttendance {
+            get {
+                return ResourceManager.GetString("_201610312310571_ConnectionGroupConfig_spCheckin_AttendanceAnalyticsQuery_Attende" +
+                        "eLastAttendance", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to IF object_id(&apos;[dbo].[ufnCrm_GetAge]&apos;) IS NOT NULL
+        ///BEGIN
+        ///  DROP FUNCTION [dbo].[ufnCrm_GetAge]
+        ///END
+        ///GO
+        ///
+        ///SET ANSI_NULLS ON
+        ///GO
+        ///
+        ///SET QUOTED_IDENTIFIER ON
+        ///GO
+        ///
+        ////*
+        ///&lt;doc&gt;
+        ///	&lt;summary&gt;
+        /// 		This function returns the age given a birthdate.
+        ///	&lt;/summary&gt;
+        ///
+        ///	&lt;returns&gt;
+        ///		The age based on birthdate
+        ///	&lt;/returns&gt;
+        ///	&lt;remarks&gt;
+        ///		
+        ///	&lt;/remarks&gt;
+        ///	&lt;code&gt;
+        ///		SELECT [dbo].[ufnCrm_GetAge]( &apos;2000-01-01&apos;)
+        ///	&lt;/code&gt;
+        ///&lt;/doc&gt;
+        ///*/
+        ///
+        ///CREATE FUNCTION [dbo].[ufnCrm_GetAge](@BirthDate datetime) 
+        ///
+        ///RETURNS INT WITH SCHEMABINDIN [rest of string was truncated]&quot;;.
+        /// </summary>
+        public static string _201610312310571_ConnectionGroupConfig_ufnCrm_GetAge {
+            get {
+                return ResourceManager.GetString("_201610312310571_ConnectionGroupConfig_ufnCrm_GetAge", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to IF object_id(&apos;[dbo].[ufnCrm_GetGradeOffset]&apos;) IS NOT NULL
+        ///BEGIN
+        ///  DROP FUNCTION [dbo].[ufnCrm_GetGradeOffset]
+        ///END
+        ///GO
+        ///
+        ///SET ANSI_NULLS ON
+        ///GO
+        ///
+        ///SET QUOTED_IDENTIFIER ON
+        ///GO
+        ///
+        ////*
+        ///&lt;doc&gt;
+        ///	&lt;summary&gt;
+        /// 		This function returns the grade offset given a graduation date. The offset can then be used with defined value to find grade
+        ///	&lt;/summary&gt;
+        ///
+        ///	&lt;returns&gt;
+        ///		The grade offset based on graduation date
+        ///	&lt;/returns&gt;
+        ///	&lt;remarks&gt;
+        ///		
+        ///	&lt;/remarks&gt;
+        ///	&lt;code&gt;
+        ///		SELECT [dbo].[ufnCrm_GetGradeOffset]( 2018, null )
+        ///	&lt; [rest of string was truncated]&quot;;.
+        /// </summary>
+        public static string _201610312310571_ConnectionGroupConfig_ufnCrm_GetGradeOffset {
+            get {
+                return ResourceManager.GetString("_201610312310571_ConnectionGroupConfig_ufnCrm_GetGradeOffset", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to IF object_id(&apos;[dbo].[ufnCrm_GetParentEmails]&apos;) IS NOT NULL
+        ///BEGIN
+        ///  DROP FUNCTION [dbo].[ufnCrm_GetParentEmails]
+        ///END
+        ///GO
+        ///
+        ///SET ANSI_NULLS ON
+        ///GO
+        ///SET QUOTED_IDENTIFIER ON
+        ///GO
+        ///
+        ////*
+        ///&lt;doc&gt;
+        ///	&lt;summary&gt;
+        /// 		This function returns the emails of any parents in any family for the selected person id
+        ///	&lt;/summary&gt;
+        ///
+        ///	&lt;returns&gt;
+        ///		The parent emails
+        ///	&lt;/returns&gt;
+        ///	&lt;remarks&gt;
+        ///		
+        ///	&lt;/remarks&gt;
+        ///	&lt;code&gt;
+        ///		SELECT [dbo].[ufnCrm_GetParentEmails]( 3 )
+        ///	&lt;/code&gt;
+        ///&lt;/doc&gt;
+        ///*/
+        ///
+        ///CREATE FUNCTION [dbo].[ufnCrm_GetParentEmails] [rest of string was truncated]&quot;;.
+        /// </summary>
+        public static string _201610312310571_ConnectionGroupConfig_ufnCrm_GetParentEmails {
+            get {
+                return ResourceManager.GetString("_201610312310571_ConnectionGroupConfig_ufnCrm_GetParentEmails", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to IF object_id(&apos;[dbo].[ufnCrm_GetParentNames]&apos;) IS NOT NULL
+        ///BEGIN
+        ///  DROP FUNCTION [dbo].[ufnCrm_GetParentNames]
+        ///END
+        ///GO
+        ///
+        ///SET ANSI_NULLS ON
+        ///GO
+        ///SET QUOTED_IDENTIFIER ON
+        ///GO
+        ///
+        ////*
+        ///&lt;doc&gt;
+        ///	&lt;summary&gt;
+        /// 		This function returns the names of any parents in any family for the selected person id
+        ///	&lt;/summary&gt;
+        ///
+        ///	&lt;returns&gt;
+        ///		The parent names
+        ///	&lt;/returns&gt;
+        ///	&lt;remarks&gt;
+        ///		
+        ///	&lt;/remarks&gt;
+        ///	&lt;code&gt;
+        ///		SELECT [dbo].[ufnCrm_GetParentNames]( 3 )
+        ///	&lt;/code&gt;
+        ///&lt;/doc&gt;
+        ///*/
+        ///
+        ///CREATE FUNCTION [dbo].[ufnCrm_GetParentNames](@Pers [rest of string was truncated]&quot;;.
+        /// </summary>
+        public static string _201610312310571_ConnectionGroupConfig_ufnCrm_GetParentNames {
+            get {
+                return ResourceManager.GetString("_201610312310571_ConnectionGroupConfig_ufnCrm_GetParentNames", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to IF object_id(&apos;[dbo].[ufnCrm_GetParentPhones]&apos;) IS NOT NULL
+        ///BEGIN
+        ///  DROP FUNCTION [dbo].[ufnCrm_GetParentPhones]
+        ///END
+        ///GO
+        ///
+        ///SET ANSI_NULLS ON
+        ///GO
+        ///SET QUOTED_IDENTIFIER ON
+        ///GO
+        ///
+        ////*
+        ///&lt;doc&gt;
+        ///	&lt;summary&gt;
+        /// 		This function returns the Phones of any parents in any family for the selected person id
+        ///	&lt;/summary&gt;
+        ///
+        ///	&lt;returns&gt;
+        ///		The parent Phone numbers
+        ///	&lt;/returns&gt;
+        ///	&lt;remarks&gt;
+        ///		
+        ///	&lt;/remarks&gt;
+        ///	&lt;code&gt;
+        ///		SELECT [dbo].[ufnCrm_GetParentPhones]( 3, &apos;Mobile&apos; )
+        ///	&lt;/code&gt;
+        ///&lt;/doc&gt;
+        ///*/
+        ///
+        ///CREATE FUNCTION [dbo].[ufnCrm [rest of string was truncated]&quot;;.
+        /// </summary>
+        public static string _201610312310571_ConnectionGroupConfig_ufnCrm_GetParentPhones {
+            get {
+                return ResourceManager.GetString("_201610312310571_ConnectionGroupConfig_ufnCrm_GetParentPhones", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to IF object_id(&apos;[dbo].[ufnUtility_CsvToTable]&apos;) IS NOT NULL
+        ///BEGIN
+        ///  DROP FUNCTION [dbo].[ufnUtility_CsvToTable]
+        ///END
+        ///GO
+        ///
+        ///SET ANSI_NULLS ON
+        ///GO
+        ///
+        ///SET QUOTED_IDENTIFIER ON
+        ///GO
+        ///
+        ////*
+        ///&lt;doc&gt;
+        ///	&lt;summary&gt;
+        /// 		This function converts a comma-delimited string of values into a table of values
+        ///        It comes from http://www.sqlservercentral.com/articles/Tally+Table/72993/
+        ///	&lt;/summary&gt;
+        ///	&lt;returns&gt;
+        ///		* id
+        ///	&lt;/returns&gt;
+        ///	&lt;remarks&gt;
+        ///		Used by spFinance_ContributionStatementQuery
+        ///	&lt;/remarks&gt;
+        ///	&lt;code&gt;
+        ///		SELECT * F [rest of string was truncated]&quot;;.
+        /// </summary>
+        public static string _201610312310571_ConnectionGroupConfig_ufnUtility_CsvToTable {
+            get {
+                return ResourceManager.GetString("_201610312310571_ConnectionGroupConfig_ufnUtility_CsvToTable", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to &lt;?xml version=&quot;1.0&quot; encoding=&quot;utf-8&quot;?&gt;
+        ///&lt;root&gt;
+        ///  &lt;!-- 
+        ///    Microsoft ResX Schema 
+        ///    
+        ///    Version 2.0
+        ///    
+        ///    The primary goals of this format is to allow a simple XML format 
+        ///    that is mostly human readable. The generation and parsing of the 
+        ///    various data types are done through the TypeConverter classes 
+        ///    associated with the data types.
+        ///    
+        ///    Example:
+        ///    
+        ///    ... ado.net/XML headers &amp; schema ...
+        ///    &lt;resheader name=&quot;resmimetype&quot;&gt;text/microsoft-resx&lt;/resheader&gt;
+        ///    &lt;resheader n [rest of string was truncated]&quot;;.
+        /// </summary>
+        public static string _201610312310571_ConnectionGroupConfig1 {
+            get {
+                return ResourceManager.GetString("_201610312310571_ConnectionGroupConfig1", resourceCulture);
+            }
+        }
     }
 }
