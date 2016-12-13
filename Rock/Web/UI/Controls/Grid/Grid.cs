@@ -1687,6 +1687,7 @@ namespace Rock.Web.UI.Controls
                             if ( !selectedKeys.Contains( dataKeyValue ) )
                             {
                                 // if there are specific rows selected, skip over rows that aren't selected
+                                dataIndex++;
                                 continue;
                             }
                         }
@@ -2471,7 +2472,7 @@ namespace Rock.Web.UI.Controls
             entitySet.ExpireDateTime = RockDateTime.Now.AddMinutes( 5 );
 
             int itemOrder = 0;
-            foreach ( var row in this.DataSourceAsDataTable.Rows.OfType<DataRow>() )
+            foreach ( DataRowView row in this.DataSourceAsDataTable.DefaultView )
             {
                 try
                 {
@@ -2480,7 +2481,7 @@ namespace Rock.Web.UI.Controls
                     if ( entitySet.EntityTypeId.HasValue && dataKeyColumn != null )
                     {
                         // we know the EntityTypeId, so set the EntityId to the dataKeyColumn value
-                        item.EntityId = ( row[dataKeyColumn] as int? ) ?? 0;
+                        item.EntityId = ( row[dataKeyColumn.ColumnName] as int? ) ?? 0;
                     }
                     else
                     {
@@ -2492,7 +2493,7 @@ namespace Rock.Web.UI.Controls
                     item.AdditionalMergeValues = new Dictionary<string, object>();
                     foreach ( var col in this.DataSourceAsDataTable.Columns.OfType<DataColumn>() )
                     {
-                        item.AdditionalMergeValues.Add( col.ColumnName, row[col] );
+                        item.AdditionalMergeValues.Add( col.ColumnName, row[col.ColumnName] );
                     }
 
                     entitySet.Items.Add( item );
