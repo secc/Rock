@@ -138,7 +138,7 @@ function() {
         /// <summary>
         /// The GroupPicker
         /// </summary>
-        private NumberBox nbPostalCode = null;
+        private RockTextBox tbPostalCode = null;
         private RockDropDownList ddlStringFilterComparison = null;
 
         /// <summary>
@@ -156,11 +156,11 @@ function() {
             controls.Add( ddlStringFilterComparison );
 
 
-            nbPostalCode = new NumberBox();
-            nbPostalCode.ID = filterControl.ID + "_tbPostalCode";
-            nbPostalCode.AddCssClass( "js-filter-control" );
-            filterControl.Controls.Add( nbPostalCode );
-            controls.Add( nbPostalCode );
+            tbPostalCode = new RockTextBox();
+            tbPostalCode.ID = filterControl.ID + "_tbPostalCode";
+            tbPostalCode.AddCssClass( "js-filter-control" );
+            filterControl.Controls.Add( tbPostalCode );
+            controls.Add( tbPostalCode );
 
             return controls.ToArray();
         }
@@ -178,7 +178,7 @@ function() {
             if ( controls.Count() >= 2 )
             {
                 RockDropDownList ddlCompare = controls[0] as RockDropDownList;
-                NumberBox nbPostalCode = controls[1] as NumberBox;
+                RockTextBox tbPostalCode = controls[1] as RockTextBox;
                 writer.AddAttribute( "class", "row field-criteria" );
                 writer.RenderBeginTag( HtmlTextWriterTag.Div );
                 writer.AddAttribute( "class", "col-md-4" );
@@ -189,7 +189,7 @@ function() {
                 writer.AddAttribute( "class", "col-md-8" );
                 writer.RenderBeginTag( HtmlTextWriterTag.Div );
 
-                nbPostalCode.RenderControl( writer );
+                tbPostalCode.RenderControl( writer );
                 writer.RenderEndTag();
 
                 writer.RenderEndTag();  // row
@@ -206,7 +206,7 @@ function() {
         public override string GetSelection( Type entityType, Control[] controls )
         {
             RockDropDownList ddlCompare = controls[0] as RockDropDownList;
-            NumberBox nbPostalBox = controls[1] as NumberBox;
+            RockTextBox nbPostalBox = controls[1] as RockTextBox;
             return string.Format( "{0}|{1}", ddlCompare.SelectedValue, nbPostalBox.Text );
         }
 
@@ -222,7 +222,7 @@ function() {
             if ( values.Length >= 2 )
             {
                 ( controls[0] as RockDropDownList ).SelectedValue = values[0];
-                ( controls[1] as NumberBox ).Text = values[1];
+                ( controls[1] as RockTextBox ).Text = values[1];
             }
         }
 
