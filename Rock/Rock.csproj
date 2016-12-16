@@ -1049,6 +1049,7 @@
     <Compile Include="Reporting\DataFilter\Person\HasPictureFilter.cs" />
     <Compile Include="Reporting\DataFilter\Person\HistoryDataViewFilter.cs" />
     <Compile Include="Reporting\DataFilter\Person\InGroupFilter.cs" />
+    <Compile Include="Reporting\DataFilter\Person\PostalCodeFilter.cs" />
     <Compile Include="Reporting\DataFilter\Person\InGroupGeofenceFilter.cs" />
     <Compile Include="Reporting\DataFilter\Person\InGroupGroupTypeFilter.cs" />
     <Compile Include="Reporting\DataFilter\Person\InLocationGeofenceFilter.cs" />
