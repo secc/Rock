@@ -1079,6 +1079,11 @@ namespace RockWeb.Blocks.Event
                     discount.DiscountPercentage = discountUI.DiscountPercentage;
                     discount.DiscountAmount = discountUI.DiscountAmount;
                     discount.Order = discountUI.Order;
+                    discount.MaxUsage = discountUI.MaxUsage;
+                    discount.MaxRegistrants = discountUI.MaxRegistrants;
+                    discount.MinRegistrants = discountUI.MinRegistrants;
+                    discount.StartDate = discountUI.StartDate;
+                    discount.EndDate = discountUI.EndDate;
                 }
 
                 // add/updated fees
@@ -1672,6 +1677,12 @@ namespace RockWeb.Blocks.Event
                 discount.DiscountPercentage = nbDiscountPercentage.Text.AsDecimal() * 0.01m;
                 discount.DiscountAmount = 0.0m;
             }
+
+            discount.MaxUsage = nbDiscountMaxUsage.Text.AsIntegerOrNull();
+            discount.MaxRegistrants = nbDiscountMaxRegistrants.Text.AsIntegerOrNull();
+            discount.MinRegistrants = nbDiscountMinRegistrants.Text.AsIntegerOrNull();
+            discount.StartDate = drpDiscountDateRange.LowerValue;
+            discount.EndDate = drpDiscountDateRange.UpperValue;
 
             HideDialog();
 
@@ -2668,7 +2679,8 @@ namespace RockWeb.Blocks.Event
                         d.Code,
                         Discount = d.DiscountAmount > 0 ?
                             d.DiscountAmount.FormatAsCurrency() :
-                            d.DiscountPercentage.ToString( "P2" )
+                            d.DiscountPercentage.ToString( "P2" ),
+                        Limits = d.DiscountLimitsString
                     } ).ToList();
                 gDiscounts.DataBind();
             }
@@ -2703,6 +2715,12 @@ namespace RockWeb.Blocks.Event
                 nbDiscountPercentage.Visible = true;
                 cbDiscountAmount.Visible = false;
             }
+
+            nbDiscountMaxUsage.Text = discount.MaxUsage.HasValue ? discount.MaxUsage.ToString() : string.Empty;
+            nbDiscountMaxRegistrants.Text = discount.MaxRegistrants.HasValue ? discount.MaxRegistrants.ToString() : string.Empty;
+            nbDiscountMinRegistrants.Text = discount.MinRegistrants.HasValue ? discount.MinRegistrants.ToString() : string.Empty;
+            drpDiscountDateRange.LowerValue = discount.StartDate;
+            drpDiscountDateRange.UpperValue = discount.EndDate;
 
             ShowDialog( "Discounts" );
         }
