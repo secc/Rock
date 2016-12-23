@@ -196,6 +196,9 @@ namespace RockWeb.Blocks.Event
                 History.EvaluateChange( registrantChanges, "Cost", registrant.Cost, cbCost.Text.AsDecimal() );
                 registrant.Cost = cbCost.Text.AsDecimal();
 
+                History.EvaluateChange( registrantChanges, "Discount Applies", registrant.DiscountApplies, cbDiscountApplies.Checked );
+                registrant.DiscountApplies = cbDiscountApplies.Checked;
+
                 if ( !Page.IsValid )
                 {
                     return;
@@ -531,6 +534,8 @@ namespace RockWeb.Blocks.Event
                         lWizardInstanceName.Text = registrant.Registration.RegistrationInstance.Name;
                         lWizardRegistrationName.Text = registrant.Registration.ToString();
                         lWizardRegistrantName.Text = registrant.ToString();
+
+                        tglWaitList.Checked = !registrant.OnWaitList;
                     }
                 }
 
@@ -554,6 +559,11 @@ namespace RockWeb.Blocks.Event
                         lWizardRegistrationName.Text = registration.ToString();
                         lWizardRegistrantName.Text = "New Registrant";
                     }
+                }
+
+                if ( TemplateState != null )
+                {
+                    tglWaitList.Visible = TemplateState.WaitListEnabled;
                 }
 
                 if ( TemplateState != null && RegistrantState == null )
@@ -618,6 +628,7 @@ namespace RockWeb.Blocks.Event
                 if ( RegistrantState != null )
                 {
                     cbCost.Text = RegistrantState.Cost.ToString( "N2" );
+                    cbDiscountApplies.Checked = RegistrantState.DiscountApplies;
                 }
             }
         }
