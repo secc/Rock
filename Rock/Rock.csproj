@@ -1105,6 +1105,7 @@
     <Compile Include="Search\Group\Name.cs" />
     <Compile Include="Search\Person\Address.cs" />
     <Compile Include="Search\Person\BusinessName.cs" />
+    <Compile Include="Web\UI\CompressedHiddenFieldPageStatePersister.cs" />
     <Compile Include="Search\Person\Email.cs" />
     <Compile Include="Search\Person\Name.cs" />
     <Compile Include="Search\Person\Phone.cs" />
