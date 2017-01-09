@@ -214,6 +214,45 @@ namespace Rock.Model
         public string ReminderEmailTemplate { get; set; }
 
         /// <summary>
+        /// Gets or sets the name of the wait list transition from.
+        /// </summary>
+        /// <value>
+        /// The name of the wait list transition from.
+        /// </value>
+        [DataMember]
+        [MaxLength( 200 )]
+        public string WaitListTransitionFromName { get; set; }
+
+        /// <summary>
+        /// Gets or sets the wait list transition from email.
+        /// </summary>
+        /// <value>
+        /// The wait list transition from email.
+        /// </value>
+        [DataMember]
+        [MaxLength( 200 )]
+        public string WaitListTransitionFromEmail { get; set; }
+
+        /// <summary>
+        /// Gets or sets the wait list transition subject.
+        /// </summary>
+        /// <value>
+        /// The wait list transition subject.
+        /// </value>
+        [DataMember]
+        [MaxLength( 200 )]
+        public string WaitListTransitionSubject { get; set; }
+
+        /// <summary>
+        /// Gets or sets the wait list transition email template.
+        /// </summary>
+        /// <value>
+        /// The wait list transition email template.
+        /// </value>
+        [DataMember]
+        public string WaitListTransitionEmailTemplate { get; set; }
+
+        /// <summary>
         /// Gets or sets the set cost on instance.
         /// </summary>
         /// <value>
@@ -356,7 +395,7 @@ namespace Rock.Model
         ///   <c>true</c> if [allow group placement]; otherwise, <c>false</c>.
         /// </value>
         [DataMember]
-        public bool AllowGroupPlacement { get;set; }
+        public bool AllowGroupPlacement { get; set; }
 
         /// <summary>
         /// Gets or sets the name of the payment reminder from.
@@ -465,35 +504,6 @@ namespace Rock.Model
         [DataMember]
         public bool WaitListEnabled { get; set; }
 
-        /// <summary>
-        /// Gets or sets the waitlist confirmation subject.
-        /// </summary>
-        /// <value>
-        /// The waitlist confirmation subject.
-        /// </value>
-        [DataMember]
-        [MaxLength( 200 )]
-        public string WaitlistConfirmationSubject { get; set; }
-
-        /// <summary>
-        /// Gets or sets the waitlist confirmation email template.
-        /// </summary>
-        /// <value>
-        /// The waitlist confirmation email template.
-        /// </value>
-        [DataMember]
-        public string WaitlistConfirmationEmailTemplate { get; set; }
-
-
-        /// <summary>
-        /// Gets or sets the waitlist confirmation message.
-        /// </summary>
-        /// <value>
-        /// The waitlist confirmation message.
-        /// </value>
-        [DataMember]
-        public string WaitlistConfirmationMessage { get; set; }
-
         #endregion
 
         #region Virtual Properties
@@ -568,7 +578,7 @@ namespace Rock.Model
             set { _fees = value; }
         }
         private ICollection<RegistrationTemplateFee> _fees;
-        
+
         /// <summary>
         /// Gets or sets the collection of the current page's child pages.
         /// </summary>
