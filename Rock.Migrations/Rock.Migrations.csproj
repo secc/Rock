@@ -56,6 +56,22 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Migrations\201610192126047_WaitlistConfirmationFields.cs" />
+    <Compile Include="Migrations\201610192126047_WaitlistConfirmationFields.designer.cs">
+      <DependentUpon>201610192126047_WaitlistConfirmationFields.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Migrations\201610261808353_WaitListNotificationFields.cs" />
+    <Compile Include="Migrations\201610261808353_WaitListNotificationFields.Designer.cs">
+      <DependentUpon>201610261808353_WaitListNotificationFields.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Migrations\201611162052022_UpdateRegistrationText.cs" />
+    <Compile Include="Migrations\201611162052022_UpdateRegistrationText.designer.cs">
+      <DependentUpon>201611162052022_UpdateRegistrationText.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Migrations\201612231305026_ExtendDiscountCodes.cs" />
+    <Compile Include="Migrations\201612231305026_ExtendDiscountCodes.designer.cs">
+      <DependentUpon>201612231305026_ExtendDiscountCodes.cs</DependentUpon>
+    </Compile>
     <Compile Include="HotFixMigrations\001_FixLabelMergeFields.cs" />
     <Compile Include="HotFixMigrations\002_FixAttendanceEmail.cs" />
     <Compile Include="HotFixMigrations\003_AddAttendanceIndex.cs" />
@@ -69,14 +85,6 @@
     <Compile Include="Migrations\201610312310571_ConnectionGroupConfig.cs" />
     <Compile Include="Migrations\201610312310571_ConnectionGroupConfig.Designer.cs">
       <DependentUpon>201610312310571_ConnectionGroupConfig.cs</DependentUpon>
-    </Compile>
-    <Compile Include="Migrations\201611162052022_UpdateRegistrationText.cs" />
-    <Compile Include="Migrations\201611162052022_UpdateRegistrationText.Designer.cs">
-      <DependentUpon>201611162052022_UpdateRegistrationText.cs</DependentUpon>
-    </Compile>
-    <Compile Include="Migrations\201612231305026_ExtendDiscountCodes.cs" />
-    <Compile Include="Migrations\201612231305026_ExtendDiscountCodes.Designer.cs">
-      <DependentUpon>201612231305026_ExtendDiscountCodes.cs</DependentUpon>
     </Compile>
     <Compile Include="Migrations\Version 6.0\Version 1.6.0\201609282147388_WaitList.cs" />
     <Compile Include="Migrations\Version 6.0\Version 1.6.0\201609282147388_WaitList.Designer.cs">
@@ -2281,17 +2289,23 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
-    <EmbeddedResource Include="Migrations\201610271014123_AttendeeLastAttendance.resx">
-      <DependentUpon>201610271014123_AttendeeLastAttendance.cs</DependentUpon>
+    <EmbeddedResource Include="Migrations\201610192126047_WaitlistConfirmationFields.resx">
+      <DependentUpon>201610192126047_WaitlistConfirmationFields.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="Migrations\201610312310571_ConnectionGroupConfig.resx">
-      <DependentUpon>201610312310571_ConnectionGroupConfig.cs</DependentUpon>
+    <EmbeddedResource Include="Migrations\201610261808353_WaitListNotificationFields.resx">
+      <DependentUpon>201610261808353_WaitListNotificationFields.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Migrations\201611162052022_UpdateRegistrationText.resx">
       <DependentUpon>201611162052022_UpdateRegistrationText.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Migrations\201612231305026_ExtendDiscountCodes.resx">
       <DependentUpon>201612231305026_ExtendDiscountCodes.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Migrations\201610271014123_AttendeeLastAttendance.resx">
+      <DependentUpon>201610271014123_AttendeeLastAttendance.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Migrations\201610312310571_ConnectionGroupConfig.resx">
+      <DependentUpon>201610312310571_ConnectionGroupConfig.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Migrations\Version 6.0\Version 1.6.0\201609282147388_WaitList.resx">
       <DependentUpon>201609282147388_WaitList.cs</DependentUpon>

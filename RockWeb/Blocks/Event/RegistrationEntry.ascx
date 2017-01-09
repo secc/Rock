@@ -33,10 +33,12 @@
 
     <asp:Panel ID="pnlRegistrant" runat="server" Visible="false" CssClass="registrationentry-registrant">
 
-        <Rock:HighlightLabel ID="hlType" runat="server" CssClass="pull-right"  />
+        
         <h1>
             <asp:Literal ID="lRegistrantTitle" runat="server" />
         </h1>        
+
+        <Rock:NotificationBox ID="nbType" runat="server" NotificationBoxType="Warning"  />
 
         <asp:Panel ID="pnlRegistrantProgressBar" runat="server" CssClass="clearfix">
             <div class="progress">
@@ -49,7 +51,7 @@
         <asp:Panel id="pnlRegistrantFields" runat="server" >
 
             <asp:Panel ID="pnlFamilyOptions" runat="server" CssClass="well js-registration-same-family">
-                <Rock:RockRadioButtonList ID="rblFamilyOptions" runat="server" Label="Individual is in the same family as" RepeatDirection="Vertical" Required="true" RequiredErrorMessage="Answer to which family is required." DataTextField="Value" DataValueField="Key" />
+                <Rock:RockRadioButtonList ID="rblFamilyOptions" runat="server" Label="Individual is in the same immediate family as" RepeatDirection="Vertical" Required="true" RequiredErrorMessage="Answer to which family is required." DataTextField="Value" DataValueField="Key" />
             </asp:Panel>
         
             <asp:Panel ID="pnlFamilyMembers" runat="server" Visible="false" CssClass="row" >
@@ -71,10 +73,8 @@
             <Rock:NotificationBox ID="nbDigitalSignature" runat="server" NotificationBoxType="Info"></Rock:NotificationBox>
             <asp:HiddenField ID="hfRequiredDocumentLinkUrl" runat="server" />
             <asp:HiddenField ID="hfRequiredDocumentQueryString" runat="server" />
-            <asp:HiddenField ID="hfRegistrantGuid" runat="server" ClientIDMode="Static" />
-            
-            <iframe id="iframeRequiredDocument" frameborder="0" runat="server" Visible="false" ClientIDMode="Static"></iframe>
-            <asp:Button id="btnRequiredDocument" runat="server" Visible="false" OnClientClick="var win = window.open($('input[id$=hfRequiredDocumentLinkUrl]').val(), '_blank');win.focus(); return false;" Text="Open Document" CssClass="btn btn-default pull-right"></asp:Button>
+
+            <iframe id="iframeRequiredDocument" frameborder="0" ></iframe>
             <span style="display:none" >
                 <asp:LinkButton ID="lbRequiredDocumentNext" runat="server" Text="Required Document Return" OnClick="lbRequiredDocumentNext_Click" CausesValidation="false" ></asp:LinkButton>
             </span>
@@ -118,7 +118,7 @@
                 </div>
                 <div class="col-md-6">
                     <asp:Panel ID="pnlRegistrarFamilyOptions" runat="server" CssClass="js-registration-same-family">
-                        <Rock:RockRadioButtonList ID="rblRegistrarFamilyOptions" runat="server" Label="You are in the same family as" RepeatDirection="Horizontal" Required="true" DataTextField="Value" DataValueField="Key" RequiredErrorMessage="Answer to which family is required." />
+                        <Rock:RockRadioButtonList ID="rblRegistrarFamilyOptions" runat="server" Label="You are in the same immediate family as" RepeatDirection="Horizontal" Required="true" DataTextField="Value" DataValueField="Key" RequiredErrorMessage="Answer to which family is required." />
                     </asp:Panel>
                 </div>
             </div>
