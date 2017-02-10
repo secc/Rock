@@ -17,9 +17,13 @@
 using System;
 using Microsoft.Owin;
 using Owin;
-using System.Web;
+using System.Collections.Generic;
+using Rock.Utility;
+using System.Linq;
+using Rock;
+using Rock.Model;
 
-[assembly: OwinStartup(typeof(RockWeb.Startup))]
+[assembly: OwinStartup( typeof( RockWeb.Startup ) )]
 namespace RockWeb
 {
     public class Startup
@@ -27,6 +31,30 @@ namespace RockWeb
         public void Configuration( IAppBuilder app )
         {
             app.MapSignalR();
+
+            // Find any plugins that implement IRockOwinStartup
+            try
+            {
+                var startups = new Dictionary<int, List<IRockOwinStartup>>();
+                foreach ( var startupType in Rock.Reflection.FindTypes( typeof( IRockOwinStartup ) ).Select( a => a.Value ).ToList() )
+                {
+                    var startup = Activator.CreateInstance( startupType ) as IRockOwinStartup;
+                    startups.AddOrIgnore( startup.StartupOrder, new List<IRockOwinStartup>() );
+                    startups[startup.StartupOrder].Add( startup );
+                }
+
+                foreach ( var startupList in startups.OrderBy( s => s.Key ).Select( s => s.Value ) )
+                {
+                    foreach ( var startup in startupList )
+                    {
+                        startup.OnStartup( app );
+                    }
+                }
+            }
+            catch ( Exception ex )
+            {
+                ExceptionLogService.LogException( ex, null );
+            }
         }
     }
 }
