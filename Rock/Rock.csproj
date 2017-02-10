@@ -1119,6 +1119,7 @@
     <Compile Include="Search\Person\Address.cs" />
     <Compile Include="Search\Person\BirthDate.cs" />
     <Compile Include="Search\Person\BusinessName.cs" />
+    <Compile Include="Utility\IRockOwinStartup.cs" />
     <Compile Include="Web\UI\CompressedHiddenFieldPageStatePersister.cs" />
     <Compile Include="Search\Person\Email.cs" />
     <Compile Include="Search\Person\Name.cs" />
