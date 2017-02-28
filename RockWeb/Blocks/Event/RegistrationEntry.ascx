@@ -73,8 +73,11 @@
             <Rock:NotificationBox ID="nbDigitalSignature" runat="server" NotificationBoxType="Info"></Rock:NotificationBox>
             <asp:HiddenField ID="hfRequiredDocumentLinkUrl" runat="server" />
             <asp:HiddenField ID="hfRequiredDocumentQueryString" runat="server" />
+            <asp:HiddenField ID="hfRegistrantGuid" runat="server" ClientIDMode="Static" />
+            
+            <iframe id="iframeRequiredDocument" frameborder="0" runat="server" Visible="false" ClientIDMode="Static"></iframe>
+            <asp:Button id="btnRequiredDocument" runat="server" Visible="false" OnClientClick="var win = window.open($('input[id$=hfRequiredDocumentLinkUrl]').val(), '_blank');win.focus(); return false;" Text="Open Document" CssClass="btn btn-default pull-right"></asp:Button>
 
-            <iframe id="iframeRequiredDocument" frameborder="0" ></iframe>
             <span style="display:none" >
                 <asp:LinkButton ID="lbRequiredDocumentNext" runat="server" Text="Required Document Return" OnClick="lbRequiredDocumentNext_Click" CausesValidation="false" ></asp:LinkButton>
             </span>
@@ -115,6 +118,7 @@
                 <div class="col-md-6">
                     <Rock:EmailBox ID="tbConfirmationEmail" runat="server" Label="Send Confirmation Emails To" Required="true" />
                     <Rock:RockCheckBox ID="cbUpdateEmail" runat="server" Text="Should Your Account Be Updated To Use This Email Address?" Visible="false" Checked="true" />
+                    <asp:Literal ID="lUpdateEmailWarning" runat="server" Text="Note: Your account will automatically be updated with this email address." Visible="false" />
                 </div>
                 <div class="col-md-6">
                     <asp:Panel ID="pnlRegistrarFamilyOptions" runat="server" CssClass="js-registration-same-family">
