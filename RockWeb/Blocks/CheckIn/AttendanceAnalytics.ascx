@@ -70,10 +70,16 @@
                         <Rock:RockCheckBoxList ID="clbCampuses" runat="server" FormGroupCssClass="campuses-picker js-campuses-picker" CssClass="campuses-picker-vertical" Label="Campuses" 
                             Help="The campuses to display attendance for. Leave blank to not filter by campus." />
                         
-                        <Rock:NotificationBox ID="nbGroupsWarning" runat="server" NotificationBoxType="Warning" Text="Please select at least one group." Visible="false"/>
-                        <h4 class="js-checkbox-selector cursor-pointer">Groups</h4>
-                        <hr class="margin-t-none" />
-                        <ul class="list-unstyled js-group-checkboxes group-checkboxes">
+                        <div class="js-groups-container">
+                            <Rock:NotificationBox ID="nbGroupsWarning" runat="server" NotificationBoxType="Warning" Text="Please select at least one group." Visible="false"/>
+                            
+                            <div class="grouplist-actions rollover-container" id="divGroupListActions" runat="server">
+                                <Rock:Toggle runat="server" ID="cbShowInactive" CssClass="pull-right" ButtonSizeCssClass="btn-xs" OnCssClass="btn-primary" OffCssClass="btn-primary" OnText="All Groups" OffText="Active Groups" AutoPostBack="true" OnCheckedChanged="cbShowInactive_CheckedChanged" />
+                                <span class="h4 js-checkbox-selector cursor-pointer">Groups</span>
+                                <span class="rollover-item" id="pnlRolloverConfig" runat="server">
+                                    <i class="fa fa-gear clickable js-show-config" onclick="$(this).closest('.js-groups-container').find('.js-groups-config-panel').slideToggle()"></i>
+                                </span>
+                            </div>
 
                             <asp:Repeater ID="rptGroupTypes" runat="server" OnItemDataBound="rptGroupTypes_ItemDataBound">
                                 <ItemTemplate>
