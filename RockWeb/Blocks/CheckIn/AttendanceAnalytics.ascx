@@ -81,12 +81,20 @@
                                 </span>
                             </div>
 
-                            <asp:Repeater ID="rptGroupTypes" runat="server" OnItemDataBound="rptGroupTypes_ItemDataBound">
-                                <ItemTemplate>
-                                </ItemTemplate>
-                            </asp:Repeater>
+                            <div class="js-groups-config-panel" style="display: none" id="pnlConfigPanel" runat="server">
+                                <Rock:RockCheckBox ID="cbIncludeGroupsWithoutSchedule" runat="server" Text="Include groups that don't have a schedule" OnCheckedChanged="cbIncludeGroupsWithoutSchedule_CheckedChanged" AutoPostBack="true" />
+                            </div>
+                            
+                            <hr class="margin-t-sm" />
+                            <ul class="list-unstyled group-checkboxes">
 
-                        </ul>
+                                <asp:Repeater ID="rptGroupTypes" runat="server" OnItemDataBound="rptGroupTypes_ItemDataBound">
+                                    <ItemTemplate>
+                                    </ItemTemplate>
+                                </asp:Repeater>
+
+                            </ul>
+                        </div>
 
                         <Rock:DataViewPicker ID="dvpDataView" runat="server" Label="Limit by DataView" />
 
@@ -330,23 +338,20 @@
                 showFilterByOptions();
 
                 // toggle all group checkboxes
-                $('.js-checkbox-selector, .js-group-checkboxes .rock-check-box-list label').on('click', function (e) {
-                    
-                    var container = $(this).parent().find('.js-group-checkboxes, .controls');
-                    var isChecked = container.hasClass('all-checked');
+                $('.js-checkbox-selector, .js-groups-container .rock-check-box-list .control-label').on('click', function (e) {
+
+                    var container = $(this).closest('.js-groups-container');
+
+                    var isChecked = true;
+                    container.find('input:checkbox').each(function (a) {
+                        if (!$(this).prop('checked')) {
+                            isChecked = false;
+                        }
+                    });
 
                     container.find('input:checkbox').each(function () {
                         $(this).prop('checked', !isChecked);
                     });
-
-                    if (isChecked) {
-                        container.removeClass('all-checked');
-                        container.find('.controls').removeClass('all-checked');
-                    }
-                    else {
-                        container.addClass('all-checked');
-                        container.find('.controls').addClass('all-checked');
-                    }
 
                 });
 
@@ -354,18 +359,16 @@
                 $('.js-campuses-picker label').on('click', function (e) {
 
                     var container = $(this).parent().find('.controls');
-                    var isChecked = container.hasClass('all-checked');
+                    var isChecked = true;
+                    container.find('input:checkbox').each(function (a) {
+                        if (!$(this).prop('checked')) {
+                            isChecked = false;
+                        }
+                    });
 
                     container.find('input:checkbox').each(function () {
                         $(this).prop('checked', !isChecked);
                     });
-
-                    if (isChecked) {
-                        container.removeClass('all-checked');
-                    }
-                    else {
-                        container.addClass('all-checked');
-                    }
 
                 });
             });
