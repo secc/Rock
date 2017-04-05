@@ -29,6 +29,8 @@
                             <asp:PlaceHolder ID="phAttributes" runat="server" />
             
                             <asp:Literal ID="lFootingText" runat="server" />
+                            
+                            <asp:PlaceHolder ID="phContent" runat="server" Visible="false" />
 
                             <div class="actions">
                                 <asp:PlaceHolder ID="phActions" runat="server" />
