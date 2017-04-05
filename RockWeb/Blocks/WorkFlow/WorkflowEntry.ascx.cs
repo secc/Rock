@@ -125,7 +125,7 @@ namespace RockWeb.Blocks.WorkFlow
             if ( HydrateObjects() )
             {
                 BuildForm( false );
-            }
+            } 
         }
 
         /// <summary>
@@ -182,6 +182,12 @@ namespace RockWeb.Blocks.WorkFlow
             }
         }
 
+        protected override void CreateChildControls()
+        {
+            HandleUIAction();
+            base.CreateChildControls();
+        }
+        
         /// <summary>
         /// Returns breadcrumbs specific to the block that should be added to navigation
         /// based on the current page reference.  This function is called during the page's
@@ -403,6 +409,11 @@ namespace RockWeb.Blocks.WorkFlow
                     {
                         foreach ( var action in activity.ActiveActions )
                         {
+                            if (action.ActionType.WorkflowAction is IUIActionComponent)
+                            {
+                                return false;
+                            }
+
                             if ( action.ActionType.WorkflowForm != null && action.IsCriteriaValid )
                             {
                                 _activity = activity;
@@ -802,6 +813,134 @@ namespace RockWeb.Blocks.WorkFlow
                 pnlForm.Visible = false;
             }
 
+        }
+
+        private bool HandleUIAction()
+        {
+
+            LoadWorkflowType();
+            
+            // If operating against an existing workflow, get the workflow and load attributes
+            if (!WorkflowId.HasValue)
+            {
+                WorkflowId = PageParameter("WorkflowId").AsIntegerOrNull();
+                if (!WorkflowId.HasValue)
+                {
+                    Guid guid = PageParameter("WorkflowGuid").AsGuid();
+                    if (!guid.IsEmpty())
+                    {
+                        _workflow = _workflowService.Queryable()
+                            .Where(w => w.Guid.Equals(guid) && w.WorkflowTypeId == _workflowType.Id)
+                            .FirstOrDefault();
+                        if (_workflow != null)
+                        {
+                            WorkflowId = _workflow.Id;
+                        }
+                    }
+                }
+            }
+
+            if (WorkflowId.HasValue)
+            {
+                if (_workflow == null)
+                {
+                    _workflow = _workflowService.Queryable()
+                        .Where(w => w.Id == WorkflowId.Value && w.WorkflowTypeId == _workflowType.Id)
+                        .FirstOrDefault();
+                }
+                if (_workflow != null)
+                {
+                    hlblWorkflowId.Text = _workflow.WorkflowId;
+
+                    _workflow.LoadAttributes();
+                    foreach (var activity in _workflow.Activities)
+                    {
+                        activity.LoadAttributes();
+                    }
+                }
+
+            }
+
+            if (!WorkflowId.HasValue)
+            {
+                return false;
+            }
+
+            var canEdit = UserCanEdit || _workflow.IsAuthorized(Authorization.EDIT, CurrentPerson);
+
+            // Find first active action form
+            int personId = CurrentPerson != null ? CurrentPerson.Id : 0;
+            foreach (var activity in _workflow.Activities
+                .Where(a =>
+                   a.IsActive &&
+                   (
+                       (canEdit) ||
+                       (!a.AssignedGroupId.HasValue && !a.AssignedPersonAliasId.HasValue) ||
+                       (a.AssignedPersonAlias != null && a.AssignedPersonAlias.PersonId == personId) ||
+                       (a.AssignedGroup != null && a.AssignedGroup.Members.Any(m => m.PersonId == personId))
+                   )
+                )
+                .OrderBy(a => a.ActivityType.Order))
+            {
+                if (canEdit || (activity.ActivityType.IsAuthorized(Authorization.VIEW, CurrentPerson)))
+                {
+                    foreach (var action in activity.ActiveActions)
+                    {
+                        if (action.ActionType.WorkflowAction is IUIActionComponent)
+                        {
+
+                            _activity = activity;
+                            _activity.LoadAttributes();
+
+                            _action = action;
+                            _actionType = _action.ActionType;
+                            ActionTypeId = _actionType.Id;
+
+                            List<string> actionErrorMessages;
+                            if (_workflowService.Process(_workflow, out actionErrorMessages))
+                            {
+                                //_action = activity.ActiveActions.FirstOrDefault();
+                                // If display returns true, then we need to display
+                                if (_action != null && _action.ActionType.WorkflowAction is IUIActionComponent && ((IUIActionComponent)_action.ActionType.WorkflowAction).Display(action, _rockContext, phContent))
+                                {
+                                    phContent.Visible = true;
+                                    pnlForm.Visible = true;
+                                    ShowNotes(false);
+                                }
+                                else
+                                {
+
+                                    int? previousActionId = null;
+
+                                    if (_action != null)
+                                    {
+                                        previousActionId = _action.Id;
+                                    }
+
+                                    ActionTypeId = null;
+                                    _action = null;
+                                    _actionType = null;
+                                    _activity = null;
+
+                                    if (HydrateObjects())
+                                    {
+                                        BuildForm(true);
+                                        ProcessActionRequest();
+                                    }
+                                }
+                            }
+                            else
+                            {
+                                ShowMessage(NotificationBoxType.Danger, "Workflow Processing Error(s):",
+                                    "<ul><li>" + actionErrorMessages.AsDelimited("</li><li>", null, true) + "</li></ul>");
+                            }
+
+                            return true;
+                        }
+                    }
+                }
+            }
+            return false;
         }
 
         #endregion
