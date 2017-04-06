@@ -449,7 +449,8 @@ namespace RockWeb.Blocks.Event
                                 if ( SignInline && 
                                     !PageParameter( "redirected" ).AsBoolean() && 
                                     DigitalSignatureComponent != null && 
-                                    !string.IsNullOrWhiteSpace( DigitalSignatureComponent.CookieInitializationUrl ) )
+                                    !string.IsNullOrWhiteSpace( DigitalSignatureComponent.CookieInitializationUrl ) &&
+                                    SignInlineEmbedMode != "New Tab")
                                 {
                                     // Redirect for Digital Signature Cookie Initialization 
                                     var returnUrl = GlobalAttributesCache.Read().GetValue( "PublicApplicationRoot" ).EnsureTrailingForwardslash() + Request.Url.PathAndQuery.RemoveLeadingForwardslash();
