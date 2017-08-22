@@ -391,7 +391,8 @@ namespace Rock.Rest.Controllers
                     Name = showFullNameReversed
                     ? Person.FormatFullNameReversed( a.LastName, a.NickName, a.SuffixValueId, a.RecordTypeValueId )
                     : Person.FormatFullName( a.NickName, a.LastName, a.SuffixValueId, a.RecordTypeValueId ),
-                    IsActive = a.RecordStatusValueId.HasValue && a.RecordStatusValueId == activeRecordStatusValueId
+                    IsActive = a.RecordStatusValueId.HasValue && a.RecordStatusValueId == activeRecordStatusValueId,
+                    RecordStatus = a.RecordStatusValueId.HasValue ? DefinedValueCache.Read( a.RecordStatusValueId.Value ).Value : string.Empty
                 } );
 
                 return simpleResult.AsQueryable();
@@ -615,25 +616,6 @@ namespace Rock.Rest.Controllers
             personSearchResult.PickerItemDetailsImageHtml = imageHtml;
             personSearchResult.PickerItemDetailsPersonInfoHtml = personInfoHtml;
             personSearchResult.PickerItemDetailsHtml = string.Format( itemDetailFormat, imageHtml, personInfoHtml );
-        }
-
-        [Authenticate, Secured]
-        [HttpGet]
-        [System.Web.Http.Route( "api/People/GetSearchDetails/{personId}" )]
-        public string GetImpersonationParameter( int personId )
-        {
-            string result = string.Empty;
-            
-            var rockContext = this.Service.Context as Rock.Data.RockContext;
-
-            var person = new PersonService( rockContext ).Get( personId );
-
-            if ( person != null )
-            {
-                result = person.ImpersonationParameter;
-            }
-
-            return result;
         }
 
         /// <summary>

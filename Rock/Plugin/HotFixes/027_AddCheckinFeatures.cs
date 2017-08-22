@@ -144,7 +144,9 @@ namespace Rock.Plugin.HotFixes
             // Attrib for BlockType: Person Select (Family Check-in):Auto Select Next Page
             RockMigrationHelper.AddBlockTypeAttribute( "92DCF018-F551-4890-8BA1-511D97BF6B8A", "BD53F9C9-EBA9-4D3F-82EA-DE5DD34A8108", "Auto Select Next Page", "AutoSelectNextPage", "", "The page to navigate to after selecting people in auto-select mode.", 5, @"", "4302646B-F6CD-492D-8850-96B9CA1CEA59" );
             // Attrib for BlockType: Person Select (Family Check-in):Pre-Selected Options Format
-            RockMigrationHelper.AddBlockTypeAttribute( "92DCF018-F551-4890-8BA1-511D97BF6B8A", "9C204CD0-1233-41C5-818A-C5DA439445AA", "Pre-Selected Options Format", "OptionFormat", "", "", 6, @"<strong>{{ Schedule.Name }}</strong>: {{ Group.Name }} - {{ Location.Name }}", "55580865-E792-469F-B45C-45713477D033" );
+            RockMigrationHelper.AddBlockTypeAttribute( "92DCF018-F551-4890-8BA1-511D97BF6B8A", "9C204CD0-1233-41C5-818A-C5DA439445AA", "Pre-Selected Options Format", "OptionFormat", "", "", 6, @"<span class='auto-select-schedule'>{{ Schedule.Name }}:</span>
+<span class='auto-select-group'>{{ Group.Name }}</span>
+<span class='auto-select-location'>{{ Location.Name }}</span>", "55580865-E792-469F-B45C-45713477D033" );
 
             // Update Family Select Next Page to direct to Action Page
             RockMigrationHelper.AddBlockAttributeValue( "CD97D61E-7BCE-436B-ACDD-4383EB7490BA", "90ECD00A-9570-4986-B32F-02F32B656A2A", @"0586648b-9490-43c6-b18d-7f403458c080" ); // Next Page
@@ -181,7 +183,7 @@ namespace Rock.Plugin.HotFixes
             RockMigrationHelper.AddBlockAttributeValue( "32B345DD-0EF4-480E-B82A-7D7191CC374B", "735D4AAB-F8F4-4388-9A00-2132356187A6", @"d54fc289-df7d-48c5-91be-38bcfdebc6af" );
 
             RockMigrationHelper.AddBlockAttributeValue( "0F82C7EB-3E71-496F-B5F4-83F32AD5EBB5", "4302646B-F6CD-492D-8850-96B9CA1CEA59", @"4af7a0e1-e991-4ae5-a2b5-c440f67a2e6a" ); // Auto Select Next Page
-            RockMigrationHelper.AddBlockAttributeValue( "0F82C7EB-3E71-496F-B5F4-83F32AD5EBB5", "55580865-E792-469F-B45C-45713477D033", @"<strong>{{ Schedule.Name }}</strong>: {{ Group.Name }} - {{ Location.Name }}" ); // Pre-Selected Options Format
+            RockMigrationHelper.AddBlockAttributeValue( "0F82C7EB-3E71-496F-B5F4-83F32AD5EBB5", "55580865-E792-469F-B45C-45713477D033", @"{{ Schedule.Name }} - {{ Group.Name }} - {{ Location.Name }}" ); // Pre-Selected Options Format
 
             // Add Block to Page: Action Select, Site: Rock Check-in
             RockMigrationHelper.AddBlock( "0586648B-9490-43C6-B18D-7F403458C080", "", "49FC4B38-741E-4B0B-B395-7C1929340D88", "Idle Redirect", "Main", "", "", 1, "7A293980-9E28-4115-85EB-DA197734EED2" );
@@ -203,6 +205,31 @@ namespace Rock.Plugin.HotFixes
             RockMigrationHelper.AddBlockAttributeValue( "04BF66EF-66E5-465D-A590-D8BA02E217B7", "1CAC7B16-041A-4F40-8AEE-A39DFA076C14", @"20" );
             // Attrib Value for Block:Idle Redirect, Attribute:New Location Page: Check Out Success, Site: Rock Check-in
             RockMigrationHelper.AddBlockAttributeValue( "04BF66EF-66E5-465D-A590-D8BA02E217B7", "2254B67B-9CB1-47DE-A63D-D0B56051ECD4", @"/checkin/welcome" );
+
+            Sql( @"
+update DataViewFilter
+set selection = '[
+	""SecondaryAudiences"",
+    ""8"",
+    ""b364cdee-f000-4965-ae67-0c80dda365dc""
+]' 
+where selection = '[
+    ""SecondaryAudiences"",
+	""8"",
+	""4cdee-f000-4965-ae67-0c80dda365dc\""\""
+]'
+
+update DataViewFilter
+set selection = '[
+    ""SecondaryAudiences"",
+	""8"",
+	""57b2a23f-3b0c-43a8-9f45-332120dcd0ee""
+]' 
+where selection = '[
+    ""SecondaryAudiences"",
+	""8"",
+	""2a23f-3b0c-43a8-9f45-332120dcd0ee\""\"",
+]'" );
 
         }
 
