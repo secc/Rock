@@ -58,9 +58,9 @@ namespace RockWeb.Blocks.Event
     [BooleanField( "Enable Debug", "Display the merge fields that are available for lava ( Success Page ).", false, "", 5 )]
     [BooleanField( "Allow InLine Digital Signature Documents", "Should inline digital documents be allowed? This requires that the registration template is configured to display the document inline", true, "", 6, "SignInline" )]
     [SystemEmailField( "Confirm Account Template", "Confirm Account Email Template", false, Rock.SystemGuid.SystemEmail.SECURITY_CONFIRM_ACCOUNT, "", 7 )]
-	[TextField ( "Family Term", "The term to use for specifying which household or family a person is a member of.", true, "immediate family", "", 8)]
-	[BooleanField( "Force Email Update", "Force the email to be updated on the person's record.", false, "", 9 )]
-
+    [TextField( "Family Term", "The term to use for specifying which household or family a person is a member of.", true, "immediate family", "", 8 )]
+    [BooleanField( "Force Email Update", "Force the email to be updated on the person's record.", false, "", 9 )]
+    [CustomDropdownListField( "Digital Signature Embed Mode", "Whether to use an Iframe or open a new tab for the signature request.", "Iframe,New Tab", true, "Iframe", "", 10, "SignInlineEmbedMode" )]
     public partial class RegistrationEntry : RockBlock
     {
         #region Fields
@@ -108,6 +108,7 @@ namespace RockWeb.Blocks.Event
         private bool SignInline { get; set; }
         private string DigitalSignatureComponentTypeName { get; set; }
         private DigitalSignatureComponent DigitalSignatureComponent { get; set; }
+        private string SignInlineEmbedMode { get; set; }
 
         // Info about each current registration
         protected RegistrationInfo RegistrationState { get; set; }
@@ -377,6 +378,22 @@ namespace RockWeb.Blocks.Event
         {
             base.OnLoad( e );
 
+            if ( !string.IsNullOrEmpty( PageParameter( "document_id" ) ) && !string.IsNullOrEmpty( PageParameter( "registration_key" ) ) )
+            {
+                Session[PageParameter( "registration_key" )] = "?document_id=" + PageParameter( "document_id" );
+
+                string returnUrl = GlobalAttributesCache.Read().GetValue( "PublicApplicationRoot" ).EnsureTrailingForwardslash() +
+                    ResolveRockUrl( "~/Blocks/Event/DocumentReturn.html" ).TrimStart( '/' );
+                Response.Redirect( returnUrl );
+                Response.Flush();
+                Response.End();
+            }
+            else if ( !string.IsNullOrEmpty( PageParameter( "registration_key" ) ) )
+            {
+                Response.Flush();
+                Response.Write( Session[PageParameter( "registration_key" )] );
+                Response.End();
+            }
             // Reset warning/error messages
             nbMain.Visible = false;
             nbWaitingList.Visible = false;
@@ -443,7 +460,8 @@ namespace RockWeb.Blocks.Event
                                     if ( SignInline &&
                                         !PageParameter( "redirected" ).AsBoolean() &&
                                         DigitalSignatureComponent != null &&
-                                        !string.IsNullOrWhiteSpace( DigitalSignatureComponent.CookieInitializationUrl ) )
+                                        !string.IsNullOrWhiteSpace( DigitalSignatureComponent.CookieInitializationUrl ) &&
+                                        SignInlineEmbedMode != "New Tab" )
                                     {
                                         // Redirect for Digital Signature Cookie Initialization 
                                         var returnUrl = GlobalAttributesCache.Read().GetValue( "PublicApplicationRoot" ).EnsureTrailingForwardslash() + Request.Url.PathAndQuery.RemoveLeadingForwardslash();
@@ -474,7 +492,7 @@ namespace RockWeb.Blocks.Event
                 // Show or Hide the Credit card entry panel based on if a saved account exists and it's selected or not.
                 divNewCard.Style[HtmlTextWriterStyle.Display] = ( rblSavedCC.Items.Count == 0 || rblSavedCC.Items[rblSavedCC.Items.Count - 1].Selected ) ? "block" : "none";
             }
-            
+
         }
 
         public override List<BreadCrumb> GetBreadCrumbs( PageReference pageReference )
@@ -644,7 +662,7 @@ namespace RockWeb.Blocks.Event
             }
             ProgressBarSteps = ( numHowMany.Value * registrantPages ) + ( Using3StepGateway ? 3 : 2 );
 
-            ShowRegistrant( true, false );
+            ShowRegistrant();
 
             hfTriggerScroll.Value = "true";
         }
@@ -683,7 +701,21 @@ namespace RockWeb.Blocks.Event
             {
                 _saveNavigationHistory = true;
 
-                ShowRegistrant( true, true );
+                CurrentFormIndex++;
+                if ( ( CurrentFormIndex >= FormCount && !SignInline ) || CurrentFormIndex >= FormCount + 1 )
+                {
+                    CurrentRegistrantIndex++;
+                    CurrentFormIndex = 0;
+                }
+
+                if ( CurrentRegistrantIndex >= RegistrationState.RegistrantCount )
+                {
+                    ShowSummary();
+                }
+                else
+                {
+                    ShowRegistrant();
+                }
             }
             else
             {
@@ -1399,6 +1431,7 @@ namespace RockWeb.Blocks.Event
                 if ( provider != null && provider.IsActive )
                 {
                     SignInline = GetAttributeValue( "SignInline" ).AsBoolean() && RegistrationTemplate.SignatureDocumentAction == SignatureDocumentAction.Embed;
+                    SignInlineEmbedMode = GetAttributeValue( "SignInlineEmbedMode" );
                     DigitalSignatureComponentTypeName = RegistrationTemplate.RequiredSignatureDocumentTemplate.ProviderEntityType.Name;
                     DigitalSignatureComponent = provider;
                 }
@@ -1441,7 +1474,7 @@ namespace RockWeb.Blocks.Event
                         // option selected
                         foreach ( var field in RegistrationTemplate.Forms
                             .SelectMany( f => f.Fields )
-                            .Where( f => 
+                            .Where( f =>
                                 ( f.PersonFieldType == RegistrationPersonFieldType.FirstName ||
                                 f.PersonFieldType == RegistrationPersonFieldType.LastName ) &&
                                 f.FieldSource == RegistrationFieldSource.PersonField ) )
@@ -2780,6 +2813,7 @@ namespace RockWeb.Blocks.Event
                                 {
                                     groupMember.GroupRoleId = group.GroupType.Roles.Select( r => r.Id ).FirstOrDefault();
                                 }
+                                groupMember.GroupMemberStatus = GroupMemberStatus.Active;
                             }
                         }
 
@@ -3382,45 +3416,57 @@ namespace RockWeb.Blocks.Event
                         }
 
                         nbDigitalSignature.Heading = "Signature Required";
+                        if ( SignInlineEmbedMode == "New Tab" )
+                    {
                         nbDigitalSignature.Text = string.Format(
-                            "This {0} requires that you sign a {1} for each registrant, please follow the prompts below to digitally sign this document for {2}.",
-                            RegistrationTemplate.RegistrationTerm, RegistrationTemplate.RequiredSignatureDocumentTemplate.Name, registrantName );
-
-                        var errors = new List<string>();
-                        string inviteLink = DigitalSignatureComponent.GetInviteLink( RegistrationTemplate.RequiredSignatureDocumentTemplate.ProviderTemplateKey, out errors );
-                        if ( !string.IsNullOrWhiteSpace( inviteLink ) )
-                        {
-                            string returnUrl = GlobalAttributesCache.Read().GetValue( "PublicApplicationRoot" ).EnsureTrailingForwardslash() +
-                                ResolveRockUrl( "~/Blocks/Event/DocumentReturn.html" );
-                            hfRequiredDocumentLinkUrl.Value = string.Format( "{0}?redirect_uri={1}", inviteLink, returnUrl );
-                        }
-                        else
-                        {
-                            ShowError( "Digital Signature Error", string.Format( "An Error Occurred Trying to Get Document Link... <ul><li>{0}</li></ul>", errors.AsDelimited( "</li><li>" ) ) );
-                            return;
-                        }
-
-                        pnlRegistrantFields.Visible = false;
-                        pnlDigitalSignature.Visible = true;
-                        lbRegistrantNext.Visible = false;
+                        "This {0} requires that you sign a {1} for each registrant, please click the button below and then follow the prompts to digitally sign this document for {2}.  This will open the signing request in a new tab in your browser.  When you have successfully signed this document, you will be returned to this page which will automatically proceed to the next step of your registration. ",
+                        RegistrationTemplate.RegistrationTerm, RegistrationTemplate.RequiredSignatureDocumentTemplate.Name, registrantName );
+                        iframeRequiredDocument.Visible = false;
+                        btnRequiredDocument.Visible = true;
                     }
                     else
                     {
+                        nbDigitalSignature.Text = string.Format(
+                        "This {0} requires that you sign a {1} for each registrant, please follow the prompts below to digitally sign this document for {2}.",
+                        RegistrationTemplate.RegistrationTerm, RegistrationTemplate.RequiredSignatureDocumentTemplate.Name, registrantName );
+                        iframeRequiredDocument.Visible = true;
+                        btnRequiredDocument.Visible = false;
+                    }
+
+                    var errors = new List<string>();
+                    string inviteLink = DigitalSignatureComponent.GetInviteLink( RegistrationTemplate.RequiredSignatureDocumentTemplate.ProviderTemplateKey, out errors );
+                    if ( !string.IsNullOrWhiteSpace( inviteLink ) )
+                    {
+                        string returnUrl = GlobalAttributesCache.Read().GetValue( "PublicApplicationRoot" ).EnsureTrailingForwardslash() +
+                            ResolveRockUrl( Request.RawUrl + ( Request.QueryString.Count == 0 ? "?" : "&" ) + "registration_key=" + RegistrationState.Registrants[CurrentRegistrantIndex].Guid ).TrimStart( '/' );
+                        hfRequiredDocumentLinkUrl.Value = string.Format( "{0}?redirect_uri={1}", inviteLink, returnUrl.UrlEncode() );
+                        hfRegistrantGuid.Value = RegistrationState.Registrants[CurrentRegistrantIndex].Guid.ToString();
+                    }
+                    else
+                    {
+                        ShowError( "Digital Signature Error", string.Format( "An Error Occurred Trying to Get Document Link... <ul><li>{0}</li></ul>", errors.AsDelimited( "</li><li>" ) ) );
+                        return;
+                    }
+
+                    pnlRegistrantFields.Visible = false;
+                    pnlDigitalSignature.Visible = true;
+                    lbRegistrantNext.Visible = false;
+                }
+                else
+                {
                         pnlRegistrantFields.Visible = true;
                         pnlDigitalSignature.Visible = false;
                         lbRegistrantNext.Visible = true;
 
                         ddlFamilyMembers.Items.Clear();
 
-                    if ( CurrentFormIndex == 0 && RegistrationState != null && RegistrationState.RegistrantCount > CurrentRegistrantIndex )
-                    {
-                        var registrant = RegistrationState.Registrants[CurrentRegistrantIndex];
-                        if ( registrant.Id <= 0 && 
-                            CurrentFormIndex == 0 && 
-                            RegistrationTemplate.RegistrantsSameFamily == RegistrantsSameFamily.Yes && 
-                            RegistrationTemplate.ShowCurrentFamilyMembers && CurrentPerson != null )
+                        if ( CurrentFormIndex == 0 && RegistrationState != null && RegistrationState.RegistrantCount > CurrentRegistrantIndex )
                         {
-                            if ( registrant.Id <= 0 && CurrentFormIndex == 0 && RegistrationTemplate.ShowCurrentFamilyMembers && CurrentPerson != null )
+                            if ( registrant.Id <= 0 &&
+                                CurrentFormIndex == 0 &&
+                                RegistrationTemplate.RegistrantsSameFamily == RegistrantsSameFamily.Yes &&
+                                RegistrationTemplate.ShowCurrentFamilyMembers &&
+                                CurrentPerson != null )
                             {
                                 var familyMembers = CurrentPerson.GetFamilyMembers( true )
                                     .Select( m => m.Person )
@@ -3796,19 +3842,51 @@ namespace RockWeb.Blocks.Event
     }});
 
     // Evaluates the current url whenever the iframe is loaded and if it includes a qrystring parameter
-    // The qry parameter value is saved to a hidden field and a post back is performed
     $('#iframeRequiredDocument').on('load', function(e) {{
         var location = this.contentWindow.location;
-        var qryString = this.contentWindow.location.search;
+        if (location) {{
+            var qryString = this.contentWindow.location.search;
+            window.processIframeReturn(qryString);
+        }}
+    }});
+
+    // The qry parameter value is saved to a hidden field and a post back is performed
+    window.processIframeReturn = function(qryString) {{
         if ( qryString && qryString != '' && qryString.startsWith('?document_id') ) {{ 
+            window.focus();
             debugger;
             $('#{19}').val(qryString);
             {20};
         }}
-    }});
+    }};
+
+    poll = function() {{
+       setTimeout(function(){{
+          $.ajax({{ 
+            url: '{23}registration_key='+$('#hfRegistrantGuid').val(), 
+            success: function(data){{
+                //
+                if (data != ''&& data.startsWith('?document_id') ) {{
+                    $('#{19}').val(data);
+                    {20};
+                }}
+                else 
+                {{
+                    //Setup the next poll 
+                    poll();
+                }}
+            }}
+        }});
+      }}, 5000);
+    }}
 
     if ($('#{21}').val() != '' ) {{
         $('#iframeRequiredDocument').attr('src', $('#{21}').val() );
+    }}
+
+    if ($('#hfRegistrantGuid').length > 0 && $('#hfRegistrantGuid').val() != '' ) {{
+        $.ajaxSetup({{ cache: false }});
+        poll();
     }}
 
 ", nbAmountPaid.ClientID                 // {0}
@@ -3833,7 +3911,8 @@ namespace RockWeb.Blocks.Event
             , hfRequiredDocumentQueryString.ClientID // {19}
             , this.Page.ClientScript.GetPostBackEventReference( lbRequiredDocumentNext, "" ) // {20}
             , hfRequiredDocumentLinkUrl.ClientID     // {21}
-            , GetAttributeValue( "FamilyTerm")            // {22}
+            , GetAttributeValue( "FamilyTerm" )      // {22}
+            , this.Request.RawUrl + ( Request.QueryString.Count == 0 ? "?" : "&" )           // {23}
 );
 
             ScriptManager.RegisterStartupScript( Page, Page.GetType(), "registrationEntry", script, true );
@@ -4758,7 +4837,7 @@ namespace RockWeb.Blocks.Event
                             object dbValue = null;
 
                             if ( field.ShowCurrentValue ||
-                                ( ( field.PersonFieldType == RegistrationPersonFieldType.FirstName || 
+                                ( ( field.PersonFieldType == RegistrationPersonFieldType.FirstName ||
                                 field.PersonFieldType == RegistrationPersonFieldType.LastName ) &&
                                 field.FieldSource == RegistrationFieldSource.PersonField ) )
                             {
@@ -4855,17 +4934,19 @@ namespace RockWeb.Blocks.Event
                 }
 
                 rblRegistrarFamilyOptions.Label = string.IsNullOrWhiteSpace( tbYourFirstName.Text ) ?
-                    "You are in the same " + GetAttributeValue( "FamilyTerm") + " as" :
-                    tbYourFirstName.Text + " is in the same " + GetAttributeValue( "FamilyTerm") + " as";
+                    "You are in the same " + GetAttributeValue( "FamilyTerm" ) + " as" :
+                    tbYourFirstName.Text + " is in the same " + GetAttributeValue( "FamilyTerm" ) + " as";
 
-                cbUpdateEmail.Visible = CurrentPerson != null && !string.IsNullOrWhiteSpace( CurrentPerson.Email ) && !(GetAttributeValue("ForceEmailUpdate").AsBoolean());
-				if (CurrentPerson != null && GetAttributeValue("ForceEmailUpdate").AsBoolean()) {
-					lUpdateEmailWarning.Visible = true;
-				}
+                cbUpdateEmail.Visible = CurrentPerson != null && !string.IsNullOrWhiteSpace( CurrentPerson.Email ) && !( GetAttributeValue( "ForceEmailUpdate" ).AsBoolean() );
+                if ( CurrentPerson != null && GetAttributeValue( "ForceEmailUpdate" ).AsBoolean() )
+                {
+                    lUpdateEmailWarning.Visible = true;
+                }
 
                 //rblRegistrarFamilyOptions.SetValue( RegistrationState.FamilyGuid.ToString() );
 
                 // Build Discount info if template has discounts and this is a new registration
+                nbDiscountCode.Visible = false;
                 if ( RegistrationTemplate != null
                     && RegistrationTemplate.Discounts.Any()
                     && !RegistrationState.RegistrationId.HasValue )
