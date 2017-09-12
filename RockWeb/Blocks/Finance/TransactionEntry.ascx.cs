@@ -158,7 +158,7 @@ TransactionAcountDetails: [
     [EntityTypeField( "Transaction Entity Type", "The Entity Type for the Transaction Detail Record (usually left blank)", false, "Advanced", order: 7 )]
     [TextField( "Entity Id Param", "The Page Parameter that will be used to set the EntityId value for the Transaction Detail Record (requires Transaction Entry Type to be configured)", false, "", "Advanced", order: 8 )]
     [CodeEditorField( "Transaction Header", "The Lava template which will be displayed prior to the Amount entry", CodeEditorMode.Lava, CodeEditorTheme.Rock, 200, false, "", "Advanced", order: 9 )]
-    [BooleanField( "Enable Initial Back button", "Show a Back button on the initial page that will navigate to wherever the user was prior to the transaction entry", false, "Advanced", order:10)]
+    [BooleanField( "Enable Initial Back button", "Show a Back button on the initial page that will navigate to wherever the user was prior to the transaction entry", false, "Advanced", order: 10 )]
     [BooleanField( "Enable Business Giving", "Should the option to give as as a business be displayed", true, "", 31 )]
 
     #endregion
@@ -182,12 +182,6 @@ TransactionAcountDetails: [
         private bool _onlyPublicAccountsInUrl = true;
         private int _accountCampusContextFilter = -1;
         private int _currentCampusContextId = -1;
-
-        /// <summary>
-        /// The scheduled transaction to be transferred.  This will get set if the
-        /// page parameter "transfer" and the "ScheduledTransactionId" are passed in.
-        /// </summary>
-        private FinancialScheduledTransaction _scheduledTransactionToBeTransferred = null;
 
         /// <summary>
         /// The scheduled transaction to be transferred.  This will get set if the
@@ -1182,7 +1176,7 @@ TransactionAcountDetails: [
                         .Where( a => a.TransactionDetails.Any( d => d.EntityTypeId.HasValue && d.EntityTypeId == transactionEntityTypeId && d.EntityId == transactionEntity.Id ) )
                         .ToList();
 
-                    var transactionEntityTransactionsTotal = transactionEntityTransactions.SelectMany( d => d.TransactionDetails ).Sum( d => (decimal?)d.Amount );
+                    var transactionEntityTransactionsTotal = transactionEntityTransactions.SelectMany( d => d.TransactionDetails ).Sum( d => ( decimal? ) d.Amount );
                     mergeFields.Add( "TransactionEntityTransactions", transactionEntityTransactions );
                     mergeFields.Add( "TransactionEntityTransactionsTotal", transactionEntityTransactionsTotal );
                     mergeFields.Add( "AmountLimit", this.PageParameter( "AmountLimit" ).AsDecimalOrNull() );
@@ -1331,14 +1325,6 @@ TransactionAcountDetails: [
                     ( f.StartDate == null || f.StartDate <= RockDateTime.Today ) &&
                     ( f.EndDate == null || f.EndDate >= RockDateTime.Today ) )
                 .OrderBy( f => f.Order ) )
-            {
-                var accountItem = new AccountItem( account.Id, account.Order, account.Name, account.CampusId, account.PublicName );
-
-                if ( showAll )
-                {
-                    SelectedAccounts.Add( accountItem );
-                }
-                else
                 {
                     var accountItem = new AccountItem( account.Id, account.Order, account.Name, account.CampusId, account.PublicName );
 
@@ -3051,10 +3037,18 @@ TransactionAcountDetails: [
                 NotificationBox nb = nbMessage;
                 switch ( hfCurrentPage.Value.AsInteger() )
                 {
-                    case 1: nb = nbSelectionMessage; break;
-                    case 2: nb = nbSelectionMessage; break;
-                    case 3: nb = nbConfirmationMessage; break;
-                    case 4: nb = nbSuccessMessage; break;
+                    case 1:
+                        nb = nbSelectionMessage;
+                        break;
+                    case 2:
+                        nb = nbSelectionMessage;
+                        break;
+                    case 3:
+                        nb = nbConfirmationMessage;
+                        break;
+                    case 4:
+                        nb = nbSuccessMessage;
+                        break;
                 }
 
                 nb.Text = text;
