@@ -267,14 +267,16 @@ function() {
         /// <returns></returns>
         public override Expression GetExpression( Type entityType, IService serviceInstance, ParameterExpression parameterExpression, string selection )
         {
+            var rockContext = ( RockContext ) serviceInstance.Context;
+
             var values = selection.Split( '|' );
 
             ComparisonType comparisonType = values[0].ConvertToEnum<ComparisonType>( ComparisonType.EqualTo );
             string postalCode = values[1];
 
-            var familyGroupTypeGuid = Rock.SystemGuid.GroupType.GROUPTYPE_FAMILY.AsGuid();
+            var familyGroupTypeId = GroupTypeCache.Read( Rock.SystemGuid.GroupType.GROUPTYPE_FAMILY.AsGuid() ).Id;
 
-            var groupLocationQry = new GroupLocationService( ( RockContext ) serviceInstance.Context ).Queryable();
+            var groupLocationQry = new GroupLocationService( rockContext ).Queryable();
 
             switch ( comparisonType )
             {
@@ -318,7 +320,7 @@ function() {
             }
 
             var groupMemberQry = groupLocationQry.Select( gl => gl.Group )
-                .Where( g => g.GroupType.Guid == familyGroupTypeGuid )
+                .Where( g => g.GroupTypeId == familyGroupTypeId )
                 .SelectMany( g => g.Members );
 
 
@@ -334,14 +336,14 @@ function() {
                     int locationTypeId = values[2].AsInteger();
                     noLocationGroupMembersQry = new GroupService( ( RockContext ) serviceInstance.Context ).Queryable()
                         .Where( g =>
-                            g.GroupType.Guid == familyGroupTypeGuid
+                             g.GroupTypeId == familyGroupTypeId
                             && !g.GroupLocations.Any( gl => gl.GroupLocationTypeValueId == locationTypeId ) )
                         .SelectMany( g => g.Members );
                 }
                 else
                 {
                     noLocationGroupMembersQry = new GroupService( ( RockContext ) serviceInstance.Context ).Queryable()
-                        .Where( g => g.GroupType.Guid == familyGroupTypeGuid && !g.GroupLocations.Any() )
+                        .Where( g => g.GroupTypeId == familyGroupTypeId && !g.GroupLocations.Any() )
                         .SelectMany( g => g.Members );
                 }
 
