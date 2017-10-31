@@ -59,7 +59,7 @@ public class Lava : IHttpHandler
                 string response = lava.ResolveMergeFields( mergeFields, currentUser != null ? currentUser.Person : null, enabledLavaCommands );
 
                 context.Response.Write( response );
-                context.Response.ContentType = contentType.IsNotNullOrWhitespace() ? contentType : "text/plain";
+                context.Response.ContentType = string.IsNullOrWhiteSpace( contentType ) == false ? contentType : "text/plain";
 
                 return;
             }
@@ -196,7 +196,7 @@ public class Lava : IHttpHandler
         {
             try
             {
-                dictionary.Add( "Body", JsonConvert.DeserializeObject( (string)dictionary["RawBody"] ) );
+                dictionary.Add( "Body", JsonConvert.DeserializeObject( ( string ) dictionary["RawBody"] ) );
             }
             catch
             {
@@ -217,7 +217,7 @@ public class Lava : IHttpHandler
             try
             {
                 XmlDocument doc = new XmlDocument();
-                doc.LoadXml( (string)dictionary["RawBody"] );
+                doc.LoadXml( ( string ) dictionary["RawBody"] );
                 string jsonText = JsonConvert.SerializeXmlNode( doc );
                 dictionary.Add( "Body", JsonConvert.DeserializeObject( ( jsonText ) ) );
             }
