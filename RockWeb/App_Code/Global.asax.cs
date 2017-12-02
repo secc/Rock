@@ -318,7 +318,32 @@ namespace RockWeb
         {
             try
             {
-                UserLoginService.UpdateLastLogin( UserLogin.GetCurrentUserName() );
+                string username = UserLogin.GetCurrentUserName();
+                if ( !String.IsNullOrEmpty( username ) )
+                {
+                    using ( var rockContext = new RockContext() )
+                    {
+                        var userLoginService = new UserLoginService( rockContext );
+
+                        var user = userLoginService.GetByUserName( username );
+                        if ( user.EntityType.Guid != new Guid("8057ABAB-6AAC-4872-A11F-AC0D52AB40F6" ) )
+                        {
+                            user.IsOnLine = false;
+
+                            rockContext.SaveChanges();
+
+                            System.Web.Security.FormsAuthentication.SignOut();
+
+                            Response.Redirect( Request.RawUrl );
+
+                            return;
+                        }
+                        else
+                        {
+                            UserLoginService.UpdateLastLogin( UserLogin.GetCurrentUserName() );
+                        }
+                    }
+                }
             }
             catch { }
 
