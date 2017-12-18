@@ -1086,15 +1086,18 @@ namespace RockWeb.Blocks.Event
                     var lPostalCode = e.Row.FindControl( "lPostalCode" ) as Literal;
                     var lCountry = e.Row.FindControl( "lCountry" ) as Literal;
 
-                    var location = _homeAddresses[registrant.PersonId.Value];
-                    if (location != null )
-                    {
-                        lStreet1.Text = location.Street1;
-                        lStreet2.Text = location.Street2;
-                        lCity.Text = location.City;
-                        lState.Text = location.State;
-                        lPostalCode.Text = location.PostalCode;
-                        lCountry.Text = location.Country;
+                    if (_homeAddresses.ContainsKey( registrant.PersonId.Value ) )
+                    { 
+                        var location = _homeAddresses[registrant.PersonId.Value];
+                        if (location != null )
+                        {
+                            lStreet1.Text = location.Street1;
+                            lStreet2.Text = location.Street2;
+                            lCity.Text = location.City;
+                            lState.Text = location.State;
+                            lPostalCode.Text = location.PostalCode;
+                            lCountry.Text = location.Country;
+                        }
                     }
                 }
             }
