@@ -39,7 +39,7 @@
                         <div class="col-md-6">
                             <Rock:NumberBox ID="nbEndOffset" Label="Close Check-in" AppendText="Mins After Start&nbsp;&nbsp;" runat="server" NumberType="Integer" CssClass="input-width-lg" />
                             <div class="attributes">
-                                <Rock:DynamicPlaceHolder ID="phAttributes" runat="server" />
+                                <asp:PlaceHolder ID="phAttributes" runat="server" />
                             </div>
                         </div>
                     </div>
@@ -75,7 +75,7 @@
                                 <asp:Literal ID="lblMainDetails" runat="server" />
                             </div>
                             <div class="col-md-6">
-                                <Rock:DynamicPlaceHolder ID="phDisplayAttributes" runat="server" />
+                                <asp:PlaceHolder ID="phDisplayAttributes" runat="server" />
                             </div>
                         </div>
                         <div class="actions">
