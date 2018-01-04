@@ -73,8 +73,11 @@
             <Rock:NotificationBox ID="nbDigitalSignature" runat="server" NotificationBoxType="Info"></Rock:NotificationBox>
             <asp:HiddenField ID="hfRequiredDocumentLinkUrl" runat="server" />
             <asp:HiddenField ID="hfRequiredDocumentQueryString" runat="server" />
+            <asp:HiddenField ID="hfRegistrantGuid" runat="server" ClientIDMode="Static" />
 
-            <iframe id="iframeRequiredDocument" frameborder="0" ></iframe>
+            <iframe id="iframeRequiredDocument" frameborder="0" runat="server" Visible="false" ClientIDMode="Static"></iframe>
+            <asp:LinkButton id="lbRequiredDocument" runat="server" Visible="false" OnClientClick="var win = window.open($('input[id$=hfRequiredDocumentLinkUrl]').val(), '_blank');win.focus(); return false;" Text="Open Document" CssClass="btn btn-default pull-right"></asp:LinkButton>
+ 
             <span style="display:none" >
                 <asp:LinkButton ID="lbRequiredDocumentNext" runat="server" Text="Required Document Return" OnClick="lbRequiredDocumentNext_Click" CausesValidation="false" ></asp:LinkButton>
             </span>
