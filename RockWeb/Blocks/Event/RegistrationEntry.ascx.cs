@@ -60,7 +60,7 @@ namespace RockWeb.Blocks.Event
     [TextField( "Family Term", "The term to use for specifying which household or family a person is a member of.", true, "immediate family", "", 8 )]
     [BooleanField( "Force Email Update", "Force the email to be updated on the person's record.", false, "", 9 )]
     [BooleanField( "Show Field Descriptions", "Show the field description as help text", defaultValue: false, order: 10, key: "ShowFieldDescriptions" )]
-
+    [CustomDropdownListField( "Digital Signature Embed Mode", "Optional setting to use a new tab rather than an Iframe for the signature request.", "Iframe,New Tab", true, "Iframe", "", 10, "SignInlineEmbedMode" )]
     public partial class RegistrationEntry : RockBlock
     {
         #region Fields
@@ -161,6 +161,7 @@ namespace RockWeb.Blocks.Event
         /// The digital signature component.
         /// </value>
         private DigitalSignatureComponent DigitalSignatureComponent { get; set; }
+        private string SignInlineEmbedMode { get; set; }
 
         /// <summary>
         /// Gets or sets the state of the registration.
@@ -470,6 +471,23 @@ namespace RockWeb.Blocks.Event
         {
             base.OnLoad( e );
 
+            if ( !string.IsNullOrEmpty( PageParameter( "document_id" ) ) && !string.IsNullOrEmpty( PageParameter( "registration_key" ) ) )
+            {
+                Session[PageParameter( "registration_key" )] = "?document_id=" + PageParameter( "document_id" );
+
+                string returnUrl = GlobalAttributesCache.Read().GetValue( "PublicApplicationRoot" ).EnsureTrailingForwardslash() +
+                                    ResolveRockUrl( "~/Blocks/Event/DocumentReturn" + ( SignInlineEmbedMode == "New Tab" ? "Tab" : "" ) + ".html" ).TrimStart( '/' );
+                Response.Redirect( returnUrl );
+                Response.Flush();
+                Response.End();
+            }
+            else if ( !string.IsNullOrEmpty( PageParameter( "registration_key" ) ) )
+            {
+                Response.Flush();
+                Response.Write( Session[PageParameter( "registration_key" )] );
+                Response.End();
+            }
+
             // Reset warning/error messages
             nbMain.Visible = false;
             nbWaitingList.Visible = false;
@@ -528,7 +546,8 @@ namespace RockWeb.Blocks.Event
                                     if ( SignInline &&
                                         !PageParameter( "redirected" ).AsBoolean() &&
                                         DigitalSignatureComponent != null &&
-                                        !string.IsNullOrWhiteSpace( DigitalSignatureComponent.CookieInitializationUrl ) )
+                                        !string.IsNullOrWhiteSpace( DigitalSignatureComponent.CookieInitializationUrl ) &&
+                                        SignInlineEmbedMode != "New Tab" )
                                     {
                                         // Redirect for Digital Signature Cookie Initialization
                                         var returnUrl = ResolvePublicUrl( Request.Url.PathAndQuery );
@@ -1508,6 +1527,7 @@ namespace RockWeb.Blocks.Event
                 var provider = DigitalSignatureContainer.GetComponent( RegistrationTemplate.RequiredSignatureDocumentTemplate.ProviderEntityType.Name );
                 if ( provider != null && provider.IsActive )
                 {
+                    SignInlineEmbedMode = GetAttributeValue( "SignInlineEmbedMode" );
                     SignInline = GetAttributeValue( "SignInline" ).AsBoolean() && RegistrationTemplate.SignatureDocumentAction == SignatureDocumentAction.Embed;
                     DigitalSignatureComponentTypeName = RegistrationTemplate.RequiredSignatureDocumentTemplate.ProviderEntityType.Name;
                     DigitalSignatureComponent = provider;
@@ -1624,7 +1644,7 @@ namespace RockWeb.Blocks.Event
         private List<string> ValidateSummary()
         {
             var validationErrors = new List<string>();
-
+            
             var autoDiscounts = RegistrationTemplate.Discounts.Where( d => d.AutoApplyDiscount ).Select( d => d.Code ).ToList();
             if ( ( RegistrationState.DiscountCode ?? string.Empty ) != tbDiscountCode.Text && !autoDiscounts.Contains( RegistrationState.DiscountCode ) )
             {
@@ -3437,18 +3457,33 @@ namespace RockWeb.Blocks.Event
                         }
 
                         nbDigitalSignature.Heading = "Signature Required";
-                        nbDigitalSignature.Text = string.Format(
+                        if ( SignInlineEmbedMode == "New Tab" )
+                        {
+                            nbDigitalSignature.Text = string.Format(
+                            "This {0} requires that you sign a {1} for each registrant, please click the button below and then follow the prompts to digitally sign this document for {2}.  This will open the signing request in a new tab in your browser.  When you have successfully signed this document, you will be returned to this page which will automatically proceed to the next step of your registration. ",
+                            RegistrationTemplate.RegistrationTerm, RegistrationTemplate.RequiredSignatureDocumentTemplate.Name, registrantName );
+                            iframeRequiredDocument.Visible = false;
+                            lbRequiredDocument.Visible = true;
+                        }
+                        else
+                        {
+                            nbDigitalSignature.Text = string.Format(
                             "This {0} requires that you sign a {1} for each registrant, please follow the prompts below to digitally sign this document for {2}.",
                             RegistrationTemplate.RegistrationTerm,
                             RegistrationTemplate.RequiredSignatureDocumentTemplate.Name,
                             registrantName );
+                            iframeRequiredDocument.Visible = true;
+                            lbRequiredDocument.Visible = false;
+                        }
 
                         var errors = new List<string>();
                         string inviteLink = DigitalSignatureComponent.GetInviteLink( RegistrationTemplate.RequiredSignatureDocumentTemplate.ProviderTemplateKey, out errors );
                         if ( !string.IsNullOrWhiteSpace( inviteLink ) )
                         {
-                            string returnUrl = ResolvePublicUrl( "~/Blocks/Event/DocumentReturn.html" );
-                            hfRequiredDocumentLinkUrl.Value = string.Format( "{0}?redirect_uri={1}", inviteLink, returnUrl );
+                            string returnUrl = GlobalAttributesCache.Read().GetValue( "PublicApplicationRoot" ).EnsureTrailingForwardslash() +
+                                ResolveRockUrl( Request.RawUrl + ( Request.QueryString.Count == 0 ? "?" : "&" ) + "registration_key=" + RegistrationState.Registrants[CurrentRegistrantIndex].Guid ).TrimStart( '/' );
+                            hfRequiredDocumentLinkUrl.Value = string.Format( "{0}?redirect_uri={1}", inviteLink, returnUrl.UrlEncode() );
+                            hfRegistrantGuid.Value = RegistrationState.Registrants[CurrentRegistrantIndex].Guid.ToString();
                         }
                         else
                         {
@@ -3891,30 +3926,55 @@ namespace RockWeb.Blocks.Event
         $('#iframeRequiredDocument').attr('src', $('#{21}').val() );
     }}
 
-",
-                nbAmountPaid.ClientID,                 // {0}
-                hfTotalCost.ClientID,                   // {1}
-                hfMinimumDue.ClientID,                  // {2}
-                hfPreviouslyPaid.ClientID,              // {3}
-                lRemainingDue.ClientID,                 // {4}
-                hfTriggerScroll.ClientID,               // {5}
-                GlobalAttributesCache.Value( "CurrencySymbol" ), // {6}
-                hfStep2Url.ClientID,                    // {7}
-                hfStep2ReturnQueryString.ClientID,      // {8}
-                this.Page.ClientScript.GetPostBackEventReference( lbStep2Return, string.Empty ), // {9}
-                this.BlockValidationGroup,              // {10}
-                txtCreditCard.ClientID,                 // {11}
-                mypExpiration.ClientID,                 // {12}
-                txtCVV.ClientID,                        // {13}
-                hfStep2AutoSubmit.ClientID,             // {14}
-                acBillingAddress.ClientID,              // {15}
-                txtCardFirstName.ClientID,              // {16}
-                txtCardLastName.ClientID,               // {17}
-                txtCardName.ClientID,                  // {18}
-                hfRequiredDocumentQueryString.ClientID, // {19}
-                this.Page.ClientScript.GetPostBackEventReference( lbRequiredDocumentNext, string.Empty ), // {20}
-                hfRequiredDocumentLinkUrl.ClientID,     // {21}
-                GetAttributeValue( "FamilyTerm" ) );      // {22}
+    poll = function() {{
+       setTimeout(function(){{
+          $.ajax({{ 
+            url: '{23}registration_key='+$('#hfRegistrantGuid').val(), 
+            success: function(data){{
+                //
+                if (data != ''&& data.startsWith('?document_id') ) {{
+                    $('#{19}').val(data);
+                    {20};
+                }}
+                else 
+                {{
+                    //Setup the next poll 
+                    poll();
+                }}
+            }}
+        }});
+      }}, 5000);
+    }}
+    if ($('#hfRegistrantGuid').length > 0 && $('#hfRegistrantGuid').val() != '' ) {{
+        $.ajaxSetup({{ cache: false }});
+        poll();
+    }}
+
+", nbAmountPaid.ClientID                 // {0}
+            , hfTotalCost.ClientID                   // {1}
+            , hfMinimumDue.ClientID                  // {2}
+            , hfPreviouslyPaid.ClientID              // {3}
+            , lRemainingDue.ClientID                 // {4}
+            , hfTriggerScroll.ClientID               // {5}
+            , GlobalAttributesCache.Value( "CurrencySymbol" ) // {6}
+            , hfStep2Url.ClientID                    // {7}
+            , hfStep2ReturnQueryString.ClientID      // {8}
+            , this.Page.ClientScript.GetPostBackEventReference( lbStep2Return, "" ) // {9}
+            , this.BlockValidationGroup              // {10}
+            , txtCreditCard.ClientID                 // {11}
+            , mypExpiration.ClientID                 // {12}
+            , txtCVV.ClientID                        // {13}
+            , hfStep2AutoSubmit.ClientID             // {14}
+            , acBillingAddress.ClientID              // {15}
+            , txtCardFirstName.ClientID              // {16}
+            , txtCardLastName.ClientID               // {17}
+            , txtCardName.ClientID                   // {18}
+            , hfRequiredDocumentQueryString.ClientID // {19}
+            , this.Page.ClientScript.GetPostBackEventReference( lbRequiredDocumentNext, "" ) // {20}
+            , hfRequiredDocumentLinkUrl.ClientID     // {21}
+            , GetAttributeValue( "FamilyTerm" )      // {22}
+            , this.Request.RawUrl + ( Request.QueryString.Count == 0 ? "?" : "&" ) // {23}
+);
 
             ScriptManager.RegisterStartupScript( Page, Page.GetType(), "registrationEntry", script, true );
 
