@@ -76,10 +76,39 @@ namespace Rock.Rest.Controllers
         }
 
         /// <summary>
+        /// Gets all current HTML Snippets.
+        /// </summary>
+        [Authenticate]
+        [HttpGet]
+        [System.Web.Http.Route( "api/HtmlContents/Snippets" )]
+        public List<HtmlContents> Snippets()
+        {
+
+            int personId = GetPerson().Id;
+
+            var htmlContentService = ( HtmlContentService ) Service;
+
+            var query = htmlContentService.Queryable().Where( hc => hc.BlockId == null && hc.CreatedByPersonAliasId.HasValue
+                        && hc.CreatedByPersonAlias.PersonId == personId ).GroupBy( hc => hc.Name )
+                        .SelectMany( hc => hc.Where( shc => hc.Max( mhc => mhc.Version ) == shc.Version ) );
+            return query.Select( hc => new HtmlContents() { Name = hc.Name, EntityValue = hc.EntityValue, Content = hc.Content } ).ToList();
+
+        }
+
+
+        /// <summary>
         /// 
         /// </summary>
         public class HtmlContents
         {
+            /// <summary>
+            /// Gets or sets the name.
+            /// </summary>
+            /// <value>
+            /// The name.
+            /// </value>
+            public string Name { get; set; }
+
             /// <summary>
             /// Gets or sets the entity value.
             /// </summary>
