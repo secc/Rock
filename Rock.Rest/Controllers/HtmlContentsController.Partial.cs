@@ -95,6 +95,35 @@ namespace Rock.Rest.Controllers
 
         }
 
+        /// <summary>
+        /// Adds a new snippet (or creates a version for an existing one).
+        /// </summary>
+        /// <param name="htmlContents">The HTML contents for the snippet.</param>
+        [Authenticate]
+        [HttpPost]
+        [System.Web.Http.Route( "api/HtmlContents/AddSnippet" )]
+        public void AddSnippet( [FromBody] HtmlContents htmlContents )
+        {
+            Person person = GetPerson();
+
+            var htmlContentService = ( HtmlContentService ) Service;
+
+            HtmlContent newHtmlContent = new HtmlContent();
+            var htmlContent = htmlContentService.Queryable().Where( hc => hc.CreatedByPersonAlias.PersonId == person.Id && hc.Name == htmlContents.Name )
+                .OrderByDescending( hc => hc.Version ).FirstOrDefault();
+            if ( htmlContent != null )
+            {
+                newHtmlContent.Version = htmlContent.Version+1;
+            }
+
+            newHtmlContent.Name = htmlContents.Name;
+            newHtmlContent.Content = htmlContents.Content;
+            newHtmlContent.CreatedByPersonAliasId = person.PrimaryAliasId;
+            Service.Add( newHtmlContent );
+
+            Service.Context.SaveChanges();
+        }
+
 
         /// <summary>
         /// 
