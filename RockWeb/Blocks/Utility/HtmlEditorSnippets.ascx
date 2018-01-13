@@ -3,30 +3,40 @@
 <asp:Panel ID="pnlModalHeader" runat="server" Visible="false">
     <h3 class="modal-title">
         <asp:Literal ID="lTitle" runat="server"></asp:Literal>
-        <span class="js-cancel-file-button cursor-pointer pull-right" style="opacity: .5">&times;</span>
+        <span class="js-cancel-button cursor-pointer pull-right" style="opacity: .5">&times;</span>
     </h3>
     
 </asp:Panel>
-
-<div class="snippets-wrapper clearfix">
-    <Rock:Grid ID="gSnippets" runat="server" AllowSorting="true" RowItemText="snippet" TooltipField="Description">
-        <Columns>
-            <Rock:ReorderField Visible="false" />
-            <Rock:RockBoundField
-                DataField="Id"
-                HeaderText="Id"
-                SortExpression="Id"
-                ItemStyle-Wrap="false"
-                ItemStyle-HorizontalAlign="Right"
-                HeaderStyle-HorizontalAlign="Right" />
-            <Rock:RockBoundField DataField="Name" HeaderText="Name" SortExpression="Name" />
-            <Rock:RockBoundField DataField="Content" HeaderText="Content" SortExpression="Content" />
-            <Rock:SecurityField TitleField="Id" />
-            <Rock:DeleteField  />
-        </Columns>
-    </Rock:Grid>
-</div>
-
+<asp:UpdatePanel runat="server" ID="upSnippets">
+    <ContentTemplate>
+        <style>
+            .truncated-text { 
+                max-width: 300px;
+                overflow: hidden;
+                text-overflow: ellipsis;
+                white-space: nowrap;
+            }
+        </style>
+        <div class="snippets-wrapper clearfix">
+            <Rock:Grid ID="gSnippets" runat="server" AllowSorting="true" RowItemText="snippet" TooltipField="Description" DataKeyNames="Id">
+                <Columns>
+                    <Rock:ReorderField Visible="false" />
+                    <Rock:RockBoundField
+                        DataField="Id"
+                        HeaderText="Id"
+                        SortExpression="Id"
+                        ItemStyle-Wrap="false"
+                        ItemStyle-HorizontalAlign="Right"
+                        HeaderStyle-HorizontalAlign="Right" />
+                    <Rock:RockBoundField DataField="Name" HeaderText="Name" SortExpression="Name" />
+                    <Rock:RockBoundField DataField="Version" HeaderText="Version" SortExpression="Version" />
+                    <Rock:RockBoundField DataField="Content" HeaderText="Content" SortExpression="Content" ItemStyle-CssClass="truncated-text" />
+                    <Rock:DeleteField ID="dfDelete" OnClick="Delete_Click"  />
+                </Columns>
+            </Rock:Grid>
+        </div>
+    </ContentTemplate>
+</asp:UpdatePanel>
 <asp:Panel ID="pnlModalFooterActions" CssClass="modal-footer" runat="server" Visible="false">
     <div class="row">
         <div class="actions">

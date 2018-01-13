@@ -72,17 +72,32 @@ namespace RockWeb.Blocks.Utility
         protected void BindGrid()
         {
             HtmlContentService htmlContentService = new HtmlContentService( new RockContext() );
-
-
-            List<int> personAliasIds = CurrentPerson.Aliases.Select( a => a.Id ).ToList();
-            var query = htmlContentService.Queryable()
-                .Where( hc => hc.BlockId == null &&  hc.CreatedByPersonAliasId.HasValue
-                        && personAliasIds.Contains( hc.CreatedByPersonAliasId.Value ) );
+            
+            var query = htmlContentService.Queryable().Where( hc => hc.BlockId == null && hc.CreatedByPersonAliasId.HasValue
+                        && hc.CreatedByPersonAlias.PersonId == CurrentPerson.Id ).GroupBy( hc => hc.Name )
+                        .SelectMany( hc => hc.Where( shc => hc.Max( mhc => mhc.Version ) == shc.Version ) );
             gSnippets.DataSource = query.ToList();
             gSnippets.DataBind();
         }
 
         #endregion
 
+
+        protected void Delete_Click( object sender, Rock.Web.UI.Controls.RowEventArgs e )
+        {
+            using ( var rockContext = new RockContext() )
+            {
+                HtmlContentService htmlContentService = new HtmlContentService( rockContext );
+                var htmlContent = htmlContentService.Get( e.RowKeyId );
+                if ( htmlContent != null )
+                {
+                    var allVersions = htmlContentService.Queryable().Where( hc => hc.Name == htmlContent.Name && hc.CreatedByPersonAliasId == htmlContent.CreatedByPersonAliasId );
+                    htmlContentService.DeleteRange( allVersions );
+                    rockContext.SaveChanges();
+                }
+            }
+
+            BindGrid();
+        }
     }
 }
