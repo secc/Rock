@@ -760,7 +760,8 @@ $(document).ready( function() {{
             rockmergefield: RockMergeField,
             rockcodeeditor: RockCodeEditor,
             rockpastetext: RockPasteText,
-            rockpastefromword: RockPasteFromWord
+            rockpastefromword: RockPasteFromWord,
+            rocksnippets: RockSnippets
         }},
 
         rockFileBrowserOptions: {{ 
@@ -780,7 +781,7 @@ $(document).ready( function() {{
         codeEditorOptions: {{
             controlId: '{_ceEditor.ClientID}',
             inCodeEditorModeHiddenFieldId: '{_hfInCodeEditorMode.ClientID}'
-        }},
+        }}
     }});
 
     if ({StartInCodeEditorMode.ToTrueFalse().ToLower()} && RockCodeEditor) {{
