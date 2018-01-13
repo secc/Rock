@@ -3,10 +3,27 @@
 
     var snippetData = [];
 
+    var updateSnippets = function () {
+        $.get('/api/HtmlContents/Snippets', function (data) {
+            // Remove any existing snippets
+            $("button.rock-snippets").next('div.dropdown-menu').find(".rock-snippet").remove();
+            snippetData = [];
+
+            if (data.length) {
+                $("button.rock-snippets").next('div.dropdown-menu').append("<li class=\"rock-snippet\" style=\"font-weight: bold; color: #999;padding-left: 20px;cursor: default;\" onclick=\"event.stopPropagation(); event.preventDefault();\">My Snippets</li>");
+           
+                // Add each snippet
+                $.each(data, function (key, snippet) {
+                    snippetData.push({ "Name": snippet.Name, "Content": snippet.Content });
+                    $("button.rock-snippets").next('div.dropdown-menu').append('<li class="rock-snippet"><a href="#" data-value="&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;' + snippet.Name + '">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;' + snippet.Name + '</a></li>');
+                });
+            }
+        });
+    }
     var settings = {
         className: 'dropdown-template dropdown-menu-right',
         items: [
-            "Add New Snippet",
+            "Save Content as New Snippet",
             "Manage Existing Snippets",
         ],
         click: function (event) {
@@ -14,11 +31,16 @@
 
             var $button = $(event.target);
             var value = $button.data('value').trim();
-            if (value == "Add New Snippet") {
+            if (value == "Save Content as New Snippet") {
                 bootbox.prompt("Please enter a name for this snippet:", function (result) {
                     if (result != null) {
-                        snippetData.push({ "Name": result, "Content": context.invoke("code") });
-                        $("button.rock-snippets").next('div.dropdown-menu').append('<li><a href="#" data-value="&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;' + result + '">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;' + result + '</a></li>');
+                        data = { "Name": result, "Content": context.invoke("code") };
+                        $.post('/api/HtmlContents/AddSnippet',
+                            data,
+                            function (result) {
+                                updateSnippets();
+                            }
+                        );
                     }
                 });
             }
@@ -37,8 +59,9 @@
 
                     $modalPopupIFrame.contents().off('click');
 
-                    $modalPopupIFrame.contents().on('click', '.js-ok-button', function () {
+                    $modalPopupIFrame.contents().on('click', '.js-ok-button, .js-cancel-button', function () {
                         Rock.controls.modal.close();
+                        updateSnippets();
                     });
                 });
 
@@ -69,16 +92,8 @@
         ui.dropdown(settings)
     ]);
 
-    $.get('/api/HtmlContents/Snippets', function (data) {
-        $("button.rock-snippets").next('div.dropdown-menu').append("<li style=\"font-weight: bold; color: #999;padding-left: 20px;cursor: default;\" onclick=\"event.stopPropagation(); event.preventDefault();\">My Snippets</li>");
+    updateSnippets();
 
-        // Add each snippet
-        $.each(data, function (key, snippet) {
-            snippetData.push({ "Name": snippet.Name, "Content": snippet.Content });
-            $("button.rock-snippets").next('div.dropdown-menu').append('<li><a href="#" data-value="&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;' + snippet.Name + '">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;' + snippet.Name + '</a></li>');
-        });
-
-    });
-    
     return button.render();   // return button as jquery object 
+
 }
