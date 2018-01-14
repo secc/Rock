@@ -69,6 +69,10 @@
     <Compile Include="HotFixMigrations\004_FixBaptismBadge.cs" />
     <Compile Include="HotFixMigrations\005_ValueAsNumeric.cs" />
     <Compile Include="HotFixMigrations\006_StatementProcs.cs" />
+    <Compile Include="Migrations\Version 7.0\Version 1.7.1\201801140232008_HtmlSnippets.cs" />
+    <Compile Include="Migrations\Version 7.0\Version 1.7.1\201801140232008_HtmlSnippets.Designer.cs">
+      <DependentUpon>201801140232008_HtmlSnippets.cs</DependentUpon>
+    </Compile>
     <Compile Include="Migrations\Version 7.0\Version 1.7.0\201712192301416_MoveInteractionTemplates.cs" />
     <Compile Include="Migrations\Version 7.0\Version 1.7.0\201712192301416_MoveInteractionTemplates.Designer.cs">
       <DependentUpon>201712192301416_MoveInteractionTemplates.cs</DependentUpon>
@@ -2642,14 +2646,13 @@
     <Compile Include="Migrations\Version 5.0\Version 1.5.0\201606061308109_ClearPreviousMigrations5.Designer.cs">
       <DependentUpon>201606061308109_ClearPreviousMigrations5.cs</DependentUpon>
     </Compile>
-    <Compile Include="Migrations\Version 7.0\Version 1.7.1\201801131439000_HtmlSnippets.cs" />
-    <Compile Include="Migrations\Version 7.0\Version 1.7.1\201801131439000_HtmlSnippets.Designer.cs">
-      <DependentUpon>201801131439000_HtmlSnippets.cs</DependentUpon>
-    </Compile>
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="SqlServerTypes\Loader.cs" />
   </ItemGroup>
   <ItemGroup>
+    <EmbeddedResource Include="Migrations\Version 7.0\Version 1.7.1\201801140232008_HtmlSnippets.resx">
+      <DependentUpon>201801140232008_HtmlSnippets.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="Migrations\Version 7.0\Version 1.7.0\201712192301416_MoveInteractionTemplates.resx">
       <DependentUpon>201712192301416_MoveInteractionTemplates.cs</DependentUpon>
     </EmbeddedResource>
@@ -4576,9 +4579,6 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Migrations\Version 5.0\Version 1.5.0\201606061308109_ClearPreviousMigrations5.resx">
       <DependentUpon>201606061308109_ClearPreviousMigrations5.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="Migrations\Version 7.0\Version 1.7.1\201801131439000_HtmlSnippets.resx">
-      <DependentUpon>201801131439000_HtmlSnippets.cs</DependentUpon>
     </EmbeddedResource>
   </ItemGroup>
   <ItemGroup>
