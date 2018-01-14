@@ -31,8 +31,18 @@ namespace Rock.Migrations
         {
             AddColumn( "HtmlContent", "Name", c => c.String( maxLength: 100 ) );
             AlterColumn( "HtmlContent", "BlockId", c => c.Int( nullable: true ) );
+            
+            // Page: HtmlEditor Snippets Plugin Frame
+            RockMigrationHelper.AddPage( true, "E7BD353C-91A6-4C15-A6C8-F44D0B16D16E", "2E169330-D7D7-4ECA-B417-72C64BE150F0", "HtmlEditor Snippets Plugin Frame", "", "93953B4B-AA72-4904-AB6F-B4E41AC758A6", "" ); // Site:Rock RMS
+            RockMigrationHelper.AddPageRoute( "93953B4B-AA72-4904-AB6F-B4E41AC758A6", "htmleditorplugins/RockSnippets" );
+            RockMigrationHelper.UpdateBlockType( "HtmlEditor Snippets", "Block to be used as part of the Snippets HtmlEditor Plugin", "~/Blocks/Utility/HtmlEditorSnippets.ascx", "Utility", "BE83B6D0-B1AD-4CCE-AF17-5603B50E6DF4" );
+            // Add Block to Page: HtmlEditor Snippets Plugin Frame, Site: Rock RMS
+            RockMigrationHelper.AddBlock( true, "93953B4B-AA72-4904-AB6F-B4E41AC758A6", "", "BE83B6D0-B1AD-4CCE-AF17-5603B50E6DF4", "HtmlEditor Snippets", "Main", "", "", 0, "27280738-A3C5-495B-8F93-2948DC5217C8" );
+            // Attrib Value for Block:HtmlEditor Snippets, Attribute:Goes By Page: HtmlEditor Snippets Plugin Frame, Site: Rock RMS
+            RockMigrationHelper.AddBlockAttributeValue( "27280738-A3C5-495B-8F93-2948DC5217C8", "C31FDA8A-8CAB-4A1C-B96D-275415B5BB1C", @"william|robert|fred" );
+
         }
-        
+
         /// <summary>
         /// Operations to be performed during the downgrade process.
         /// </summary>
@@ -40,6 +50,10 @@ namespace Rock.Migrations
         {
             DropColumn( "HtmlContent", "Name" );
             AlterColumn( "HtmlContent", "BlockId", c => c.Int( nullable: false ) );
+
+            RockMigrationHelper.DeleteBlock( "27280738-A3C5-495B-8F93-2948DC5217C8" );
+            RockMigrationHelper.DeleteBlockType( "BE83B6D0-B1AD-4CCE-AF17-5603B50E6DF4" );
+            RockMigrationHelper.DeletePage( "93953B4B-AA72-4904-AB6F-B4E41AC758A6" ); //  Page: HtmlEditor Snippets Plugin Frame
         }
     }
 }
