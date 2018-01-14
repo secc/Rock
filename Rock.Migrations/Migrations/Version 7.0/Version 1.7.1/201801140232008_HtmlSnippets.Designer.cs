@@ -9,11 +9,11 @@ namespace Rock.Migrations
     [GeneratedCode("EntityFramework.Migrations", "6.1.3-40302")]
     public sealed partial class HtmlSnippets : IMigrationMetadata
     {
-        private readonly ResourceManager Resources = new ResourceManager(typeof(InteractionModels));
+        private readonly ResourceManager Resources = new ResourceManager(typeof(HtmlSnippets));
         
         string IMigrationMetadata.Id
         {
-            get { return "20170113143900_HtmlSnippets"; }
+            get { return "201801140232008_HtmlSnippets"; }
         }
         
         string IMigrationMetadata.Source
