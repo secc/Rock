@@ -117,9 +117,7 @@ namespace Rock.Web.UI.Controls
                     var personBlock = ParentPersonBlock;
                     if ( personBlock != null )
                     {
-                        badgeComponent.ParentPersonBlock = personBlock;
-                        badgeComponent.Person = personBlock.Person;
-                        badgeComponent.Render( PersonBadge, writer );
+                        badgeComponent.Render( PersonBadge, writer, personBlock.Person, personBlock );
                     }
                 }
             }

@@ -75,33 +75,6 @@ namespace Rock.PersonProfile
             }
         }
 
-
-        /// <summary>
-        /// Gets or sets the parent person block.
-        /// </summary>
-        /// <value>
-        /// The parent person block.
-        /// </value>
-        public PersonBlock ParentPersonBlock
-        {
-            get { return _parentPersonBlock; }
-            set { _parentPersonBlock = value; }
-        }
-        private PersonBlock _parentPersonBlock;
-
-        /// <summary>
-        /// Gets or sets the person.
-        /// </summary>
-        /// <value>
-        /// The person.
-        /// </value>
-        public virtual Person Person
-        {
-            get { return _person; }
-            set { _person = value; }
-        }
-        private Person _person;
-
         /// <summary>
         /// Initializes a new instance of the <see cref="BadgeComponent" /> class.
         /// </summary>
@@ -142,13 +115,14 @@ namespace Rock.PersonProfile
         {
             return badge.GetAttributeValue( key );
         }
-        
+
         /// <summary>
         /// Renders the specified writer.
         /// </summary>
         /// <param name="badge">The badge.</param>
         /// <param name="writer">The writer.</param>
-        public abstract void Render( PersonBadgeCache badge, HtmlTextWriter writer );
+        /// <param name="writer">The person to whom this page applies.</param>
+        public abstract void Render( PersonBadgeCache badge, HtmlTextWriter writer, Person person, PersonBlock parentPersonBlock );
 
     }
 }

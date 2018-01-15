@@ -28,6 +28,7 @@ using System.Data;
 using System;
 using System.Diagnostics;
 using Rock.Web.Cache;
+using Rock.Web.UI;
 
 namespace Rock.PersonProfile.Badge
 {
@@ -51,12 +52,12 @@ namespace Rock.PersonProfile.Badge
         /// </summary>
         /// <param name="badge">The badge.</param>
         /// <param name="writer">The writer.</param>
-        public override void Render( PersonBadgeCache badge, System.Web.UI.HtmlTextWriter writer )
+        public override void Render( PersonBadgeCache badge, System.Web.UI.HtmlTextWriter writer, Person person, PersonBlock parentPersonBlock )
         {
             // Grab the DISC Scores
             bool isValidDiscScore = true;
             int discStrength = 0;
-            int?[] discScores = new int?[] { Person.GetAttributeValue( "NaturalD" ).AsIntegerOrNull(), Person.GetAttributeValue( "NaturalI" ).AsIntegerOrNull(), Person.GetAttributeValue( "NaturalS" ).AsIntegerOrNull(), Person.GetAttributeValue( "NaturalC" ).AsIntegerOrNull() };
+            int?[] discScores = new int?[] { person.GetAttributeValue( "NaturalD" ).AsIntegerOrNull(), person.GetAttributeValue( "NaturalI" ).AsIntegerOrNull(), person.GetAttributeValue( "NaturalS" ).AsIntegerOrNull(), person.GetAttributeValue( "NaturalC" ).AsIntegerOrNull() };
 
             // Validate the DISC Scores, find the strength
             for ( int i = 0; i < discScores.Length; i++ )
@@ -88,7 +89,7 @@ namespace Rock.PersonProfile.Badge
             {
                 // Find the DISC Personality Type / Strength
                 String description = string.Empty;
-                string personalityType = Person.GetAttributeValue( "PersonalityType" );
+                string personalityType = person.GetAttributeValue( "PersonalityType" );
                 if ( !string.IsNullOrEmpty( personalityType ) )
                 {
                     var personalityValue = DefinedTypeCache.Read( Rock.SystemGuid.DefinedType.DISC_RESULTS_TYPE.AsGuid() ).DefinedValues.Where( v => v.Value == personalityType ).FirstOrDefault();
@@ -103,7 +104,7 @@ namespace Rock.PersonProfile.Badge
                 if ( !String.IsNullOrEmpty( GetAttributeValue( badge, "DISCResultDetail" ) ) )
                 {
                     int pageId = Rock.Web.Cache.PageCache.Read( Guid.Parse( GetAttributeValue( badge, "DISCResultDetail" ) ) ).Id;
-                    detailPageUrl = System.Web.VirtualPathUtility.ToAbsolute( String.Format( "~/page/{0}?Person={1}", pageId, Person.UrlEncodedKey ) );
+                    detailPageUrl = System.Web.VirtualPathUtility.ToAbsolute( String.Format( "~/page/{0}?Person={1}", pageId, person.UrlEncodedKey ) );
                     writer.Write( "<a href='{0}'>", detailPageUrl  );
                 }
 
@@ -124,7 +125,7 @@ namespace Rock.PersonProfile.Badge
             else
             {
                 // check for recent DISC request
-                DateTime? lastRequestDate = Person.GetAttributeValue( "LastDiscRequestDate" ).AsDateTime();
+                DateTime? lastRequestDate = person.GetAttributeValue( "LastDiscRequestDate" ).AsDateTime();
 
                 bool recentRequest = lastRequestDate.HasValue && lastRequestDate.Value > (RockDateTime.Now.AddDays( -30 ));
 
