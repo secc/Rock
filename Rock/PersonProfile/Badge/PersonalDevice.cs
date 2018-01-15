@@ -22,6 +22,7 @@ using Rock.Attribute;
 using Rock.Web.Cache;
 using Rock.Model;
 using Rock.Web;
+using Rock.Web.UI;
 
 namespace Rock.PersonProfile.Badge
 {
@@ -40,12 +41,12 @@ namespace Rock.PersonProfile.Badge
         /// </summary>
         /// <param name="badge">The badge.</param>
         /// <param name="writer">The writer.</param>
-        public override void Render( PersonBadgeCache badge, System.Web.UI.HtmlTextWriter writer )
+        public override void Render( PersonBadgeCache badge, System.Web.UI.HtmlTextWriter writer, Person person, PersonBlock parentPersonBlock )
         {
-            if ( Person != null )
+            if ( person != null )
             {
                 //  create url for link to details
-                string detailPageUrl = new PageReference( GetAttributeValue( badge, "PersonalDevicesDetail" ), new Dictionary<string, string> { { "PersonGuid", Person.Guid.ToString() } } ).BuildUrl();
+                string detailPageUrl = new PageReference( GetAttributeValue( badge, "PersonalDevicesDetail" ), new Dictionary<string, string> { { "PersonGuid", person.Guid.ToString() } } ).BuildUrl();
 
                 writer.Write( $"<div class='badge badge-personaldevice badge-id-{badge.Id}' data-toggle='tooltip' data-original-title=''>" );
 
@@ -57,7 +58,7 @@ namespace Rock.PersonProfile.Badge
                                                 
                         $.ajax({{
                                 type: 'GET',
-                                url: Rock.settings.get('baseUrl') + 'api/PersonBadges/PersonalDevicesNumber/{Person.Id}' ,
+                                url: Rock.settings.get('baseUrl') + 'api/PersonBadges/PersonalDevicesNumber/{person.Id}' ,
                                 statusCode: {{
                                     200: function (data, status, xhr) {{
                                         var badgeHtml = '';
