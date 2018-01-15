@@ -29,6 +29,7 @@ using System.Data;
 using System;
 using System.Diagnostics;
 using Rock.Web.Cache;
+using Rock.Web.UI;
 
 namespace Rock.PersonProfile.AlertNote
 {
@@ -50,7 +51,7 @@ namespace Rock.PersonProfile.AlertNote
         /// </summary>
         /// <param name="badge">The badge.</param>
         /// <param name="writer">The writer.</param>
-        public override void Render( PersonBadgeCache badge, System.Web.UI.HtmlTextWriter writer )
+        public override void Render( PersonBadgeCache badge, System.Web.UI.HtmlTextWriter writer, Person person, PersonBlock parentPersonBlock )
         {
             List<Guid> noteTypes = new List<Guid>();
 
@@ -65,7 +66,7 @@ namespace Rock.PersonProfile.AlertNote
             // check for alert note
             var alertNotesExist = new NoteService( new RockContext() ).Queryable().AsNoTracking()
                                 .Where( n => noteTypes.Contains( n.NoteType.Guid )
-                                        && n.EntityId.Value == Person.Id
+                                        && n.EntityId.Value == person.Id
                                         && n.IsAlert == true
                                         && ( !n.IsPrivateNote || n.CreatedByPersonAlias.PersonId == currentPersonId )
                                         )

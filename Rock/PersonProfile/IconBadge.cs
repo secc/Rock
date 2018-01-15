@@ -46,15 +46,15 @@ namespace Rock.PersonProfile
         /// </summary>
         /// <param name="badge">The badge.</param>
         /// <param name="writer">The writer.</param>
-        public override void Render( PersonBadgeCache badge, System.Web.UI.HtmlTextWriter writer )
+        public override void Render( PersonBadgeCache badge, System.Web.UI.HtmlTextWriter writer, Person person, PersonBlock parentPersonBlock )
         {
-            if ( Person != null )
+            if ( person != null )
             {
                 writer.AddAttribute( HtmlTextWriterAttribute.Class, "badge" );
-                writer.AddAttribute( HtmlTextWriterAttribute.Title, GetToolTipText( Person ) );
+                writer.AddAttribute( HtmlTextWriterAttribute.Title, GetToolTipText( person ) );
                 writer.RenderBeginTag( HtmlTextWriterTag.Div );
 
-                writer.AddAttribute( HtmlTextWriterAttribute.Src, GetIconPath( Person ) );
+                writer.AddAttribute( HtmlTextWriterAttribute.Src, GetIconPath( person ) );
                 writer.RenderBeginTag( HtmlTextWriterTag.Img );
                 writer.RenderEndTag();
 
