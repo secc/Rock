@@ -24,6 +24,7 @@ using Rock;
 using Rock.Attribute;
 using Rock.Model;
 using Rock.Web.Cache;
+using Rock.Web.UI;
 using Rock.Web.UI.Controls;
 
 namespace Rock.PersonProfile.Badge
@@ -47,7 +48,7 @@ namespace Rock.PersonProfile.Badge
         /// </summary>
         /// <param name="badge">The badge.</param>
         /// <param name="writer">The writer.</param>
-        public override void Render( PersonBadgeCache badge, System.Web.UI.HtmlTextWriter writer )
+        public override void Render( PersonBadgeCache badge, System.Web.UI.HtmlTextWriter writer, Person person, PersonBlock parentPersonBlock )
         {
             Guid? interactionChannelGuid = GetAttributeValue( badge, "InteractionChannel" ).AsGuid();
             string badgeColor = GetAttributeValue( badge, "BadgeColor" );
@@ -79,7 +80,7 @@ namespace Rock.PersonProfile.Badge
                                                 
                         $.ajax({{
                                 type: 'GET',
-                                url: Rock.settings.get('baseUrl') + 'api/PersonBadges/InteractionsInRange/{Person.Id}/{interactionChannel.Id}/{HttpUtility.UrlEncode(dateRange)}' ,
+                                url: Rock.settings.get('baseUrl') + 'api/PersonBadges/InteractionsInRange/{person.Id}/{interactionChannel.Id}/{HttpUtility.UrlEncode(dateRange)}' ,
                                 statusCode: {{
                                     200: function (data, status, xhr) {{
                                     
