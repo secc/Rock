@@ -93,7 +93,7 @@ namespace Rock.PersonProfile
         /// <value>
         /// The MEF components.
         /// </value>
-        [ImportMany( typeof( BadgeComponent ) )]
+        [ImportMany( typeof( BadgeComponent ))]
         protected override IEnumerable<Lazy<BadgeComponent, IComponentData>> MEFComponents { get; set; }
 
     }

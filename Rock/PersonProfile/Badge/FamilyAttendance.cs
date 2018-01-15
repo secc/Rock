@@ -27,6 +27,7 @@ using System.Data;
 using System;
 using System.Diagnostics;
 using Rock.Web.Cache;
+using Rock.Web.UI;
 
 namespace Rock.PersonProfile.Badge
 {
@@ -49,7 +50,7 @@ namespace Rock.PersonProfile.Badge
         /// </summary>
         /// <param name="badge">The badge.</param>
         /// <param name="writer">The writer.</param>
-        public override void Render( PersonBadgeCache badge, System.Web.UI.HtmlTextWriter writer )
+        public override void Render( PersonBadgeCache badge, System.Web.UI.HtmlTextWriter writer, Person person, PersonBlock parentPersonBlock )
         {
             int minBarHeight = GetAttributeValue(badge, "MinimumBarHeight").AsIntegerOrNull() ?? 2;
             int monthsToDisplay = GetAttributeValue(badge, "MonthsToDisplay").AsIntegerOrNull() ?? 24;
@@ -62,10 +63,10 @@ namespace Rock.PersonProfile.Badge
             }
 
             string tooltip = string.Empty;
-            var groupTypeRole = Person.GetFamilyRole();
+            var groupTypeRole = person.GetFamilyRole();
             if ( groupTypeRole != null && groupTypeRole.Guid == SystemGuid.GroupRole.GROUPROLE_FAMILY_MEMBER_CHILD.AsGuid() )
             {
-                tooltip = $"{Person.NickName.ToPossessive().EncodeHtml()} attendance for the last 24 months. Each bar is a month.";
+                tooltip = $"{person.NickName.ToPossessive().EncodeHtml()} attendance for the last 24 months. Each bar is a month.";
             }
             else
             {
@@ -107,7 +108,7 @@ namespace Rock.PersonProfile.Badge
                     }});
                 </script>
                 
-            ", Person.Id.ToString(), monthsToDisplay , minBarHeight, badge.Id ));
+            ", person.Id.ToString(), monthsToDisplay , minBarHeight, badge.Id ));
 
         }
 
