@@ -27,6 +27,7 @@ using System.Data;
 using System;
 using System.Diagnostics;
 using Rock.Web.Cache;
+using Rock.Web.UI;
 
 namespace Rock.PersonProfile.Badge
 {
@@ -50,7 +51,7 @@ namespace Rock.PersonProfile.Badge
         /// </summary>
         /// <param name="badge">The badge.</param>
         /// <param name="writer">The writer.</param>
-        public override void Render( PersonBadgeCache badge, System.Web.UI.HtmlTextWriter writer )
+        public override void Render( PersonBadgeCache badge, System.Web.UI.HtmlTextWriter writer, Person person, PersonBlock parentPersonBlock )
         {
             if (!String.IsNullOrEmpty(GetAttributeValue(badge, "GroupTypePurpose")))
             {
@@ -94,7 +95,7 @@ namespace Rock.PersonProfile.Badge
         }});
     }});
 </script>          
-", Person.Id.ToString(), groupTypePurposeGuid.ToString(), badgeColor, badge.Id, GetAttributeValue(badge, "BadgeIconCss" ) ) );
+", person.Id.ToString(), groupTypePurposeGuid.ToString(), badgeColor, badge.Id, GetAttributeValue(badge, "BadgeIconCss" ) ) );
                 }
             }
 

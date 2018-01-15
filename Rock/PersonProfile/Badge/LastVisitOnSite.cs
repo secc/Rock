@@ -27,6 +27,7 @@ using System.Data;
 using System;
 using System.Diagnostics;
 using Rock.Web.Cache;
+using Rock.Web.UI;
 
 namespace Rock.PersonProfile.Badge
 {
@@ -49,7 +50,7 @@ namespace Rock.PersonProfile.Badge
         /// </summary>
         /// <param name="badge">The badge.</param>
         /// <param name="writer">The writer.</param>
-        public override void Render( PersonBadgeCache badge, System.Web.UI.HtmlTextWriter writer )
+        public override void Render( PersonBadgeCache badge, System.Web.UI.HtmlTextWriter writer, Person person, PersonBlock parentPersonBlock )
         {
             int? siteId = GetAttributeValue( badge, "Site" ).AsIntegerOrNull();
             if ( siteId.HasValue )
@@ -65,7 +66,7 @@ namespace Rock.PersonProfile.Badge
                     if ( !String.IsNullOrEmpty( GetAttributeValue( badge, "PageViewDetails" ) ) )
                     {
                         int pageId = Rock.Web.Cache.PageCache.Read( Guid.Parse( GetAttributeValue( badge, "PageViewDetails" ) ) ).Id;
-                        detailPageUrl = System.Web.VirtualPathUtility.ToAbsolute( String.Format( "~/page/{0}?Person={1}&SiteId={2}", pageId, Person.UrlEncodedKey, siteId ) );
+                        detailPageUrl = System.Web.VirtualPathUtility.ToAbsolute( String.Format( "~/page/{0}?Person={1}&SiteId={2}", pageId, person.UrlEncodedKey, siteId ) );
                     }
 
                     writer.Write( String.Format( "<div class='badge badge-lastvisitonsite badge-id-{0}' data-toggle='tooltip' data-original-title=''>", badge.Id ) );
@@ -127,7 +128,7 @@ namespace Rock.PersonProfile.Badge
                     }});
                 </script>
                 
-            ", Person.Id, siteId, badge.Id, detailPageUrl, siteName ) );
+            ", person.Id, siteId, badge.Id, detailPageUrl, siteName ) );
                 }
             }
         }

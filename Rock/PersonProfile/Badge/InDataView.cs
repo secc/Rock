@@ -29,6 +29,7 @@ using System.Data;
 using System;
 using System.Diagnostics;
 using Rock.Web.Cache;
+using Rock.Web.UI;
 
 namespace Rock.PersonProfile.Badge
 {
@@ -50,7 +51,7 @@ namespace Rock.PersonProfile.Badge
         /// </summary>
         /// <param name="badge">The badge.</param>
         /// <param name="writer">The writer.</param>
-        public override void Render( PersonBadgeCache badge, System.Web.UI.HtmlTextWriter writer )
+        public override void Render( PersonBadgeCache badge, System.Web.UI.HtmlTextWriter writer, Person person, PersonBlock parentPersonBlock )
         {
             RockContext rockContext = new RockContext();
             var dataViewAttributeGuid = GetAttributeValue( badge, "DataView" ).AsGuid();
@@ -62,10 +63,10 @@ namespace Rock.PersonProfile.Badge
                 {
                     var errors = new List<string>();
                     var qry = dataView.GetQuery( null, 30, out errors );
-                    if ( qry != null && qry.Where( e => e.Id == Person.Id ).Any() )
+                    if ( qry != null && qry.Where( e => e.Id == person.Id ).Any() )
                     {
                         Dictionary<string, object> mergeValues = new Dictionary<string, object>();
-                        mergeValues.Add( "Person", Person );
+                        mergeValues.Add( "Person", person );
                         writer.Write( GetAttributeValue( badge, "BadgeContent" ).ResolveMergeFields( mergeValues ) );
                     }
                 }

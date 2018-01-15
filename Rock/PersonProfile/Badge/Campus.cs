@@ -20,6 +20,7 @@ using System.ComponentModel.Composition;
 using System.Linq;
 
 using Rock.Model;
+using Rock.Web.UI;
 using Rock.Web.UI.Controls;
 
 namespace Rock.PersonProfile.Badge
@@ -38,12 +39,12 @@ namespace Rock.PersonProfile.Badge
         /// </summary>
         /// <param name="person">The person.</param>
         /// <returns></returns>
-        public override HighlightLabel GetLabel(Person person)
+        public override HighlightLabel GetLabel(Person person, PersonBlock parentPersonBlock )
         {
-            if (ParentPersonBlock != null)
+            if (parentPersonBlock != null)
             {
                 // Campus is associated with the family group(s) person belongs to.
-                var families = ParentPersonBlock.PersonGroups(Rock.SystemGuid.GroupType.GROUPTYPE_FAMILY);
+                var families = parentPersonBlock.PersonGroups(Rock.SystemGuid.GroupType.GROUPTYPE_FAMILY);
                 if (families != null)
                 {
                     var label = new HighlightLabel();

@@ -19,11 +19,12 @@ using System.ComponentModel;
 using System.ComponentModel.Composition;
 using System.Data;
 using System.Linq;
-
+using System.Web.UI;
 using Rock.Attribute;
 using Rock.Data;
 using Rock.Model;
 using Rock.Web.Cache;
+using Rock.Web.UI;
 using Rock.Web.UI.Controls;
 
 namespace Rock.PersonProfile.Badge
@@ -70,7 +71,7 @@ namespace Rock.PersonProfile.Badge
         /// </summary>
         /// <param name="badge">The badge.</param>
         /// <param name="writer">The writer.</param>
-        public override void Render( PersonBadgeCache badge, System.Web.UI.HtmlTextWriter writer )
+        public override void Render( PersonBadgeCache badge, System.Web.UI.HtmlTextWriter writer, Person person, PersonBlock parentPersonBlock )
         {
             Guid? groupTypeGuid = GetAttributeValue( badge, "GroupType" ).AsGuidOrNull();
             if ( groupTypeGuid.HasValue )
@@ -81,7 +82,7 @@ namespace Rock.PersonProfile.Badge
                 var dateRangeSummary = SlidingDateRangePicker.FormatDelimitedValues( slidingDateRangeDelimitedValues );
 
                 var mergeFields = Lava.LavaHelper.GetCommonMergeFields( null, null, new Lava.CommonMergeFieldsOptions { GetLegacyGlobalMergeFields = false } );
-                mergeFields.Add( "Person", this.Person );
+                mergeFields.Add( "Person", person );
                 using ( var rockContext = new RockContext() )
                 {
                     var groupType = GroupTypeCache.Read( groupTypeGuid.Value );
@@ -90,7 +91,7 @@ namespace Rock.PersonProfile.Badge
                     mergeFields.Add( "Badge", badge );
                     mergeFields.Add( "DateRange", new { Dates = dateRange, Summary = dateRangeSummary } );
 
-                    var personAliasIds = Person.Aliases.Select( a => a.Id ).ToList();
+                    var personAliasIds = person.Aliases.Select( a => a.Id ).ToList();
 
                     var attendanceQuery = new AttendanceService( rockContext ).Queryable().Where( a =>
                         a.Group.GroupTypeId == groupTypeId && a.DidAttend == true
