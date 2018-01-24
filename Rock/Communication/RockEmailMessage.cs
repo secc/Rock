@@ -74,7 +74,7 @@ namespace Rock.Communication
         /// <value>
         /// The cc emails.
         /// </value>
-        public List<string> CCEmails { get; set; } = new List<string>();
+        public string CCEmails { get; set; }
 
         /// <summary>
         /// Gets or sets the BCC emails.
@@ -82,7 +82,7 @@ namespace Rock.Communication
         /// <value>
         /// The BCC emails.
         /// </value>
-        public List<string> BCCEmails { get; set; } = new List<string>();
+        public string BCCEmails { get; set; }
 
         /// <summary>
         /// Gets or sets the subject.
@@ -156,8 +156,8 @@ namespace Rock.Communication
                 this.FromEmail = systemEmail.From;
                 this.FromName = systemEmail.FromName;
                 this.SetRecipients( systemEmail.To );
-                this.CCEmails = systemEmail.Cc.SplitDelimitedValues().ToList();
-                this.BCCEmails = systemEmail.Bcc.SplitDelimitedValues().ToList();
+                this.CCEmails = systemEmail.Cc;
+                this.BCCEmails = systemEmail.Bcc;
                 this.Subject = systemEmail.Subject;
                 this.Message = systemEmail.Body;
             }
