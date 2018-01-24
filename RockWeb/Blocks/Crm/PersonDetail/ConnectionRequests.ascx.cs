@@ -75,7 +75,7 @@ namespace RockWeb.Blocks.Crm.PersonDetail
 
                 var connectionTypesList = connectionTypesQry.AsNoTracking().ToList();
 
-                rConnectionTypes.DataSource = connectionTypesList.Where( a => a.IsAuthorized( Rock.Security.Authorization.VIEW, this.CurrentPerson ) ).ToList();
+                rConnectionTypes.DataSource = connectionTypesList.ToList();
                 rConnectionTypes.DataBind();
             }
         }
@@ -87,6 +87,7 @@ namespace RockWeb.Blocks.Crm.PersonDetail
         /// <param name="e">The <see cref="RepeaterItemEventArgs"/> instance containing the event data.</param>
         protected void rConnectionTypes_ItemDataBound( object sender, RepeaterItemEventArgs e )
         {
+            var lConnectionTypeName = e.Item.FindControl( "lConnectionTypeName" ) as Label;
             var lConnectionOpportunityList = e.Item.FindControl( "lConnectionOpportunityList" ) as Literal;
             if ( lConnectionOpportunityList != null )
             {
@@ -108,35 +109,50 @@ namespace RockWeb.Blocks.Crm.PersonDetail
                         string listHtml = string.Empty;
                         foreach ( var connectionRequest in connectionRequestList )
                         {
-                            string connectionNameHtml;
-                            string connectionName;
-                            if ( connectionRequest.CampusId.HasValue )
+                            bool canEdit = false;
+                            if (connectionRequest.ConnectionOpportunity
+                                .ConnectionOpportunityConnectorGroups
+                                .Where( g =>
+                                    (!g.CampusId.HasValue || !connectionRequest.CampusId.HasValue || g.CampusId.HasValue &&
+                                    g.CampusId == connectionRequest.CampusId) &&
+                                    g.ConnectorGroup != null &&
+                                    g.ConnectorGroup.Members.Any( m => m.PersonId == CurrentPersonId.Value ) ).Any() )
                             {
-                                connectionName = string.Format( "{0} ({1})", connectionRequest.ConnectionOpportunity, CampusCache.Read( connectionRequest.CampusId.Value ) );
+                                canEdit = true;
                             }
-                            else
+                            if (connectionRequest.ConnectionOpportunity.ConnectionType.IsAuthorized( Rock.Security.Authorization.VIEW, this.CurrentPerson ) || canEdit)
                             {
-                                connectionName = string.Format( "{0}", connectionRequest.ConnectionOpportunity );
-                            }
+                                lConnectionTypeName.Visible = true;
+                                string connectionNameHtml;
+                                string connectionName;
+                                if ( connectionRequest.CampusId.HasValue )
+                                {
+                                    connectionName = string.Format( "{0} ({1})", connectionRequest.ConnectionOpportunity, CampusCache.Read( connectionRequest.CampusId.Value ) );
+                                }
+                                else
+                                {
+                                    connectionName = string.Format( "{0}", connectionRequest.ConnectionOpportunity );
+                                }
 
-                            if ( connectionRequestDetailPage != null && connectionRequestDetailPage.PageId > 0 )
-                            {
-                                connectionRequestDetailPage.Parameters = new System.Collections.Generic.Dictionary<string, string>();
-                                connectionRequestDetailPage.Parameters.Add( "ConnectionRequestId", connectionRequest.Id.ToString() );
-                                connectionRequestDetailPage.Parameters.Add( "ConnectionOpportunityId", connectionRequest.ConnectionOpportunityId.ToString() );
+                                if ( connectionRequestDetailPage != null && connectionRequestDetailPage.PageId > 0 )
+                                {
+                                    connectionRequestDetailPage.Parameters = new System.Collections.Generic.Dictionary<string, string>();
+                                    connectionRequestDetailPage.Parameters.Add( "ConnectionRequestId", connectionRequest.Id.ToString() );
+                                    connectionRequestDetailPage.Parameters.Add( "ConnectionOpportunityId", connectionRequest.ConnectionOpportunityId.ToString() );
 
-                                connectionNameHtml = string.Format( "<a href='{0}'>{1}</a>", connectionRequestDetailPage.BuildUrl(), connectionName );
-                            }
-                            else
-                            {
-                                connectionNameHtml = connectionName;
-                            }
+                                    connectionNameHtml = string.Format( "<a href='{0}'>{1}</a>", connectionRequestDetailPage.BuildUrl(), connectionName );
+                                }
+                                else
+                                {
+                                    connectionNameHtml = connectionName;
+                                }
 
-                            listHtml += string.Format(
-                                "<li {0}>{1} - <small>{2}</small></li>",
-                                ( connectionRequest.ConnectionState == ConnectionState.Connected || connectionRequest.ConnectionState == ConnectionState.Inactive ) ? "class='is-inactive'" : string.Empty,
-                                connectionNameHtml,
-                                connectionRequest.ConnectionState == ConnectionState.Connected ? "Connected" : connectionRequest.ConnectionStatus.ToString() );
+                                listHtml += string.Format(
+                                    "<li {0}>{1} - <small>{2}</small></li>",
+                                    ( connectionRequest.ConnectionState == ConnectionState.Connected || connectionRequest.ConnectionState == ConnectionState.Inactive ) ? "class='is-inactive'" : string.Empty,
+                                    connectionNameHtml,
+                                    connectionRequest.ConnectionState == ConnectionState.Connected ? "Connected" : connectionRequest.ConnectionStatus.ToString() );
+                            }
                         }
 
                         lConnectionOpportunityList.Text = listHtml;
