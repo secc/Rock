@@ -15,7 +15,7 @@
                     <asp:Repeater ID="rConnectionTypes" runat="server" OnItemDataBound="rConnectionTypes_ItemDataBound">
                         <ItemTemplate>
                             <li>
-                                <asp:Label runat="server" CssClass="control-label" ID="lConnectionTypeName" Text='<%#Eval("Name") %>' />
+                                <asp:Label runat="server" CssClass="control-label" ID="lConnectionTypeName" Text='<%#Eval("Name") %>' Visible="false" />
                                 <ul class="connectionopportunity-list list-unstyled margin-l-md">
                                     <asp:Literal runat="server" ID="lConnectionOpportunityList" />
                                 </ul>
