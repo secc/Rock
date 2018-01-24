@@ -74,7 +74,28 @@ namespace Rock.Communication
         /// <value>
         /// The cc emails.
         /// </value>
-        public string CCEmails { get; set; }
+        [Obsolete( "Use CCEmailsDelimited Instead" )]
+        public List<string> CCEmails
+        {
+            get
+            {
+                return CCEmailsDelimited.SplitDelimitedValues().ToList();
+            }
+
+            set
+            {
+                CCEmailsDelimited = value.AsDelimited( "," );
+            }
+        }
+
+
+        /// <summary>
+        /// Gets or sets the comma-delimited list of CCEmails (or Lava that creates the list)
+        /// </summary>
+        /// <value>
+        /// The cc emails delimited.
+        /// </value>
+        public string CCEmailsDelimited { get; set; }
 
         /// <summary>
         /// Gets or sets the BCC emails.
@@ -82,7 +103,28 @@ namespace Rock.Communication
         /// <value>
         /// The BCC emails.
         /// </value>
-        public string BCCEmails { get; set; }
+        [Obsolete("Use BCCEmailsDelimited Instead")]
+        public List<string> BCCEmails
+        {
+            get
+            {
+                return BCCEmailsDelimited.SplitDelimitedValues().ToList();
+            }
+
+            set
+            {
+                BCCEmailsDelimited = value.AsDelimited( "," );
+            }
+        }
+
+
+        /// <summary>
+        /// Gets or sets the comma-delimited list of BCCEmails (or Lava that creates the list)
+        /// </summary>
+        /// <value>
+        /// The cc emails delimited.
+        /// </value>
+        public string BCCEmailsDelimited { get; set; }
 
         /// <summary>
         /// Gets or sets the subject.
@@ -156,8 +198,8 @@ namespace Rock.Communication
                 this.FromEmail = systemEmail.From;
                 this.FromName = systemEmail.FromName;
                 this.SetRecipients( systemEmail.To );
-                this.CCEmails = systemEmail.Cc;
-                this.BCCEmails = systemEmail.Bcc;
+                this.CCEmailsDelimited = systemEmail.Cc;
+                this.BCCEmailsDelimited = systemEmail.Bcc;
                 this.Subject = systemEmail.Subject;
                 this.Message = systemEmail.Body;
             }
