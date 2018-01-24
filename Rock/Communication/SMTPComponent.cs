@@ -204,14 +204,14 @@ namespace Rock.Communication.Transport
                             CheckSafeSender( message, globalAttributes );
 
                             // cc
-                            string mergedCCEmails = emailMessage.CCEmails.ResolveMergeFields( recipientData.MergeFields, emailMessage.CurrentPerson, emailMessage.EnabledLavaCommands );
+                            string mergedCCEmails = emailMessage.CCEmailsDelimited.ResolveMergeFields( recipientData.MergeFields, emailMessage.CurrentPerson, emailMessage.EnabledLavaCommands );
                             foreach ( string cc in mergedCCEmails.SplitDelimitedValues().ToList().Where( e => e != "" ) )
                             {
                                 message.CC.Add( new MailAddress( cc ) );
                             }
 
                             // bcc
-                            string mergedBCCEmails = emailMessage.BCCEmails.ResolveMergeFields( recipientData.MergeFields, emailMessage.CurrentPerson, emailMessage.EnabledLavaCommands );
+                            string mergedBCCEmails = emailMessage.BCCEmailsDelimited.ResolveMergeFields( recipientData.MergeFields, emailMessage.CurrentPerson, emailMessage.EnabledLavaCommands );
                             foreach ( string bcc in mergedBCCEmails.SplitDelimitedValues().ToList().Where( e => e != "" ) )
                             {
                                 message.Bcc.Add( new MailAddress( bcc ) );
@@ -724,8 +724,8 @@ namespace Rock.Communication.Transport
             message.FromName = template.FromName;
             message.SetRecipients( recipients );
             template.To.SplitDelimitedValues().ToList().ForEach( to => message.AddRecipient( to ) );
-            message.CCEmails = template.Cc;
-            message.BCCEmails = template.Bcc;
+            message.CCEmailsDelimited = template.Cc;
+            message.BCCEmailsDelimited = template.Bcc;
             message.Subject = template.Subject;
             message.Message = template.Body;
             message.ThemeRoot = themeRoot;
