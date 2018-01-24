@@ -204,19 +204,17 @@ namespace Rock.Communication.Transport
                             CheckSafeSender( message, globalAttributes );
 
                             // cc
-                            foreach ( string cc in emailMessage.CCEmails.Where( e => e != "" ) )
+                            string mergedCCEmails = emailMessage.CCEmails.ResolveMergeFields( recipientData.MergeFields, emailMessage.CurrentPerson, emailMessage.EnabledLavaCommands );
+                            foreach ( string cc in mergedCCEmails.SplitDelimitedValues().ToList().Where( e => e != "" ) )
                             {
-                                // Resolve any possible merge fields in the cc address
-                                string ccRecipient = cc.ResolveMergeFields( recipientData.MergeFields, emailMessage.CurrentPerson, emailMessage.EnabledLavaCommands );
-                                message.CC.Add( new MailAddress( ccRecipient ) );
+                                message.CC.Add( new MailAddress( cc ) );
                             }
 
                             // bcc
-                            foreach ( string bcc in emailMessage.BCCEmails.Where( e => e != "" ) )
+                            string mergedBCCEmails = emailMessage.BCCEmails.ResolveMergeFields( recipientData.MergeFields, emailMessage.CurrentPerson, emailMessage.EnabledLavaCommands );
+                            foreach ( string bcc in mergedBCCEmails.SplitDelimitedValues().ToList().Where( e => e != "" ) )
                             {
-                                // Resolve any possible merge fields in the cc address
-                                string bccRecipient = bcc.ResolveMergeFields( recipientData.MergeFields, emailMessage.CurrentPerson, emailMessage.EnabledLavaCommands );
-                                message.Bcc.Add( new MailAddress( bccRecipient ) );
+                                message.Bcc.Add( new MailAddress( bcc ) );
                             }
 
                             // Subject
@@ -726,8 +724,8 @@ namespace Rock.Communication.Transport
             message.FromName = template.FromName;
             message.SetRecipients( recipients );
             template.To.SplitDelimitedValues().ToList().ForEach( to => message.AddRecipient( to ) );
-            message.CCEmails = template.Cc.SplitDelimitedValues().ToList();
-            message.BCCEmails = template.Bcc.SplitDelimitedValues().ToList();
+            message.CCEmails = template.Cc;
+            message.BCCEmails = template.Bcc;
             message.Subject = template.Subject;
             message.Message = template.Body;
             message.ThemeRoot = themeRoot;
