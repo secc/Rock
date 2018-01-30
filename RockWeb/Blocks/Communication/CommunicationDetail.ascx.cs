@@ -688,7 +688,7 @@ namespace RockWeb.Blocks.Communication
 
 
                             btnCancel.Visible = hasPendingRecipients;
-                            btnCopy.Visible = communication.IsAuthorized( Rock.Security.Authorization.EDIT, CurrentPerson );
+                            btnCopy.Visible = communication.IsAuthorized( Rock.Security.Authorization.EDIT, CurrentPerson ) || communication.CreatedByPersonId == CurrentPerson.Id;
                             break;
                         }
                 }
