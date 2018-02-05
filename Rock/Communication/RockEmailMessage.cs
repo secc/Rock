@@ -160,6 +160,7 @@ namespace Rock.Communication
                 this.BCCEmails = systemEmail.Bcc.SplitDelimitedValues().ToList();
                 this.Subject = systemEmail.Subject;
                 this.Message = systemEmail.Body;
+                this.EnabledLavaCommands = GlobalAttributesCache.Read().GetValue( "DefaultEnabledLavaCommands" );
             }
         }
     }
