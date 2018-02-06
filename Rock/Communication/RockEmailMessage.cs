@@ -202,6 +202,7 @@ namespace Rock.Communication
                 this.BCCEmailsDelimited = systemEmail.Bcc;
                 this.Subject = systemEmail.Subject;
                 this.Message = systemEmail.Body;
+                this.EnabledLavaCommands = GlobalAttributesCache.Read().GetValue( "DefaultEnabledLavaCommands" );
             }
         }
     }
