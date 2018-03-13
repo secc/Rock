@@ -15,6 +15,7 @@
 // </copyright>
 //
 using System;
+using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Data.Entity.ModelConfiguration;
@@ -234,8 +235,14 @@ namespace Rock.Model
                     return false;
 
                 if ( identity.Ticket != null &&
-                    identity.Ticket.UserData.ToLower() == "true" )
-                    return false;
+                    identity.Ticket.UserData.Length > 0 )
+                {
+                    Dictionary<string, string> userData = identity.Ticket.UserData.AsDictionaryOrNull();
+                    if (userData.ContainsKey( "IsImpersonated" ) && userData["IsImpersonated"].ToLower() == "true" )
+                    {
+                        return false;
+                    }
+                }
 
                 return true;
             }

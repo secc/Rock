@@ -354,7 +354,30 @@ namespace RockWeb
         {
             try
             {
-                UserLoginService.UpdateLastLogin( UserLogin.GetCurrentUserName() );
+                // Check the ticket
+                bool validTicket = true;
+                System.Web.Security.FormsIdentity identity = HttpContext.Current.User.Identity as System.Web.Security.FormsIdentity;
+
+                if ( identity != null && identity.Ticket.UserData != null )
+                {
+                    Dictionary<string, string> userData = identity.Ticket.UserData.AsDictionaryOrNull();
+                    if ( userData == null ||
+                        userData["RockKey"] != GlobalAttributesCache.Read().GetValue( "FormsAuthenticationTicketKey" ) ||
+                        ( userData["UserAgent"] != Request.UserAgent &&
+                            userData["UserHostAddress"] != Request.UserHostAddress ) )
+                    {
+                        validTicket = false;
+                    }
+                }
+                if ( validTicket )
+                {
+                    UserLoginService.UpdateLastLogin( UserLogin.GetCurrentUserName() );
+                }
+                else
+                {
+                    Rock.Security.Authorization.SignOut();
+                    Response.Redirect( Request.RawUrl, true );
+                }
             }
             catch { }
 

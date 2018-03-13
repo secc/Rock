@@ -22,6 +22,7 @@ using System.Text;
 using System.Web;
 using System.Web.Security;
 
+using Rock;
 using Rock.Data;
 using Rock.Model;
 using Rock.Web.Cache;
@@ -749,9 +750,16 @@ namespace Rock.Security
         /// <param name="IsImpersonated">if set to <c>true</c> [is impersonated].</param>
         public static void SetAuthCookie( string userName, bool isPersisted, bool IsImpersonated )
         {
+            Dictionary<string, string> userData = new Dictionary<string, string>();
+            userData.Add( "IsImpersonated", IsImpersonated.ToString() );
+            userData.Add( "UserAgent", HttpContext.Current.Request.UserAgent );
+            userData.Add( "UserHostAddress", HttpContext.Current.Request.UserHostAddress );
+            userData.Add( "RockKey", GlobalAttributesCache.Read().GetValue( "FormsAuthenticationTicketKey" ) );
+            string userDataString = string.Join( "|", userData.Select( x => x.Key + "^" + x.Value ).ToArray() );
+
             var ticket = new FormsAuthenticationTicket( 1, userName, RockDateTime.Now,
                 RockDateTime.Now.Add( FormsAuthentication.Timeout ), isPersisted,
-                IsImpersonated.ToString(), FormsAuthentication.FormsCookiePath );
+                userDataString, FormsAuthentication.FormsCookiePath );
 
             var authCookie = GetAuthCookie( GetCookieDomain(), FormsAuthentication.Encrypt( ticket ) );
             if ( ticket.IsPersistent )
