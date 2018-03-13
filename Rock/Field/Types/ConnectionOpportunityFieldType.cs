@@ -83,7 +83,7 @@ namespace Rock.Field.Types
             {
                 if ( controls.Count > 0 && controls[0] != null && controls[0] is CheckBox )
                 {
-                    configurationValues[INCLUDE_INACTIVE_KEY].Value = ( (CheckBox)controls[0] ).Checked.ToString();
+                    configurationValues[INCLUDE_INACTIVE_KEY].Value = ( ( CheckBox ) controls[0] ).Checked.ToString();
                 }
             }
 
@@ -101,7 +101,7 @@ namespace Rock.Field.Types
             {
                 if ( controls.Count > 0 && controls[0] != null && controls[0] is CheckBox && configurationValues.ContainsKey( INCLUDE_INACTIVE_KEY ) )
                 {
-                    ( (CheckBox)controls[0] ).Checked = configurationValues[INCLUDE_INACTIVE_KEY].Value.AsBoolean();
+                    ( ( CheckBox ) controls[0] ).Checked = configurationValues[INCLUDE_INACTIVE_KEY].Value.AsBoolean();
                 }
             }
         }
@@ -123,7 +123,7 @@ namespace Rock.Field.Types
             string formattedValue = string.Empty;
 
             Guid? guid = value.AsGuidOrNull();
-            if (guid.HasValue)
+            if ( guid.HasValue )
             {
                 var opportunity = new ConnectionOpportunityService( new RockContext() ).Get( guid.Value );
                 if ( opportunity != null )
@@ -191,7 +191,7 @@ namespace Rock.Field.Types
         public override string GetEditValue( Control control, Dictionary<string, ConfigurationValue> configurationValues )
         {
             var picker = control as DropDownList;
-            if (picker != null)
+            if ( picker != null )
             {
                 // picker has value as ConnectionOpportunity.Guid
                 return picker.SelectedValue;
@@ -209,7 +209,7 @@ namespace Rock.Field.Types
         public override void SetEditValue( Control control, Dictionary<string, ConfigurationValue> configurationValues, string value )
         {
             var picker = control as DropDownList;
-            if ( picker != null )
+            if ( picker != null && value != null )
             {
                 picker.SelectedValue = value.ToUpper();
             }
@@ -229,7 +229,7 @@ namespace Rock.Field.Types
         {
             Guid guid = GetEditValue( control, configurationValues ).AsGuid();
             var item = new ConnectionOpportunityService( new RockContext() ).Get( guid );
-            return item != null ? item.Id : (int?)null;
+            return item != null ? item.Id : ( int? ) null;
         }
 
         /// <summary>
