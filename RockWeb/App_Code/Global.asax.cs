@@ -354,30 +354,7 @@ namespace RockWeb
         {
             try
             {
-                // Check the ticket
-                bool validTicket = true;
-                System.Web.Security.FormsIdentity identity = HttpContext.Current.User.Identity as System.Web.Security.FormsIdentity;
-
-                if ( identity != null && identity.Ticket.UserData != null )
-                {
-                    Dictionary<string, string> userData = identity.Ticket.UserData.AsDictionaryOrNull();
-                    if ( userData == null ||
-                        userData["RockKey"] != GlobalAttributesCache.Read().GetValue( "FormsAuthenticationTicketKey" ) ||
-                        ( userData["UserAgent"] != Request.UserAgent &&
-                            userData["UserHostAddress"] != Request.UserHostAddress ) )
-                    {
-                        validTicket = false;
-                    }
-                }
-                if ( validTicket )
-                {
-                    UserLoginService.UpdateLastLogin( UserLogin.GetCurrentUserName() );
-                }
-                else
-                {
-                    Rock.Security.Authorization.SignOut();
-                    Response.Redirect( Request.RawUrl, true );
-                }
+                UserLoginService.UpdateLastLogin( UserLogin.GetCurrentUserName() );
             }
             catch { }
 
@@ -429,6 +406,25 @@ namespace RockWeb
         /// <param name="e">The <see cref="EventArgs" /> instance containing the event data.</param>
         protected void Application_AuthenticateRequest( object sender, EventArgs e )
         {
+            try
+            {
+                // Check the ticket
+                System.Web.Security.FormsIdentity identity = HttpContext.Current.User.Identity as System.Web.Security.FormsIdentity;
+
+                if ( identity != null && identity.Ticket.UserData != null )
+                {
+                    Dictionary<string, string> userData = identity.Ticket.UserData.AsDictionaryOrNull();
+                    if ( userData == null ||
+                        userData["RockKey"] != GlobalAttributesCache.Read().GetValue( "FormsAuthenticationTicketKey" ) ||
+                        ( userData["UserAgent"] != Request.UserAgent &&
+                            userData["UserHostAddress"] != Request.UserHostAddress ) )
+                    {
+                        Rock.Security.Authorization.SignOut();
+                        Response.Redirect( Request.RawUrl, true );
+                    }
+                }
+            }
+            catch ( Exception ) { }
         }
 
         /// <summary>
