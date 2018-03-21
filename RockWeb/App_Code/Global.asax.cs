@@ -411,13 +411,22 @@ namespace RockWeb
                 // Check the ticket
                 System.Web.Security.FormsIdentity identity = HttpContext.Current.User.Identity as System.Web.Security.FormsIdentity;
 
+                string address = HttpContext.Current.Request.UserHostAddress;
+                if ( !string.IsNullOrEmpty( HttpContext.Current.Request.ServerVariables["HTTP_X_FORWARDED_FOR"] ) )
+                {
+                    string[] addresses = HttpContext.Current.Request.ServerVariables["HTTP_X_FORWARDED_FOR"].Split( ',' );
+                    if ( addresses.Length != 0 )
+                    {
+                        address = addresses[0].Split( ':' )[0];
+                    }
+                }
                 if ( identity != null && identity.Ticket.UserData != null )
                 {
                     Dictionary<string, string> userData = identity.Ticket.UserData.AsDictionaryOrNull();
                     if ( userData == null ||
                         userData["RockKey"] != GlobalAttributesCache.Read().GetValue( "FormsAuthenticationTicketKey" ) ||
                         ( userData["UserAgent"] != Request.UserAgent &&
-                            userData["UserHostAddress"] != Request.UserHostAddress ) )
+                            userData["UserHostAddress"] != address ) )
                     {
                         Rock.Security.Authorization.SignOut();
                         Response.Redirect( Request.RawUrl, true );

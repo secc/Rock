@@ -750,10 +750,19 @@ namespace Rock.Security
         /// <param name="IsImpersonated">if set to <c>true</c> [is impersonated].</param>
         public static void SetAuthCookie( string userName, bool isPersisted, bool IsImpersonated )
         {
+            string address = HttpContext.Current.Request.UserHostAddress;
+            if ( !string.IsNullOrEmpty( HttpContext.Current.Request.ServerVariables["HTTP_X_FORWARDED_FOR"] ) )
+            {
+                string[] addresses = HttpContext.Current.Request.ServerVariables["HTTP_X_FORWARDED_FOR"].Split( ',' );
+                if ( addresses.Length != 0 )
+                {
+                    address = addresses[0].Split( ':' )[0];
+                }
+            }
             Dictionary<string, string> userData = new Dictionary<string, string>();
             userData.Add( "IsImpersonated", IsImpersonated.ToString() );
             userData.Add( "UserAgent", HttpContext.Current.Request.UserAgent );
-            userData.Add( "UserHostAddress", HttpContext.Current.Request.UserHostAddress );
+            userData.Add( "UserHostAddress", address );
             userData.Add( "RockKey", GlobalAttributesCache.Read().GetValue( "FormsAuthenticationTicketKey" ) );
             string userDataString = string.Join( "|", userData.Select( x => x.Key + "^" + x.Value ).ToArray() );
 
