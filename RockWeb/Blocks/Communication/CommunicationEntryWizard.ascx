@@ -1212,7 +1212,7 @@
                 jqueryLoaderScript.async = false;
                 jqueryLoaderScript.className = "js-emaileditor-addon";
                 jqueryLoaderScript.type = "text/javascript";
-                jqueryLoaderScript.src = '<%=RockPage.ResolveRockUrl("~/Scripts/jquery-1.12.4.min.js", true ) %>';
+                jqueryLoaderScript.src = '<%=RockPage.ResolveRockUrl("~/Scripts/jquery-3.3.1.min.js", true ) %>';
 
                 var dragulaLoaderScript = document.createElement("script");
                 dragulaLoaderScript.async = false;
