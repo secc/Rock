@@ -20,10 +20,12 @@ using System.ComponentModel;
 using System.ComponentModel.Composition;
 using System.Linq;
 using System.Web;
+using System.Web.UI;
 using Rock;
 using Rock.Attribute;
 using Rock.Model;
 using Rock.Web.Cache;
+using Rock.Web.UI;
 using Rock.Web.UI.Controls;
 
 namespace Rock.PersonProfile.Badge
@@ -38,7 +40,7 @@ namespace Rock.PersonProfile.Badge
     [InteractionChannelField( "Interaction Channel", "The Interaction channel to use.", true, order: 0 )]
     [SlidingDateRangeField( "Date Range", "The date range in which the interactions were made.", required: false, order: 1 )]
     [LinkedPage( "Detail Page", "Select the page to navigate when the badge is clicked.", false, order: 2 )]
-    [TextField( "Badge Icon CSS", "The CSS icon to use for the badge.", true, "fa-random", key: "BadgeIconCss", order:3 )]
+    [TextField( "Badge Icon CSS", "The CSS icon to use for the badge.", true, "fa-random", key: "BadgeIconCss", order: 3 )]
     [TextField( "Badge Color", "The color of the badge (#ffffff).", true, "#0ab4dd", order: 4 )]
     public class InteractionsInRange : BadgeComponent
     {
@@ -47,11 +49,11 @@ namespace Rock.PersonProfile.Badge
         /// </summary>
         /// <param name="badge">The badge.</param>
         /// <param name="writer">The writer.</param>
-        public override void Render( PersonBadgeCache badge, System.Web.UI.HtmlTextWriter writer )
+        public override void Render( PersonBadgeCache badge, System.Web.UI.HtmlTextWriter writer, Person person, PersonBlock parentPersonBlock )
         {
             Guid? interactionChannelGuid = GetAttributeValue( badge, "InteractionChannel" ).AsGuid();
             string badgeColor = GetAttributeValue( badge, "BadgeColor" );
-            
+
             if ( interactionChannelGuid.HasValue && !String.IsNullOrEmpty( badgeColor ) )
             {
                 string dateRange = GetAttributeValue( badge, "DateRange" );
@@ -73,13 +75,13 @@ namespace Rock.PersonProfile.Badge
 
                 writer.Write( "</div>" );
 
-                writer.Write($@"
+                writer.Write( $@"
                 <script>
                     Sys.Application.add_load(function () {{
                                                 
                         $.ajax({{
                                 type: 'GET',
-                                url: Rock.settings.get('baseUrl') + 'api/PersonBadges/InteractionsInRange/{Person.Id}/{interactionChannel.Id}/{HttpUtility.UrlEncode(dateRange)}' ,
+                                url: Rock.settings.get('baseUrl') + 'api/PersonBadges/InteractionsInRange/{person.Id}/{interactionChannel.Id}/{HttpUtility.UrlEncode( dateRange )}' ,
                                 statusCode: {{
                                     200: function (data, status, xhr) {{
                                     

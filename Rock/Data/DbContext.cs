@@ -27,6 +27,10 @@ using Rock.Transactions;
 using Rock.UniversalSearch;
 using Rock.Workflow;
 
+using Audit = Rock.Model.Audit;
+using System.Linq.Expressions;
+using Z.EntityFramework.Plus;
+
 namespace Rock.Data
 {
     /// <summary>
@@ -168,6 +172,24 @@ namespace Rock.Data
             }
 
             return result;
+        }
+
+        /// <summary>
+        /// Gets the current person alias.
+        /// </summary>
+        /// <returns></returns>
+        private PersonAlias GetCurrentPersonAlias()
+        {
+            if ( HttpContext.Current != null && HttpContext.Current.Items.Contains( "CurrentPerson" ) )
+            {
+                var currentPerson = HttpContext.Current.Items["CurrentPerson"] as Person;
+                if ( currentPerson != null && currentPerson.PrimaryAlias != null )
+                {
+                    return currentPerson.PrimaryAlias;
+                }
+            }
+
+            return null;
         }
 
         /// <summary>
@@ -378,6 +400,25 @@ namespace Rock.Data
                     }
                 } );
             }
+        }
+
+        /// <summary>
+        /// Does a direct bulk UPDATE. 
+        /// Example: rockContext.BulkUpdate( personQuery, p => new Person { LastName = "Decker" } );
+        /// NOTE: This bypasses the Rock and a bunch of the EF Framework and automatically commits the changes to the database
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="queryable">The queryable for the records to update</param>
+        /// <param name="updateFactory">Linq expression to specify the updated property values</param>
+        /// <returns></returns>
+        public virtual int BulkUpdate<T>( IQueryable<T> queryable, Expression<Func<T, T>> updateFactory ) where T : class
+        {
+            var currentDateTime = RockDateTime.Now;
+            PersonAlias currentPersonAlias = this.GetCurrentPersonAlias();
+            var rockExpressionVisitor = new RockBulkUpdateExpressionVisitor( currentDateTime, currentPersonAlias );
+            rockExpressionVisitor.Visit( updateFactory );
+            int recordsUpdated = queryable.Update( updateFactory );
+            return recordsUpdated;
         }
 
         /// <summary>

@@ -786,6 +786,14 @@ namespace Rock.Web.UI
                         Site.RedirectToChangePasswordPage( true, true );
                     }
                 }
+
+                // Check if there is a ROCK_PERSONALDEVICE_ADDRESS cookie, link person to device
+                if ( Request.Cookies["rock_wifi"] != null )
+                {
+                    HttpCookie httpCookie = Request.Cookies["rock_wifi"];
+                    LinkPersonAliasToDevice( ( int ) CurrentPersonAliasId, httpCookie.Values["ROCK_PERSONALDEVICE_ADDRESS"] );
+                    Response.Cookies["rock_wifi"].Expires = DateTime.Now.AddDays( -1 );
+                }
             }
 
             // If a PageInstance exists
@@ -2122,6 +2130,38 @@ Sys.Application.add_load(function () {
             trigger.EventName = "Click";
             updatePanel.Triggers.Add( trigger );
         }
+
+        /// <summary>
+        /// Links the person alias to device.
+        /// </summary>
+        /// <param name="personAliasId">The person alias identifier.</param>
+        /// <param name="MacAddress">The mac address.</param>
+        public void LinkPersonAliasToDevice( int personAliasId, string MacAddress )
+        {
+            using ( var rockContext = new RockContext() )
+            {
+                PersonalDeviceService personalDeviceService = new PersonalDeviceService( rockContext );
+                PersonalDevice personalDevice = personalDeviceService.GetByMACAddress( MacAddress );
+
+                // It's possible that the device was deleted from the DB but a cookie still exists
+                if ( personalDevice == null )
+                {
+                    return;
+                }
+
+                // Assign the current Person.Alias to the device and save
+                if ( personalDevice.PersonAliasId == null || personalDevice.PersonAliasId != personAliasId )
+                {
+                    personalDevice.PersonAliasId = personAliasId;
+                    rockContext.SaveChanges();
+                }
+
+                // Update interactions for this device with this person.alias if they don't already have one.
+                InteractionService interactionService = new InteractionService( rockContext );
+                interactionService.UpdateInteractionsWithPersonAliasIdForDeviceId( personAliasId, personalDevice.Id );
+            }
+        }
+
 
         #endregion
 
