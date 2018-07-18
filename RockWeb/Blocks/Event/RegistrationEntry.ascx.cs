@@ -3695,7 +3695,7 @@ namespace RockWeb.Blocks.Event
                 //
                 if (data != ''&& data.startsWith('?document_id') ) {{
                     $('#{19}').val(data);
-                    {20};
+                    setTimeout(function() {{ {20}; }}, 1);
                 }}
                 else 
                 {{
