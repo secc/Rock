@@ -906,6 +906,10 @@ $(document).ready(function() {
                             AddCacheItem( CONTENT_CACHE_KEY, items, ItemCacheDuration.Value, cacheTags );
                         }
 
+                        TagService tagService = new TagService(rockContext);
+                        var tag = tagService.Queryable().Where(ts => ts.EntityTypeId == 205 && ts.Name == "Family").FirstOrDefault();
+                        Console.WriteLine("Tag value: {0}", tag);
+
                         // If items could be filtered by querystring values, check for filters
                         if ( isQueryParameterFilteringEnabled )
                         {
