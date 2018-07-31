@@ -906,19 +906,33 @@ $(document).ready(function() {
                             AddCacheItem( CONTENT_CACHE_KEY, items, ItemCacheDuration.Value, cacheTags );
                         }
 
-                        TagService tagService = new TagService(rockContext);
-                        var tag = tagService.Queryable().Where(ts => ts.EntityTypeId == 205 && ts.Name == "Family").FirstOrDefault();
-                        Console.WriteLine("Tag value: {0}", tag);
+                        
 
                         // If items could be filtered by querystring values, check for filters
                         if ( isQueryParameterFilteringEnabled )
                         {
+                             var itemQry = items.AsQueryable();
+                                
+                            if ( !string.IsNullOrWhiteSpace( PageParameter( "tag" ) ) && PageParameter( "tag" ) != "all")
+                            {
+                                TagService tagService = new TagService(rockContext);
+                                var entityTypeCache = EntityTypeCache.Read( ITEM_TYPE_NAME );
+                                var entityTypeId = entityTypeCache.Id;
+                                var pageParameter = PageParameter( "tag" );
+                                var taggedGuids = tagService.Queryable()
+                                    .Where( t => t.EntityTypeId == entityTypeId && t.Name == pageParameter )
+                                    .SelectMany( t => t.TaggedItems.Select( ti => ti.EntityGuid ) )
+                                    .ToList();
+
+                                itemQry = itemQry.Where( i => taggedGuids.Contains(i.Guid) );
+
+                            }
+
                             var pageParameters = PageParameters();
                             if ( pageParameters.Count > 0 )
                             {
                                 var propertyFilter = new Rock.Reporting.DataFilter.PropertyFilter();
 
-                                var itemQry = items.AsQueryable();
                                 foreach ( string key in PageParameters().Select( p => p.Key ).ToList() )
                                 {
                                     var selection = new List<string>();
