@@ -19,14 +19,11 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data.Entity;
 using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 using System.Web;
 using System.Web.UI;
 using System.Web.UI.WebControls;
-
 using Humanizer;
-
 using Newtonsoft.Json;
 
 using Rock;
@@ -49,7 +46,6 @@ namespace RockWeb.Blocks.Event
     [DisplayName( "Registration Entry" )]
     [Category( "Event" )]
     [Description( "Block used to register for a registration instance." )]
-
     [DefinedValueField( Rock.SystemGuid.DefinedType.PERSON_CONNECTION_STATUS, "Connection Status", "The connection status to use for new individuals (default: 'Web Prospect'.)", true, false, Rock.SystemGuid.DefinedValue.PERSON_CONNECTION_STATUS_WEB_PROSPECT, "", 0 )]
     [DefinedValueField( Rock.SystemGuid.DefinedType.PERSON_RECORD_STATUS, "Record Status", "The record status to use for new individuals (default: 'Pending'.)", true, false, Rock.SystemGuid.DefinedValue.PERSON_RECORD_STATUS_PENDING, "", 1 )]
     [DefinedValueField( Rock.SystemGuid.DefinedType.FINANCIAL_SOURCE_TYPE, "Source", "The Financial Source Type to use when creating transactions", false, false, Rock.SystemGuid.DefinedValue.FINANCIAL_SOURCE_TYPE_WEBSITE, "", 2 )]
@@ -61,6 +57,7 @@ namespace RockWeb.Blocks.Event
     [BooleanField( "Force Email Update", "Force the email to be updated on the person's record.", false, "", 9 )]
     [BooleanField( "Show Field Descriptions", "Show the field description as help text", defaultValue: false, order: 10, key: "ShowFieldDescriptions" )]
     [CustomDropdownListField( "Digital Signature Embed Mode", "Optional setting to use a new tab rather than an Iframe for the signature request.", "Iframe,New Tab", true, "Iframe", "", 10, "SignInlineEmbedMode" )]
+    [BooleanField( "Show Field Descriptions", "Show the field description as help text", defaultValue: true, order: 10, key: "ShowFieldDescriptions" )]
     public partial class RegistrationEntry : RockBlock
     {
         #region Fields
@@ -69,6 +66,7 @@ namespace RockWeb.Blocks.Event
 
         // Page (query string) parameter names
         private const string REGISTRATION_ID_PARAM_NAME = "RegistrationId";
+
         private const string SLUG_PARAM_NAME = "Slug";
         private const string START_AT_BEGINNING = "StartAtBeginning";
         private const string REGISTRATION_INSTANCE_ID_PARAM_NAME = "RegistrationInstanceId";
@@ -78,6 +76,7 @@ namespace RockWeb.Blocks.Event
 
         // Viewstate keys
         private const string REGISTRATION_INSTANCE_STATE_KEY = "RegistrationInstanceState";
+
         private const string REGISTRATION_STATE_KEY = "RegistrationState";
         private const string GROUP_ID_KEY = "GroupId";
         private const string CAMPUS_ID_KEY = "CampusId";
@@ -172,7 +171,7 @@ namespace RockWeb.Blocks.Event
         protected RegistrationInfo RegistrationState { get; set; }
 
         /// <summary>
-        /// Gets or sets the current panel. 
+        /// Gets or sets the current panel.
         /// </summary>
         /// <value>
         /// The current panel.
@@ -324,7 +323,7 @@ namespace RockWeb.Blocks.Event
         {
             get
             {
-                // If this is an existing registration, max registrants is the number of registrants already 
+                // If this is an existing registration, max registrants is the number of registrants already
                 // on registration ( don't allow adding new registrants )
                 if ( RegistrationState != null && RegistrationState.RegistrationId.HasValue )
                 {
@@ -355,7 +354,7 @@ namespace RockWeb.Blocks.Event
         {
             get
             {
-                // If this is an existing registration, min registrants is the number of registrants already 
+                // If this is an existing registration, min registrants is the number of registrants already
                 // on registration ( don't allow adding new registrants )
                 if ( RegistrationState != null && RegistrationState.RegistrationId.HasValue )
                 {
@@ -502,9 +501,10 @@ namespace RockWeb.Blocks.Event
             // Show save account info based on if checkbox is checked
             divSaveAccount.Style[HtmlTextWriterStyle.Display] = cbSaveAccount.Checked ? "block" : "none";
 
-            // Change the labels for the family member radio buttons
-            rblFamilyOptions.Label = "Individual is in the same " + GetAttributeValue( "FamilyTerm" ) + " as";
+            // Change the display when family members are allowed
+            rblFamilyOptions.Label = RegistrantTerm + " is in the same " + GetAttributeValue( "FamilyTerm" ) + " as";
             rblRegistrarFamilyOptions.Label = "You are in the same " + GetAttributeValue( "FamilyTerm" ) + " as";
+            pnlFamilyMembers.Style[HtmlTextWriterStyle.Display] = pnlFamilyMembers.Visible && RegistrationTemplate.RegistrantsSameFamily == RegistrantsSameFamily.Yes ? "block" : "none";
 
             if ( !Page.IsPostBack )
             {
@@ -660,7 +660,7 @@ namespace RockWeb.Blocks.Event
                 }
                 catch ( System.InvalidOperationException )
                 {
-                    // Swallow this exception 
+                    // Swallow this exception
                 }
             }
 
@@ -1015,6 +1015,7 @@ namespace RockWeb.Blocks.Event
             decimal currentStep = ( FormCount * CurrentRegistrantIndex ) + CurrentFormIndex + 1;
             PercentComplete = ( currentStep / ProgressBarSteps ) * 100.0m;
             pnlRegistrantProgressBar.Visible = GetAttributeValue( "DisplayProgressBar" ).AsBoolean();
+            pnlFamilyMembers.Style[HtmlTextWriterStyle.Display] = "block";
         }
 
         #endregion
@@ -1344,8 +1345,8 @@ namespace RockWeb.Blocks.Event
                     return false;
                 }
 
-                // Only allow the person that was logged in when this registration was created. 
-                // If the logged in person, registered on someone elses behalf (for example, husband logged in, but entered wife's name as the Registrar), 
+                // Only allow the person that was logged in when this registration was created.
+                // If the logged in person, registered on someone elses behalf (for example, husband logged in, but entered wife's name as the Registrar),
                 // also allow that person to access the registration
                 if ( ( registration.PersonAlias != null && registration.PersonAlias.PersonId == CurrentPersonId.Value ) ||
                     ( registration.CreatedByPersonAlias != null && registration.CreatedByPersonAlias.PersonId == CurrentPersonId.Value ) )
@@ -1561,14 +1562,14 @@ namespace RockWeb.Blocks.Event
                     cost = RegistrationInstanceState.Cost ?? 0.0m;
                 }
 
-                // If this is the first registrant being added, default it to the current person
-                if ( RegistrationState.RegistrantCount == 0 && registrantCount == 1 && CurrentPerson != null )
+                // If this is the first registrant being added and all are in the same family, default it to the current person
+                if ( RegistrationState.RegistrantCount == 0 && registrantCount == 1 && CurrentPerson != null && RegistrationTemplate.RegistrantsSameFamily == RegistrantsSameFamily.Yes )
                 {
                     var registrant = new RegistrantInfo( RegistrationInstanceState, CurrentPerson );
                     if ( RegistrationTemplate.ShowCurrentFamilyMembers )
                     {
-                        // If currentfamily members can be selected, the firstname and lastname fields will be 
-                        // disabled so values need to be set (in case those fields did not have the 'showCurrentValue' 
+                        // If currentfamily members can be selected, the firstname and lastname fields will be
+                        // disabled so values need to be set (in case those fields did not have the 'showCurrentValue'
                         // option selected
                         foreach ( var field in RegistrationTemplate.Forms
                             .SelectMany( f => f.Fields )
@@ -1614,7 +1615,7 @@ namespace RockWeb.Blocks.Event
                     RegistrationState.Registrants.Add( registrant );
                 }
 
-                // Get the number of registrants that needs to be removed. 
+                // Get the number of registrants that needs to be removed.
                 int removeCount = RegistrationState.RegistrantCount - registrantCount;
                 if ( removeCount > 0 )
                 {
@@ -2275,7 +2276,7 @@ namespace RockWeb.Blocks.Event
                                 case RegistrationPersonFieldType.Campus:
                                     campusId = fieldValue.ToString().AsIntegerOrNull();
                                     break;
-                                
+
                                 case RegistrationPersonFieldType.MiddleName:
                                     string middleName = fieldValue.ToString().Trim();
                                     History.EvaluateChange( personChanges, "Middle Name", person.MiddleName, middleName );
@@ -2427,7 +2428,7 @@ namespace RockWeb.Blocks.Event
                     registrant.DiscountApplies = registrantInfo.DiscountApplies;
 
                     // Remove fees
-                    // Remove/delete any registrant fees that are no longer in UI with quantity 
+                    // Remove/delete any registrant fees that are no longer in UI with quantity
                     foreach ( var dbFee in registrant.Fees.ToList() )
                     {
                         if ( !registrantInfo.FeeValues.Keys.Contains( dbFee.RegistrationTemplateFeeId ) ||
@@ -2678,7 +2679,7 @@ namespace RockWeb.Blocks.Event
                     {
                         familyId = familyGroup.Id;
 
-                        // Store the family id for next person 
+                        // Store the family id for next person
                         multipleFamilyGroupIds.AddOrIgnore( familyGuid, familyGroup.Id );
                         if ( !singleFamilyId.HasValue )
                         {
@@ -2828,7 +2829,7 @@ namespace RockWeb.Blocks.Event
                         registrant.GroupMemberId = groupMember != null ? groupMember.Id : ( int? ) null;
                         rockContext.SaveChanges();
 
-                        // Set any of the template's group member attributes 
+                        // Set any of the template's group member attributes
                         groupMember.LoadAttributes();
 
                         var registrantInfo = RegistrationState.Registrants.FirstOrDefault( r => r.Guid == registrant.Guid );
@@ -3506,14 +3507,15 @@ namespace RockWeb.Blocks.Event
                         lbRegistrantNext.Visible = true;
 
                         ddlFamilyMembers.Items.Clear();
+                        var preselectFamilyMember = RegistrationTemplate.RegistrantsSameFamily == RegistrantsSameFamily.Yes;
 
-                        if ( CurrentFormIndex == 0 && RegistrationState != null && RegistrationState.RegistrantCount > CurrentRegistrantIndex )
+                        if ( CurrentFormIndex == 0 && RegistrationState != null && RegistrationTemplate.ShowCurrentFamilyMembers )
                         {
                             if ( registrant.Id <= 0 &&
-                                CurrentFormIndex == 0 &&
-                                RegistrationTemplate.RegistrantsSameFamily == RegistrantsSameFamily.Yes &&
-                                RegistrationTemplate.ShowCurrentFamilyMembers &&
-                                CurrentPerson != null )
+                            	CurrentFormIndex == 0 &&
+                            	RegistrationTemplate.RegistrantsSameFamily != RegistrantsSameFamily.No &&
+                            	RegistrationTemplate.ShowCurrentFamilyMembers &&
+                            	CurrentPerson != null )
                             {
                                 var familyMembers = CurrentPerson.GetFamilyMembers( true )
                                     .Select( m => m.Person )
@@ -3539,7 +3541,7 @@ namespace RockWeb.Blocks.Event
                                     foreach ( var familyMember in familyMembers )
                                     {
                                         ListItem listItem = new ListItem( familyMember.FullName, familyMember.Id.ToString() );
-                                        listItem.Selected = familyMember.Id == registrant.PersonId;
+                                        listItem.Selected = familyMember.Id == registrant.PersonId && preselectFamilyMember;
                                         ddlFamilyMembers.Items.Add( listItem );
                                     }
                                 }
@@ -3780,13 +3782,18 @@ namespace RockWeb.Blocks.Event
         {
             RockPage.AddScriptLink( ResolveUrl( "~/Scripts/jquery.creditCardTypeDetector.js" ) );
 
-            string script = string.Format(
-                @"
+            var controlFamilyGuid = Guid.Empty;
+            if ( CurrentPerson != null )
+            {
+                controlFamilyGuid = CurrentPerson.GetFamily().Guid;
+            }
+
+            string script = string.Format( @"
     // Adjust the label of 'is in the same family' based on value of first name entered
     $('input.js-first-name').change( function() {{
         var name = $(this).val();
         if ( name == null || name == '') {{
-            name = 'Individual';
+            name = '{23}';
         }}
         var $lbl = $('div.js-registration-same-family').find('label.control-label')
         $lbl.text( name + ' is in the same {22} as');
@@ -3802,8 +3809,18 @@ namespace RockWeb.Blocks.Event
         $lbl.text( name + ' in the same {22} as');
     }} );
 
-    $('#{0}').on('change', function() {{
+    // Adjust the Family Member dropdown when choosing same immediate family
+    $('#{24}').on('change', function() {{
+        var displaySetting = $('#{25}').css('display');
+        if ( $(""input[id*='{24}']:checked"").val() == '{26}' && displaySetting == 'none' ) {{
+            $( '#{25}').slideToggle();
+        }}
+        else if ( displaySetting == 'block' ) {{
+            $('#{25}').slideToggle();
+        }}
+    }});
 
+    $('#{0}').on('change', function() {{
         var totalCost = Number($('#{1}').val());
         var minDue = Number($('#{2}').val());
         var previouslyPaid = Number($('#{3}').val());
@@ -3825,7 +3842,6 @@ namespace RockWeb.Blocks.Event
 
         var amountRemaining = totalCost - ( previouslyPaid + amountPaid );
         $('#{4}').text( '{6}' + amountRemaining.toFixed(2) );
-        
     }});
 
     // Detect credit card type
@@ -3881,7 +3897,7 @@ namespace RockWeb.Blocks.Event
                     $form.find('.js-billing-state').val( $('#{15}_ddlState').val() );
                 }} else {{
                     $form.find('.js-billing-state').val( $('#{15}_tbState').val() );
-                }}            
+                }}
                 $form.find('.js-billing-postal').val( $('#{15}_tbPostalCode').val() );
                 $form.find('.js-billing-country').val( $('#{15}_ddlCountry').val() );
 
@@ -3896,7 +3912,7 @@ namespace RockWeb.Blocks.Event
     $('#iframeStep2').on('load', function(e) {{
         var location = this.contentWindow.location;
         var qryString = this.contentWindow.location.search;
-        if ( qryString && qryString != '' && qryString.startsWith('?token-id') ) {{ 
+        if ( qryString && qryString != '' && qryString.startsWith('?token-id') ) {{
             $('#{8}').val(qryString);
             window.location = ""javascript:{9}"";
         }} else {{
@@ -3916,7 +3932,7 @@ namespace RockWeb.Blocks.Event
         var location = this.contentWindow.location;
         try {{
             var qryString = this.contentWindow.location.search;
-            if ( qryString && qryString != '' && qryString.startsWith('?document_id') ) {{ 
+            if ( qryString && qryString != '' && qryString.startsWith('?document_id') ) {{
                 $('#{19}').val(qryString);
                 window.location = ""javascript:{20}"";
             }}
@@ -3933,7 +3949,7 @@ namespace RockWeb.Blocks.Event
     poll = function() {{
        setTimeout(function(){{
           $.ajax({{ 
-            url: '{23}registration_key='+$('#hfRegistrantGuid').val(), 
+            url: '{27}registration_key='+$('#hfRegistrantGuid').val(), 
             success: function(data){{
                 //
                 if (data != ''&& data.startsWith('?document_id') ) {{
@@ -3955,29 +3971,33 @@ namespace RockWeb.Blocks.Event
     }}
 
 ", nbAmountPaid.ClientID                 // {0}
-            , hfTotalCost.ClientID                   // {1}
-            , hfMinimumDue.ClientID                  // {2}
-            , hfPreviouslyPaid.ClientID              // {3}
-            , lRemainingDue.ClientID                 // {4}
-            , hfTriggerScroll.ClientID               // {5}
-            , GlobalAttributesCache.Value( "CurrencySymbol" ) // {6}
-            , hfStep2Url.ClientID                    // {7}
-            , hfStep2ReturnQueryString.ClientID      // {8}
-            , this.Page.ClientScript.GetPostBackEventReference( lbStep2Return, "" ) // {9}
-            , this.BlockValidationGroup              // {10}
-            , txtCreditCard.ClientID                 // {11}
-            , mypExpiration.ClientID                 // {12}
-            , txtCVV.ClientID                        // {13}
-            , hfStep2AutoSubmit.ClientID             // {14}
-            , acBillingAddress.ClientID              // {15}
-            , txtCardFirstName.ClientID              // {16}
-            , txtCardLastName.ClientID               // {17}
-            , txtCardName.ClientID                   // {18}
-            , hfRequiredDocumentQueryString.ClientID // {19}
-            , this.Page.ClientScript.GetPostBackEventReference( lbRequiredDocumentNext, "" ) // {20}
-            , hfRequiredDocumentLinkUrl.ClientID     // {21}
-            , GetAttributeValue( "FamilyTerm" )      // {22}
-            , this.Request.RawUrl + ( Request.QueryString.Count == 0 ? "?" : "&" ) // {23}
+            ,hfTotalCost.ClientID                   // {1}
+            ,hfMinimumDue.ClientID                  // {2}
+            ,hfPreviouslyPaid.ClientID              // {3}
+            ,lRemainingDue.ClientID                 // {4}
+            ,hfTriggerScroll.ClientID               // {5}
+            ,GlobalAttributesCache.Value( "CurrencySymbol" ) // {6}
+            ,hfStep2Url.ClientID                    // {7}
+            ,hfStep2ReturnQueryString.ClientID      // {8}
+            ,this.Page.ClientScript.GetPostBackEventReference( lbStep2Return, "" ) // {9}
+            ,this.BlockValidationGroup              // {10}
+            ,txtCreditCard.ClientID                 // {11}
+            ,mypExpiration.ClientID                 // {12}
+            ,txtCVV.ClientID                        // {13}
+            ,hfStep2AutoSubmit.ClientID             // {14}
+            ,acBillingAddress.ClientID              // {15}
+            ,txtCardFirstName.ClientID              // {16}
+            ,txtCardLastName.ClientID               // {17}
+            , txtCardName.ClientID                  // {18}
+            ,hfRequiredDocumentQueryString.ClientID // {19}
+            ,this.Page.ClientScript.GetPostBackEventReference( lbRequiredDocumentNext, "" ) // {20}
+            ,hfRequiredDocumentLinkUrl.ClientID     // {21}
+            ,GetAttributeValue( "FamilyTerm" )      // {22}
+            ,RegistrantTerm                         // {23}
+            ,rblFamilyOptions.ClientID              // {24}
+            ,pnlFamilyMembers.ClientID              // {25}
+            ,controlFamilyGuid                      // {26}
+            , this.Request.RawUrl + ( Request.QueryString.Count == 0 ? "?" : "&" ) // {27}
 );
 
             ScriptManager.RegisterStartupScript( Page, Page.GetType(), "registrationEntry", script, true );
@@ -4063,16 +4083,21 @@ namespace RockWeb.Blocks.Event
                 // so that current registrant can use the previous registrants value
                 RegistrantInfo registrant = null;
                 RegistrantInfo previousRegistrant = null;
+                var preselectCurrentPerson = RegistrationTemplate.RegistrantsSameFamily == RegistrantsSameFamily.Yes;
 
-                if ( RegistrationState != null && RegistrationState.RegistrantCount > CurrentRegistrantIndex )
+                if ( RegistrationState != null && RegistrationState.RegistrantCount >= CurrentRegistrantIndex )
                 {
                     registrant = RegistrationState.Registrants[CurrentRegistrantIndex];
-
-                    // If this is not the first person, then check to see if option for asking about family should be displayed
-                    if ( CurrentFormIndex == 0 && CurrentRegistrantIndex > 0 &&
-                        RegistrationTemplate.RegistrantsSameFamily == RegistrantsSameFamily.Ask )
+                    // Check to see if option for asking about family should be displayed
+                    if ( CurrentFormIndex == 0 && RegistrationTemplate.RegistrantsSameFamily == RegistrantsSameFamily.Ask )
                     {
                         var familyOptions = RegistrationState.GetFamilyOptions( RegistrationTemplate, CurrentRegistrantIndex );
+                        if ( CurrentRegistrantIndex == 0  && CurrentPerson != null )
+                        {
+                            // GetFamilyOptions ignores the first registrant by default, so add it manually when set to Ask
+                            familyOptions.Add( CurrentPerson.GetFamily().Guid, CurrentPerson.FullName );
+                        }
+
                         if ( familyOptions.Any() )
                         {
                             familyOptions.Add(
@@ -4348,7 +4373,7 @@ namespace RockWeb.Blocks.Event
                         ValidationGroup = BlockValidationGroup,
                         SelectedDate = setValue && fieldValue != null ? fieldValue as DateTime? : null
                     };
-                    
+
                     phRegistrantControls.Controls.Add( dppAnniversaryDate );
                     break;
 
@@ -4367,7 +4392,7 @@ namespace RockWeb.Blocks.Event
                         ValidationGroup = BlockValidationGroup,
                         CountryCode = PhoneNumber.DefaultCountryCode()
                     };
-                    
+
                     var mobilePhoneNumber = setValue && fieldValue != null ? fieldValue as PhoneNumber : null;
                     ppMobile.CountryCode = mobilePhoneNumber != null ? mobilePhoneNumber.CountryCode : string.Empty;
                     ppMobile.Number = mobilePhoneNumber != null ? mobilePhoneNumber.ToString() : string.Empty;
@@ -4390,7 +4415,7 @@ namespace RockWeb.Blocks.Event
                         ValidationGroup = BlockValidationGroup,
                         CountryCode = PhoneNumber.DefaultCountryCode()
                     };
-                        
+
                     var homePhoneNumber = setValue && fieldValue != null ? fieldValue as PhoneNumber : null;
                     ppHome.CountryCode = homePhoneNumber != null ? homePhoneNumber.CountryCode : string.Empty;
                     ppHome.Number = homePhoneNumber != null ? homePhoneNumber.ToString() : string.Empty;
@@ -4413,7 +4438,7 @@ namespace RockWeb.Blocks.Event
                         ValidationGroup = BlockValidationGroup,
                         CountryCode = PhoneNumber.DefaultCountryCode()
                     };
-                    
+
                     var workPhoneNumber = setValue && fieldValue != null ? fieldValue as PhoneNumber : null;
                     ppWork.CountryCode = workPhoneNumber != null ? workPhoneNumber.CountryCode : string.Empty;
                     ppWork.Number = workPhoneNumber != null ? workPhoneNumber.ToString() : string.Empty;
@@ -4431,7 +4456,7 @@ namespace RockWeb.Blocks.Event
                     };
 
                     ddlConnectionStatus.BindToDefinedType( DefinedTypeCache.Get( new Guid( Rock.SystemGuid.DefinedType.PERSON_CONNECTION_STATUS ) ), true );
-                    
+
                     if ( setValue && fieldValue != null )
                     {
                         var value = fieldValue.ToString().AsInteger();
@@ -4747,7 +4772,7 @@ namespace RockWeb.Blocks.Event
                     var tbLastName = phRegistrantControls.FindControl( "tbLastName" ) as RockTextBox;
                     string lastName = tbLastName != null ? tbLastName.Text : null;
                     return string.IsNullOrWhiteSpace( lastName ) ? null : lastName;
-                
+
                 case RegistrationPersonFieldType.MiddleName:
                     var tbMiddleName = phRegistrantControls.FindControl( "tbMiddleName" ) as RockTextBox;
                     string middleName = tbMiddleName != null ? tbMiddleName.Text : null;
@@ -4788,7 +4813,7 @@ namespace RockWeb.Blocks.Event
                 case RegistrationPersonFieldType.MaritalStatus:
                     var ddlMaritalStatus = phRegistrantControls.FindControl( "ddlMaritalStatus" ) as RockDropDownList;
                     return ddlMaritalStatus != null ? ddlMaritalStatus.SelectedValueAsInt() : null;
-                
+
                 case RegistrationPersonFieldType.AnniversaryDate:
                     var dppAnniversaryDate = phRegistrantControls.FindControl( "dppAnniversaryDate" ) as DatePartsPicker;
                     return dppAnniversaryDate != null ? dppAnniversaryDate.SelectedDate : null;
@@ -5033,7 +5058,8 @@ namespace RockWeb.Blocks.Event
                 var familyOptions = RegistrationState.GetFamilyOptions( RegistrationTemplate, RegistrationState.RegistrantCount );
                 if ( familyOptions.Any() )
                 {
-                    Guid? selectedGuid = rblRegistrarFamilyOptions.SelectedValueAsGuid();
+                    // previous family selections are always null after postback, so default to anyone in the same family
+                    var selectedGuid = CurrentPerson != null ? CurrentPerson.GetFamily().Guid : rblRegistrarFamilyOptions.SelectedValueAsGuid();
 
                     familyOptions.Add(
                         familyOptions.ContainsKey( RegistrationState.FamilyGuid ) ?
