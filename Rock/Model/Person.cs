@@ -2275,6 +2275,7 @@ namespace Rock.Model
         /// <param name="maxWidth">The maximum width (in px).</param>
         /// <param name="maxHeight">The maximum height (in px).</param>
         /// <returns></returns>
+        [RockObsolete( "1.5" )]
         [Obsolete( "GetPhotoUrl is deprecated, please use GetPersonPhotoUrl or GetPersonNoPictureUrl instead." )]
         public static string GetPhotoUrl( int? photoId, Gender gender, int? maxWidth, int? maxHeight )
         {
@@ -2290,6 +2291,7 @@ namespace Rock.Model
         /// <param name="maxWidth">The maximum width (in px).</param>
         /// <param name="maxHeight">The maximum height (in px).</param>
         /// <returns></returns>
+        [RockObsolete( "1.5" )]
         [Obsolete( "GetPhotoUrl is deprecated, please use GetPersonPhotoUrl or GetPersonNoPictureUrl instead." )]
         public static string GetPhotoUrl( int? photoId, int? age, Gender gender, int? maxWidth, int? maxHeight )
         {
@@ -2305,6 +2307,7 @@ namespace Rock.Model
         /// <param name="maxWidth">The maximum width (in px).</param>
         /// <param name="maxHeight">The maximum height (in px).</param>
         /// <returns></returns>
+        [RockObsolete( "1.5" )]
         [Obsolete( "GetPhotoUrl is deprecated, please use GetPersonPhotoUrl or GetPersonNoPictureUrl instead." )]
         public static string GetPhotoUrl( int? photoId, Gender gender, int? age, int? maxWidth, int? maxHeight )
         {
@@ -2320,6 +2323,7 @@ namespace Rock.Model
         /// <param name="maxWidth">The maximum width (in px).</param>
         /// <param name="maxHeight">The maximum height (in px).</param>
         /// <returns></returns>
+        [RockObsolete( "1.5" )]
         [Obsolete( "GetPhotoUrl is deprecated, please use GetPersonPhotoUrl or GetPersonNoPictureUrl instead." )]
         public static string GetPhotoUrl( int? photoId, Gender gender, Guid? recordTypeValueGuid, int? maxWidth, int? maxHeight )
         {
@@ -2336,6 +2340,7 @@ namespace Rock.Model
         /// <param name="maxWidth">The maximum width (in px).</param>
         /// <param name="maxHeight">The maximum height (in px).</param>
         /// <returns></returns>
+        [RockObsolete( "1.5" )]
         [Obsolete( "GetPhotoUrl is deprecated, please use GetPersonPhotoUrl or GetPersonNoPictureUrl instead." )]
         public static string GetPhotoUrl( int? photoId, int? age, Gender gender, Guid? recordTypeValueGuid, int? maxWidth, int? maxHeight )
         {
@@ -2353,6 +2358,7 @@ namespace Rock.Model
         /// <param name="maxHeight">The maximum height (in px).</param>
         /// <param name="personId">The person identifier.</param>
         /// <returns></returns>
+        [RockObsolete( "1.5" )]
         [Obsolete( "GetPhotoUrl is deprecated, please use GetPersonPhotoUrl or GetPersonNoPictureUrl instead." )]
         public static string GetPhotoUrl( int? photoId, int? age, Gender gender, Guid? recordTypeValueGuid, int? maxWidth = null, int? maxHeight = null, int? personId = null )
         {
@@ -2474,7 +2480,9 @@ namespace Rock.Model
         /// <param name="maxWidth">The maximum width (in px).</param>
         /// <param name="maxHeight">The maximum height (in px).</param>
         /// <returns></returns>
-        public static string GetPersonPhotoUrl( int? personId, int? photoId, int? age, Gender gender, Guid? recordTypeValueGuid, int? maxWidth = null, int? maxHeight = null )
+        [RockObsolete( "1.8" )]
+        [Obsolete("Use other GetPersonPhotoUrl")]
+        public static string GetPersonPhotoUrl(int? personId, int? photoId, int? age, Gender gender, Guid? recordTypeValueGuid, int? maxWidth = null, int? maxHeight = null )
         {
             string virtualPath = string.Empty;
             if ( photoId.HasValue )
@@ -2591,6 +2599,7 @@ namespace Rock.Model
         /// <param name="maxHeight">The maximum height (in px).</param>
         /// <param name="className">The css class name to apply to the image.</param>
         /// <returns></returns>
+        [RockObsolete( "1.5" )]
         [Obsolete( "GetPhotoImageTag is deprecated, please use GetPersonPhotoImageTag instead." )]
         public static string GetPhotoImageTag( PersonAlias personAlias, int? maxWidth = null, int? maxHeight = null, string className = "" )
         {
@@ -2606,6 +2615,7 @@ namespace Rock.Model
         /// <param name="maxHeight">The maximum height (in px).</param>
         /// <param name="className">The css class name to apply to the image.</param>
         /// <returns></returns>
+        [RockObsolete( "1.5" )]
         [Obsolete( "GetPhotoImageTag is deprecated, please use GetPersonPhotoImageTag instead." )]
         public static string GetPhotoImageTag( Person person, int? maxWidth = null, int? maxHeight = null, string className = "" )
         {
@@ -2639,6 +2649,7 @@ namespace Rock.Model
         /// <param name="altText">The alt text to use on the image.</param>
         /// <param name="className">The css class name to apply to the image.</param>
         /// <returns></returns>
+        [RockObsolete( "1.5" )]
         [Obsolete( "GetPhotoImageTag is deprecated, please use GetPersonPhotoImageTag instead." )]
         public static string GetPhotoImageTag( int? photoId, Gender gender, int? maxWidth = null, int? maxHeight = null, string altText = "", string className = "" )
         {
@@ -2656,6 +2667,7 @@ namespace Rock.Model
         /// <param name="altText">The alt text to use on the image.</param>
         /// <param name="className">The css class name to apply to the image.</param>
         /// <returns></returns>
+        [RockObsolete( "1.5" )]
         [Obsolete( "GetPhotoImageTag is deprecated, please use GetPersonPhotoImageTag instead." )]
         public static string GetPhotoImageTag( int? photoId, int? age, Gender gender, int? maxWidth = null, int? maxHeight = null, string altText = "", string className = "" )
         {
@@ -2674,6 +2686,7 @@ namespace Rock.Model
         /// <param name="altText">The alt text to use on the image.</param>
         /// <param name="className">The css class name to apply to the image.</param>
         /// <returns></returns>
+        [RockObsolete( "1.5" )]
         [Obsolete( "GetPhotoImageTag is deprecated, please use GetPersonPhotoImageTag instead." )]
         public static string GetPhotoImageTag( int? photoId, int? age, Gender gender, Guid? recordTypeValueGuid, int? maxWidth = null, int? maxHeight = null, string altText = "", string className = "" )
         {
@@ -2693,6 +2706,7 @@ namespace Rock.Model
         /// <param name="className">The css class name to apply to the image.</param>
         /// <param name="personId">The person identifier.</param>
         /// <returns></returns>
+        [RockObsolete( "1.5" )]
         [Obsolete( "GetPhotoImageTag is deprecated, please use GetPersonPhotoImageTag instead." )]
         public static string GetPhotoImageTag( int? photoId, int? age, Gender gender, Guid? recordTypeValueGuid, int? maxWidth = null, int? maxHeight = null, string altText = "", string className = "", int? personId = null )
         {

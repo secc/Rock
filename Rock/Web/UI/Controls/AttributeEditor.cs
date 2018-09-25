@@ -614,6 +614,7 @@ namespace Rock.Web.UI.Controls
         /// <value>
         ///   <c>true</c> if Show in Grid option is visible; otherwise, <c>false</c>.
         /// </value>
+        [RockObsolete( "1.7" )]
         [Obsolete( "Use IsShowInGridVisible instead." )]
         public bool ShowInGridVisible
         {
@@ -919,6 +920,7 @@ namespace Rock.Web.UI.Controls
         /// <value>
         /// The field type id.
         /// </value>
+        [RockObsolete( "1.8" )]
         [Obsolete( "Use AttributeFieldTypeId or SetAttributeFieldType instead" )]
         public int? FieldTypeId
         {
@@ -955,6 +957,7 @@ namespace Rock.Web.UI.Controls
         /// <value>
         /// The qualifiers.
         /// </value>
+        [RockObsolete( "1.8" )]
         [Obsolete( "Use AttributeQualifiers or SetAttributeFieldType instead" )]
         public Dictionary<string, ConfigurationValue> Qualifiers
         {

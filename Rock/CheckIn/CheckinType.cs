@@ -69,8 +69,9 @@ namespace Rock.CheckIn
         /// <value>
         /// The length of the security code.
         /// </value>
+        [RockObsolete( "1.6.4" )]
         [Obsolete( "Use SecurityCodeAlphaNumericLength instead." )]
-        public int SecurityCodeLength => GetSetting( "core_checkin_SecurityCodeLength" ).AsIntegerOrNull() ?? 3;
+        public int SecurityCodeLength { get { return GetSetting( "core_checkin_SecurityCodeLength" ).AsIntegerOrNull() ?? 3; } }
 
         /// <summary>
         /// Gets the length of the security code alpha numeric.
@@ -214,7 +215,7 @@ namespace Rock.CheckIn
         /// <value>
         /// <c>true</c> if [prevent duplicate checkin]; otherwise, <c>false</c>.
         /// </value>
-        public bool PreventDuplicateCheckin => GetSetting( "core_checkin_PreventDuplicateCheckin" ).AsBoolean( false );
+        public bool PreventDuplicateCheckin { get { return GetSetting( "core_checkin_PreventDuplicateCheckin" ).AsBoolean( false ); } }
 
         /// <summary>
         /// Gets a value indicating whether [prevent inactive people]. Obsolete as of 1.7.0.
@@ -222,6 +223,7 @@ namespace Rock.CheckIn
         /// <value>
         /// <c>true</c> if [prevent inactive people]; otherwise, <c>false</c>.
         /// </value>
+        [RockObsolete( "1.7" )]
         [Obsolete( "Use PreventInactivePeople instead.", true )]
         public bool PreventInactivePeopele => GetSetting( "core_checkin_PreventInactivePeople" ).AsBoolean( false );
 

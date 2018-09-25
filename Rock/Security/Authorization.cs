@@ -90,6 +90,7 @@ namespace Rock.Security
         /// <summary>
         /// Load the static Authorizations object
         /// </summary>
+        [RockObsolete( "1.8" )]
         [Obsolete( "Use Get() Instead." )]
         public static bool Load()
         {
@@ -192,6 +193,7 @@ namespace Rock.Security
         /// <param name="entityTypeId">The entity type identifier.</param>
         /// <param name="entityId">The entity identifier.</param>
         /// <param name="rockContext">The rock context.</param>
+        [RockObsolete( "1.8" )]
         [Obsolete( "Use RefreshEntity() instead." )]
         public static void ReloadEntity( int entityTypeId, int entityId, RockContext rockContext = null )
         {
@@ -276,6 +278,7 @@ namespace Rock.Security
         /// <param name="entityTypeId">The entity type identifier.</param>
         /// <param name="entityId">The entity identifier.</param>
         /// <param name="action">The action.</param>
+        [RockObsolete( "1.8" )]
         [Obsolete( "Use RefreshAction() instead." )]
         public static void ReloadAction( int entityTypeId, int entityId, string action )
         {
@@ -320,6 +323,7 @@ namespace Rock.Security
         /// <param name="entityId">The entity identifier.</param>
         /// <param name="action">The action.</param>
         /// <param name="rockContext">The rock context.</param>
+        [RockObsolete( "1.8" )]
         [Obsolete( "Use RefreshAction() instead." )]
         public static void ReloadAction( int entityTypeId, int entityId, string action, RockContext rockContext )
         {
@@ -638,6 +642,7 @@ namespace Rock.Security
         /// <summary>
         /// Clear the static Authorizations object
         /// </summary>
+        [RockObsolete( "1.8" )]
         [Obsolete( "Use Clear() instead." )]
         public static void Flush()
         {
