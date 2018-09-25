@@ -3188,6 +3188,10 @@ namespace RockWeb.Blocks.Event
                 var registrant = RegistrationState.Registrants[CurrentRegistrantIndex];
                 if ( registrant.OnWaitList )
                 {
+                    if ( CurrentFormIndex >= RegistrationTemplate.Forms.Count )
+                    {
+                        return false;
+                    }
                     var form = RegistrationTemplate.Forms.OrderBy( f => f.Order ).ToList()[CurrentFormIndex];
                     return form.Fields.Any( f => !f.IsInternal && f.ShowOnWaitlist );
                 }
@@ -3903,7 +3907,7 @@ namespace RockWeb.Blocks.Event
                 // If the current form, is the last one, add any fee controls
                 if ( FormCount - 1 == CurrentFormIndex && !registrant.OnWaitList )
                 {
-                    foreach ( var fee in RegistrationTemplate.Fees.OrderBy( o => o .Order ) )
+                    foreach ( var fee in RegistrationTemplate.Fees.OrderBy( o => o.Order ) )
                     {
                         var feeValues = new List<FeeInfo>();
                         if ( registrant != null && registrant.FeeValues.ContainsKey( fee.Id ) )
