@@ -771,6 +771,8 @@ namespace RockWeb.Blocks.Groups
                 // load with groups that have Group History
                 _groupsWithGroupHistory = new HashSet<int>( new GroupHistoricalService( rockContext ).Queryable().Where( a => qryGroups.Any( g => g.Id == a.GroupId ) ).Select( a => a.GroupId ).ToList() );
 
+                GroupMemberService groupMemberService = new GroupMemberService( rockContext );
+                
                 groupList = qryGroups
                     .AsEnumerable()
                     .Where(g => g.IsAuthorized(Rock.Security.Authorization.VIEW, CurrentPerson))
@@ -789,7 +791,7 @@ namespace RockWeb.Blocks.Groups
                         GroupRole = string.Empty,
                         DateAdded = DateTime.MinValue,
                         IsSynced = g.GroupSyncs.Any(),
-                        MemberCount = g.Members.Count()
+                        MemberCount = groupMemberService.Queryable(true).Where(gm => gm.GroupId == g.Id).Count()
                     } )
                     .AsQueryable()
                     .Sort( sortProperty )
