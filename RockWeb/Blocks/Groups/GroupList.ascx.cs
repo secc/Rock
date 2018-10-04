@@ -667,6 +667,8 @@ namespace RockWeb.Blocks.Groups
                     qryGroups = qryGroups.Where( t => t.GroupType.GroupTypePurposeValueId == groupTypePurposeValue );
                 }
 
+                GroupMemberService groupMemberService = new GroupMemberService( rockContext );
+                
                 groupList = qryGroups
                     .AsEnumerable()
                     .Where(g => g.IsAuthorized(Rock.Security.Authorization.VIEW, CurrentPerson))
@@ -685,7 +687,7 @@ namespace RockWeb.Blocks.Groups
                         GroupRole = string.Empty,
                         DateAdded = DateTime.MinValue,
                         IsSynced = g.SyncDataViewId.HasValue,
-                        MemberCount = g.Members.Count()
+                        MemberCount = groupMemberService.Queryable(true).Where(gm => gm.GroupId == g.Id).Count()
                     } )
                     .AsQueryable()
                     .Sort( sortProperty )
