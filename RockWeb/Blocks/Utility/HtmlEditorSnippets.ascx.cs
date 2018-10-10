@@ -27,6 +27,7 @@ using Rock.Data;
 using Rock.Model;
 using Rock.Web.Cache;
 using Rock.Web.UI;
+using Rock.Web.UI.Controls;
 
 namespace RockWeb.Blocks.Utility
 {
@@ -50,6 +51,12 @@ namespace RockWeb.Blocks.Utility
             base.OnInit( e );
             gSnippets.Actions.ShowAdd = true;
             gSnippets.Actions.AddClick += Actions_AddClick;
+
+            var securityField = gSnippets.ColumnsOfType<SecurityField>().FirstOrDefault();
+            if ( securityField != null )
+            {
+                securityField.EntityTypeId = EntityTypeCache.Read( typeof( HtmlContent ) ).Id;
+            }
 
         }
 
@@ -112,6 +119,38 @@ namespace RockWeb.Blocks.Utility
         protected void efEdit_Click( object sender, Rock.Web.UI.Controls.RowEventArgs e )
         {
             NavigateToLinkedPage( "EditPage", new Dictionary<string, string> { { "htmlcontentid", e.RowKeyId.ToString() } } );
+        }
+
+        protected void lbfCopy_Click( object sender, Rock.Web.UI.Controls.RowEventArgs e )
+        {
+            RockContext rockContext = new RockContext();
+            HtmlContentService htmlContentService = new HtmlContentService( rockContext );
+            var htmlContent = htmlContentService.Get( e.RowKeyId );
+
+            string newName = "Copy of " + htmlContent.Name;
+            int copyNum = 1;
+            bool alreadyExists = true;
+            while( alreadyExists )
+            {
+                alreadyExists = htmlContentService.Queryable().Any( hc => hc.Name == newName && hc.CreatedByPersonAliasId == CurrentPersonAliasId );
+                if (alreadyExists)
+                {
+                    copyNum++;
+                    newName = "Copy " + copyNum + " of " + htmlContent.Name;
+                }
+            }
+
+            HtmlContent newHtmlContent = new HtmlContent();
+            newHtmlContent.Id = 0;
+            newHtmlContent.Name = newName;
+            newHtmlContent.Content = htmlContent.Content;
+            newHtmlContent.CreatedByPersonAliasId = CurrentPersonAliasId;
+            newHtmlContent.Version = 0;
+            htmlContentService.Add( newHtmlContent );
+            rockContext.SaveChanges();
+
+            // Rebind the Grid control
+            BindGrid();
         }
     }
 }
