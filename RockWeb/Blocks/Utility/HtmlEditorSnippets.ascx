@@ -30,8 +30,9 @@
                         HeaderStyle-HorizontalAlign="Right" />
                     <Rock:RockBoundField DataField="Name" HeaderText="Name" SortExpression="Name" />
                     <Rock:RockBoundField DataField="Version" HeaderText="Version" SortExpression="Version" />
-                    <Rock:RockBoundField DataField="Content" HeaderText="Content" SortExpression="Content" ItemStyle-CssClass="truncated-text" />
+                    <Rock:RockBoundField DataField="Content" HeaderText="Content" SortExpression="Content" ItemStyle-CssClass="truncated-text" ItemStyle-Width="60%" />
                     <Rock:EditField ID="efEdit" OnClick="efEdit_Click" />
+                    <Rock:LinkButtonField CssClass="btn btn-default btn-sm fa fa-clone" OnClick="lbfCopy_Click" HeaderStyle-HorizontalAlign="Center" />
                     <Rock:DeleteField ID="dfDelete" OnClick="Delete_Click" />
                 </Columns>
             </Rock:Grid>
