@@ -283,6 +283,10 @@ namespace RockWeb.Blocks.Groups
 
                 if ( groupMember != null )
                 {
+                    string photoFormat = "<div class=\"photo-icon photo-round photo-round-xs pull-left margin-r-sm js-person-popover\" personid=\"{0}\" data-original=\"{1}&w=50\" style=\"background-image: url( '{2}' ); background-size: cover; background-repeat: no-repeat;\"></div>";
+
+                    e.Row.Cells[1].Text = string.Format( photoFormat, groupMember.PersonId, groupMember.Person.PhotoUrl, ResolveUrl( "~/Assets/Images/person-no-photo-male.svg" ) ) + groupMember.Name;
+
                     int groupMemberId = groupMember.Id;
 
                     if ( _groupMembersWithRegistrations.ContainsKey( groupMemberId ) )
@@ -1157,16 +1161,27 @@ namespace RockWeb.Blocks.Groups
                     }
 
                     var groupMemberIds = groupMembersList.Select( m => m.Id ).ToList();
+                    var source = groupMemberIds.AsQueryable();
 
                     // Get all the group members with any associated registrations
-                    _groupMembersWithRegistrations = new RegistrationRegistrantService( rockContext )
-                        .Queryable().AsNoTracking()
-                        .Where( r =>
-                            r.Registration != null &&
-                            r.Registration.RegistrationInstance != null &&
-                            r.GroupMemberId.HasValue &&
-                            groupMemberIds.Contains( r.GroupMemberId.Value ) )
-                        .ToList()
+                    List<RegistrationRegistrant> registrantList = new List<RegistrationRegistrant>();
+                    // Due to an issue where groups of a certain size would create a query that was too large
+                    // to execute, this was split into groups of 5000
+                    while ( source.Any() )
+                    {
+                        int[] groupMemberIdArray = source.Take( 5000 ).ToArray();
+                        registrantList.AddRange(new RegistrationRegistrantService( rockContext )
+                           .Queryable().AsNoTracking()
+                           .Where( r =>
+                               r.Registration != null &&
+                               r.Registration.RegistrationInstance != null &&
+                               r.GroupMemberId.HasValue &&
+                               groupMemberIdArray.Contains( r.GroupMemberId.Value ) )
+                           .ToList());
+                        source = source.Skip( 5000 );
+                    }
+                    
+                    _groupMembersWithRegistrations = registrantList
                         .GroupBy( r => r.GroupMemberId.Value )
                         .Select( g => new
                         {
@@ -1198,8 +1213,6 @@ namespace RockWeb.Blocks.Groups
                     {
                         martialStatusField.Visible = _group.GroupType.ShowMaritalStatus;
                     }
-
-                    string photoFormat = "<div class=\"photo-icon photo-round photo-round-xs pull-left margin-r-sm js-person-popover\" personid=\"{0}\" data-original=\"{1}&w=50\" style=\"background-image: url( '{2}' ); background-size: cover; background-repeat: no-repeat;\"></div>";
 
                     var attendanceFirstLast = new Dictionary<int, DateRange>();
                     bool showAttendance = GetAttributeValue( "ShowAttendance" ).AsBoolean() && _group.GroupType.TakesAttendance;
@@ -1238,9 +1251,9 @@ namespace RockWeb.Blocks.Groups
                         PersonId = m.PersonId,
                         NickName = m.Person.NickName,
                         LastName = m.Person.LastName,
+                        Person = m.Person,
                         Name =
-                        ( isExporting ? m.Person.LastName + ", " + m.Person.NickName : string.Format( photoFormat, m.PersonId, m.Person.PhotoUrl, ResolveUrl( "~/Assets/Images/person-no-photo-male.svg" ) ) +
-                            m.Person.NickName + " " + m.Person.LastName
+                        ( isExporting ? m.Person.LastName + ", " + m.Person.NickName : m.Person.NickName + " " + m.Person.LastName
                             + ( ( hasGroupRequirements && groupMemberIdsThatLackGroupRequirements.Contains( m.Id ) ) 
                                 ? " <i class='fa fa-exclamation-triangle text-warning'></i>"
                                 : string.Empty )
@@ -1380,6 +1393,7 @@ namespace RockWeb.Blocks.Groups
         public int Id { get; set; }
         public Guid Guid { get; set; }
         public int PersonId { get; set; }
+        public Person Person { get; set; }
         public string NickName { get; set; }
         public string LastName { get; set; }
         public string Name { get; set; }
