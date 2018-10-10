@@ -25,6 +25,7 @@ using Rock;
 using Rock.Attribute;
 using Rock.Data;
 using Rock.Model;
+using Rock.Security;
 using Rock.Web.Cache;
 using Rock.Web.UI;
 
@@ -54,11 +55,20 @@ namespace RockWeb.Blocks.Utility
                 var htmlContent = htmlContentService.Get( id );
                 if ( htmlContent != null )
                 {
-                    tbName.Text = htmlContent.Name;
-                    tbName.ReadOnly = true;
-                    heSnippet.Text = htmlContent.Content;
-                    rockContext.SaveChanges();
-                }
+                    if ((htmlContent.CreatedByPersonAlias != null && htmlContent.CreatedByPersonAlias.PersonId == CurrentPersonId)
+                        || htmlContent.IsAuthorized(Authorization.EDIT, CurrentPerson))
+                    {
+                        tbName.Text = htmlContent.Name;
+                        heSnippet.Text = htmlContent.Content;
+                        rockContext.SaveChanges();
+                    }
+                    else
+                    {
+                        upSnippets.Visible = false;
+                        nbMessage.Text = "You are not authorized to edit this snippet.";
+                        nbMessage.Visible = true;
+                    }
+                } 
             }
 
         }
@@ -74,17 +84,22 @@ namespace RockWeb.Blocks.Utility
             var rockContext = new RockContext();
             HtmlContentService htmlContentService = new HtmlContentService( rockContext );
             var htmlContent = htmlContentService.Get( id );
-            var version = 0;
-            if ( htmlContent != null )
+            if (htmlContent == null)
             {
-                version = htmlContent.Version + 1;
+                htmlContent = new HtmlContent();
+                htmlContentService.Add( htmlContent );
+                htmlContent.CreatedByPersonAliasId = CurrentPersonAliasId;
+
+            } else if ( !(( htmlContent.CreatedByPersonAlias != null && htmlContent.CreatedByPersonAlias.PersonId == CurrentPersonId )
+                || htmlContent.IsAuthorized( Authorization.EDIT, CurrentPerson )) )
+            {
+                upSnippets.Visible = false;
+                nbMessage.Text = "You are not authorized to edit this snippet.";
+                nbMessage.Visible = true;
+                return;
             }
-            HtmlContent newHtmlContent = new HtmlContent();
-            newHtmlContent.Name = tbName.Text;
-            newHtmlContent.Content = heSnippet.Text;
-            newHtmlContent.CreatedByPersonAliasId = CurrentPersonAliasId;
-            newHtmlContent.Version = version;
-            htmlContentService.Add( newHtmlContent );
+            htmlContent.Name = tbName.Text;
+            htmlContent.Content = heSnippet.Text;
 
             rockContext.SaveChanges();
             NavigateToParentPage();
