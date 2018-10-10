@@ -36,6 +36,7 @@ namespace RockWeb.Blocks.Utility
     [DisplayName( "HtmlEditor Snippets" )]
     [Category( "Utility" )]
     [Description( "Block to be used as part of the Snippets HtmlEditor Plugin" )]
+    [LinkedPage( "Edit Page" )]
     public partial class HtmlEditorSnippets : RockBlock
     {
         #region Base Control Methods
@@ -47,7 +48,9 @@ namespace RockWeb.Blocks.Utility
         protected override void OnInit( EventArgs e )
         {
             base.OnInit( e );
-            
+            gSnippets.Actions.ShowAdd = true;
+            gSnippets.Actions.AddClick += Actions_AddClick;
+
         }
 
         /// <summary>
@@ -57,22 +60,23 @@ namespace RockWeb.Blocks.Utility
         protected override void OnLoad( EventArgs e )
         {
             base.OnLoad( e );
-           
+
             if ( !this.IsPostBack )
             {
-
                 pnlModalHeader.Visible = PageParameter( "ModalMode" ).AsBoolean();
                 pnlModalFooterActions.Visible = PageParameter( "ModalMode" ).AsBoolean();
                 lTitle.Text = PageParameter( "Title" );
                 BindGrid();
             }
-            
+
         }
+
+
 
         protected void BindGrid()
         {
             HtmlContentService htmlContentService = new HtmlContentService( new RockContext() );
-            
+
             var query = htmlContentService.Queryable().Where( hc => hc.BlockId == null && hc.CreatedByPersonAliasId.HasValue
                         && hc.CreatedByPersonAlias.PersonId == CurrentPerson.Id ).GroupBy( hc => hc.Name )
                         .SelectMany( hc => hc.Where( shc => hc.Max( mhc => mhc.Version ) == shc.Version ) );
@@ -98,6 +102,16 @@ namespace RockWeb.Blocks.Utility
             }
 
             BindGrid();
+        }
+
+        private void Actions_AddClick( object sender, EventArgs e )
+        {
+            NavigateToLinkedPage( "EditPage" );
+        }
+
+        protected void efEdit_Click( object sender, Rock.Web.UI.Controls.RowEventArgs e )
+        {
+            NavigateToLinkedPage( "EditPage", new Dictionary<string, string> { { "htmlcontentid", e.RowKeyId.ToString() } } );
         }
     }
 }

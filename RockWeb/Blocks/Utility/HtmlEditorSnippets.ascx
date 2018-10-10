@@ -5,12 +5,12 @@
         <asp:Literal ID="lTitle" runat="server"></asp:Literal>
         <span class="js-cancel-button cursor-pointer pull-right" style="opacity: .5">&times;</span>
     </h3>
-    
+
 </asp:Panel>
 <asp:UpdatePanel runat="server" ID="upSnippets">
     <ContentTemplate>
         <style>
-            .truncated-text { 
+            .truncated-text {
                 max-width: 300px;
                 overflow: hidden;
                 text-overflow: ellipsis;
@@ -18,7 +18,7 @@
             }
         </style>
         <div class="snippets-wrapper clearfix">
-            <Rock:Grid ID="gSnippets" runat="server" AllowSorting="true" RowItemText="snippet" TooltipField="Description" DataKeyNames="Id">
+            <Rock:Grid ID="gSnippets" runat="server" AllowSorting="true" RowItemText="snippet" TooltipField="Description" DataKeyNames="Id" >
                 <Columns>
                     <Rock:ReorderField Visible="false" />
                     <Rock:RockBoundField
@@ -31,7 +31,8 @@
                     <Rock:RockBoundField DataField="Name" HeaderText="Name" SortExpression="Name" />
                     <Rock:RockBoundField DataField="Version" HeaderText="Version" SortExpression="Version" />
                     <Rock:RockBoundField DataField="Content" HeaderText="Content" SortExpression="Content" ItemStyle-CssClass="truncated-text" />
-                    <Rock:DeleteField ID="dfDelete" OnClick="Delete_Click"  />
+                    <Rock:EditField ID="efEdit" OnClick="efEdit_Click" />
+                    <Rock:DeleteField ID="dfDelete" OnClick="Delete_Click" />
                 </Columns>
             </Rock:Grid>
         </div>
