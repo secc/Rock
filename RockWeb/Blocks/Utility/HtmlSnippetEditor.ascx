@@ -7,4 +7,4 @@
         <Rock:BootstrapButton runat="server" ID="btnCancel" Text="Cancel" OnClick="btnCancel_Click" />
     </ContentTemplate>
 </asp:UpdatePanel>
-
+<Rock:NotificationBox ID="nbMessage" runat="server" Title="Error" NotificationBoxType="Danger" Visible="false" Dismissable="true" />
