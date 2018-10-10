@@ -85,8 +85,7 @@ namespace RockWeb.Blocks.Utility
             HtmlContentService htmlContentService = new HtmlContentService( new RockContext() );
 
             var query = htmlContentService.Queryable().Where( hc => hc.BlockId == null && hc.CreatedByPersonAliasId.HasValue
-                        && hc.CreatedByPersonAlias.PersonId == CurrentPerson.Id ).GroupBy( hc => hc.Name )
-                        .SelectMany( hc => hc.Where( shc => hc.Max( mhc => mhc.Version ) == shc.Version ) );
+                        && hc.CreatedByPersonAlias.PersonId == CurrentPerson.Id );
             gSnippets.DataSource = query.ToList();
             gSnippets.DataBind();
         }
@@ -102,8 +101,7 @@ namespace RockWeb.Blocks.Utility
                 var htmlContent = htmlContentService.Get( e.RowKeyId );
                 if ( htmlContent != null )
                 {
-                    var allVersions = htmlContentService.Queryable().Where( hc => hc.Name == htmlContent.Name && hc.CreatedByPersonAliasId == htmlContent.CreatedByPersonAliasId );
-                    htmlContentService.DeleteRange( allVersions );
+                    htmlContentService.Delete( htmlContent );
                     rockContext.SaveChanges();
                 }
             }

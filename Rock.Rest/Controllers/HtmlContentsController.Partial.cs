@@ -89,8 +89,7 @@ namespace Rock.Rest.Controllers
             var htmlContentService = ( HtmlContentService ) Service;
 
             var query = htmlContentService.Queryable().Where( hc => hc.BlockId == null && hc.CreatedByPersonAliasId.HasValue
-                        && hc.CreatedByPersonAlias.PersonId == personId ).GroupBy( hc => hc.Name )
-                        .SelectMany( hc => hc.Where( shc => hc.Max( mhc => mhc.Version ) == shc.Version ) );
+                        && hc.CreatedByPersonAlias.PersonId == personId );
             return query.Select( hc => new HtmlContents() { Name = hc.Name, EntityValue = hc.EntityValue, Content = hc.Content } ).ToList();
 
         }
@@ -109,13 +108,6 @@ namespace Rock.Rest.Controllers
             var htmlContentService = ( HtmlContentService ) Service;
 
             HtmlContent newHtmlContent = new HtmlContent();
-            var htmlContent = htmlContentService.Queryable().Where( hc => hc.CreatedByPersonAlias.PersonId == person.Id && hc.Name == htmlContents.Name )
-                .OrderByDescending( hc => hc.Version ).FirstOrDefault();
-            if ( htmlContent != null )
-            {
-                newHtmlContent.Version = htmlContent.Version+1;
-            }
-
             newHtmlContent.Name = htmlContents.Name;
             newHtmlContent.Content = htmlContents.Content;
             newHtmlContent.CreatedByPersonAliasId = person.PrimaryAliasId;
