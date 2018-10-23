@@ -1801,10 +1801,10 @@ namespace Rock.Model
 
                 if ( isInactive )
                 {
-                    // If person was just inactivated, update the group member status for all their group memberships to be inactive
                     var dbPropertyEntry = entry.Property( "RecordStatusValueId" );
                     if ( dbPropertyEntry != null && dbPropertyEntry.IsModified )
-                    {
+                    {   
+                        // If person was just inactivated, update the group member status for all their group memberships to be inactive
                         foreach ( var groupMember in new GroupMemberService( rockContext )
                             .Queryable()
                             .Where( m =>
@@ -1814,7 +1814,20 @@ namespace Rock.Model
                         {
                             groupMember.GroupMemberStatus = GroupMemberStatus.Inactive;
                         }
+                        // Also update the person's connection requests
+                        int[] aliasIds = Aliases.Select( a => a.Id ).ToArray();
+                        foreach (var connectionRequest in new ConnectionRequestService(rockContext)
+                            .Queryable()
+                            .Where(c =>
+                                aliasIds.Contains(c.PersonAliasId) &&
+                                c.ConnectionState != ConnectionState.Inactive && 
+                                c.ConnectionState != ConnectionState.Connected ) )
+                        {
+                            connectionRequest.ConnectionState = ConnectionState.Inactive;
+                        }
                     }
+
+
                 }
             }
 
