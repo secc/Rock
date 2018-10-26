@@ -55,7 +55,7 @@ namespace RockWeb.Blocks.Groups
     [BooleanField( "Show Copy Button", "Copies the group and all of its associated authorization rules", false, "", 10 )]
     [LinkedPage( "Group List Page", "The page to display related Group List.", false, "", "", 11 )]
     [LinkedPage( "Fundraising Progress Page", "The page to display fundraising progress for all its members.", false, "", "", 12 )]
-    [BooleanField( "Show Location Addresses", "Determines if the location address should be shown when viewing the group details.", true, order: 13)]
+    [BooleanField( "Show Location Addresses", "Determines if the location address should be shown when viewing the group details.", true, order: 13 )]
     [BooleanField( "Prevent Selecting Inactive Campus", "Should inactive campuses be excluded from the campus field when editing a group?.", false, "", 14 )]
 
     public partial class GroupDetail : RockBlock, IDetailBlock
@@ -1554,7 +1554,16 @@ namespace RockWeb.Blocks.Groups
             {
                 groupIconHtml = !string.IsNullOrWhiteSpace( group.GroupType.IconCssClass ) ?
                     string.Format( "<i class='{0}' ></i>", group.GroupType.IconCssClass ) : string.Empty;
-                hlType.Text = group.GroupType.Name;
+                if ( group.GroupType.IsAuthorized( Authorization.ADMINISTRATE, CurrentPerson ) )
+                {
+                    var groupTypeDetailPage = new PageReference( "5CD8E024-710B-4EDE-8C8C-4C9E15E6AFAB" ).BuildUrl();
+                    hlType.Text = string.Format( "<a href='{0}?groupTypeId={1}'>{2}</a>", groupTypeDetailPage, group.GroupType.Id, group.GroupType.Name );
+                }
+                else
+                {
+                    hlType.Text = group.GroupType.Name;
+                }
+                hlType.ToolTip = group.GroupType.Description;
             }
 
             hfGroupId.SetValue( group.Id );
@@ -1717,7 +1726,7 @@ namespace RockWeb.Blocks.Groups
                                         groupLocation.GroupLocationTypeValue != null ? ( "<h4>" + groupLocation.GroupLocationTypeValue.Value + "</h4>" ) : string.Empty, // 0
                                         groupMapUrl, // 1
                                         mapLink, //2
-                                        groupLocation.Location.GetFullStreetAddress().IsNotNullOrWhitespace() && GetAttributeValue( "ShowLocationAddresses" ).AsBoolean() ? string.Format("<div class='address'>{0}</div>", groupLocation.Location.GetFullStreetAddress() ) : "" // 3
+                                        groupLocation.Location.GetFullStreetAddress().IsNotNullOrWhitespace() && GetAttributeValue( "ShowLocationAddresses" ).AsBoolean() ? string.Format( "<div class='address'>{0}</div>", groupLocation.Location.GetFullStreetAddress() ) : "" // 3
                                         ), // 2
                                         Mode = LiteralMode.PassThrough
                                     };
@@ -2131,7 +2140,7 @@ namespace RockWeb.Blocks.Groups
         /// <param name="e">The <see cref="RowEventArgs"/> instance containing the event data.</param>
         protected void gLocations_Edit( object sender, RowEventArgs e )
         {
-            Guid locationGuid = (Guid)e.RowKeyValue;
+            Guid locationGuid = ( Guid ) e.RowKeyValue;
             gLocations_ShowEdit( locationGuid );
         }
 
@@ -2274,7 +2283,7 @@ namespace RockWeb.Blocks.Groups
         /// <param name="e">The <see cref="RowEventArgs"/> instance containing the event data.</param>
         protected void gLocations_Delete( object sender, RowEventArgs e )
         {
-            Guid rowGuid = (Guid)e.RowKeyValue;
+            Guid rowGuid = ( Guid ) e.RowKeyValue;
             GroupLocationsState.RemoveEntity( rowGuid );
 
             BindLocationsGrid();
@@ -2413,7 +2422,7 @@ namespace RockWeb.Blocks.Groups
         /// <param name="e">The <see cref="RowEventArgs"/> instance containing the event data.</param>
         protected void gGroupRequirements_Edit( object sender, RowEventArgs e )
         {
-            Guid groupRequirementGuid = (Guid)e.RowKeyValue;
+            Guid groupRequirementGuid = ( Guid ) e.RowKeyValue;
             gGroupRequirements_ShowEdit( groupRequirementGuid );
         }
 
@@ -2518,7 +2527,7 @@ namespace RockWeb.Blocks.Groups
         /// <param name="e">The <see cref="RowEventArgs"/> instance containing the event data.</param>
         protected void gGroupRequirements_Delete( object sender, RowEventArgs e )
         {
-            Guid rowGuid = (Guid)e.RowKeyValue;
+            Guid rowGuid = ( Guid ) e.RowKeyValue;
             GroupRequirementsState.RemoveEntity( rowGuid );
 
             BindGroupRequirementsGrid();
@@ -2555,7 +2564,7 @@ namespace RockWeb.Blocks.Groups
         /// <param name="e">The <see cref="RowEventArgs" /> instance containing the event data.</param>
         protected void gGroupMemberAttributes_Edit( object sender, RowEventArgs e )
         {
-            Guid attributeGuid = (Guid)e.RowKeyValue;
+            Guid attributeGuid = ( Guid ) e.RowKeyValue;
             gGroupMemberAttributes_ShowEdit( attributeGuid );
         }
 
@@ -2606,7 +2615,7 @@ namespace RockWeb.Blocks.Groups
         /// <param name="e">The <see cref="RowEventArgs" /> instance containing the event data.</param>
         protected void gGroupMemberAttributes_Delete( object sender, RowEventArgs e )
         {
-            Guid attributeGuid = (Guid)e.RowKeyValue;
+            Guid attributeGuid = ( Guid ) e.RowKeyValue;
             GroupMemberAttributesState.RemoveEntity( attributeGuid );
 
             BindGroupMemberAttributesGrid();
@@ -2775,7 +2784,7 @@ namespace RockWeb.Blocks.Groups
         /// <param name="e">The <see cref="RowEventArgs" /> instance containing the event data.</param>
         protected void gMemberWorkflowTriggers_Edit( object sender, RowEventArgs e )
         {
-            Guid attributeGuid = (Guid)e.RowKeyValue;
+            Guid attributeGuid = ( Guid ) e.RowKeyValue;
             gMemberWorkflowTriggers_ShowEdit( attributeGuid );
         }
 
@@ -2962,7 +2971,7 @@ namespace RockWeb.Blocks.Groups
         /// <exception cref="System.NotImplementedException"></exception>
         protected void gMemberWorkflowTriggers_Delete( object sender, RowEventArgs e )
         {
-            Guid rowGuid = (Guid)e.RowKeyValue;
+            Guid rowGuid = ( Guid ) e.RowKeyValue;
             MemberWorkflowTriggersState.RemoveEntity( rowGuid );
 
             BindMemberWorkflowTriggersGrid();
