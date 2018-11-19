@@ -369,13 +369,11 @@ namespace RockWeb.Blocks.Event
 
         private Dictionary<Guid, List<RegistrationTemplateFormField>> FormFieldsState { get; set; }
 
-        private List<Guid> ExpandedForms { get; set; }
+        private List<Guid> ExpandedForms = new List<Guid>();
 
         private List<RegistrationTemplateDiscount> DiscountState { get; set; }
 
         private List<RegistrationTemplateFee> FeeState { get; set; }
-
-        private int? GridFieldsDeleteIndex { get; set; }
 
         #endregion
 
@@ -445,15 +443,6 @@ namespace RockWeb.Blocks.Event
         protected override void OnInit( EventArgs e )
         {
             base.OnInit( e );
-
-            // attribute field grid actions
-            gFields.DataKeyNames = new string[] { "Guid" };
-            gFields.Actions.ShowAdd = true;
-            gFields.Actions.AddClick += gFields_AddClick;
-            gFields.GridRebind += gFields_GridRebind;
-            gFields.RowDataBound += gFields_RowDataBound;
-            gFields.GridReorder += gFields_GridReorder;
-            GridFieldsDeleteIndex = gFields.GetColumnIndexByFieldType( typeof( DeleteField ) );
 
             // assign discounts grid actions
             gDiscounts.DataKeyNames = new string[] { "Guid" };
@@ -803,7 +792,7 @@ The first registrant's information will be used to complete the registrar inform
             {
                 if ( li.Selected )
                 {
-                    notify = notify | (RegistrationNotify)li.Value.AsInteger();
+                    notify = notify | ( RegistrationNotify ) li.Value.AsInteger();
                 }
             }
 
@@ -962,7 +951,7 @@ The first registrant's information will be used to complete the registrar inform
                 }
 
                 // delete fields that aren't assigned in the UI anymore
-                var fieldUiGuids = FormFieldsState.SelectMany( a => a.Value).Select( f => f.Guid ).ToList();
+                var fieldUiGuids = FormFieldsState.SelectMany( a => a.Value ).Select( f => f.Guid ).ToList();
                 foreach ( var formField in registrationTemplateFormFieldService
                     .Queryable()
                     .Where( a =>
@@ -1098,6 +1087,7 @@ The first registrant's information will be used to complete the registrar inform
                             formField.IsRequired = formFieldUI.IsRequired;
                             formField.Order = formFieldUI.Order;
                             formField.ShowOnWaitlist = formFieldUI.ShowOnWaitlist;
+                            formField.FieldVisibilityRules = formFieldUI.FieldVisibilityRules;
                         }
                     }
                 }
@@ -1232,111 +1222,6 @@ The first registrant's information will be used to complete the registrar inform
 
         #endregion
 
-        #region Field Grid Events
-
-        /// <summary>
-        /// Handles the AddClick event of the gFields control.
-        /// </summary>
-        /// <param name="sender">The source of the event.</param>
-        /// <param name="e">The <see cref="EventArgs"/> instance containing the event data.</param>
-        protected void gFields_AddClick( object sender, EventArgs e )
-        {
-            ParseControls();
-
-            if ( FormFieldsState.Any() )
-            {
-                ShowFormFieldEdit( FormFieldsState.First().Key, Guid.NewGuid() );
-            }
-
-            BuildControls();
-        }
-
-        /// <summary>
-        /// Handles the Edit event of the gFields control.
-        /// </summary>
-        /// <param name="sender">The source of the event.</param>
-        /// <param name="e">The <see cref="RowEventArgs"/> instance containing the event data.</param>
-        protected void gFields_Edit( object sender, RowEventArgs e )
-        {
-            ParseControls();
-
-            if ( FormFieldsState.Any() )
-            {
-                ShowFormFieldEdit( FormFieldsState.First().Key, e.RowKeyValue.ToString().AsGuid() );
-            }
-
-            BuildControls();
-        }
-
-        /// <summary>
-        /// Handles the GridReorder event of the gFields control.
-        /// </summary>
-        /// <param name="sender">The source of the event.</param>
-        /// <param name="e">The <see cref="GridReorderEventArgs"/> instance containing the event data.</param>
-        protected void gFields_GridReorder( object sender, GridReorderEventArgs e )
-        {
-            ParseControls();
-
-            if ( FormFieldsState.Any() )
-            {
-                var keyValue = FormFieldsState.First();
-                SortFields( keyValue.Value, e.OldIndex, e.NewIndex );
-                ReOrderFields( keyValue.Value );
-            }
-
-            BuildControls();
-        }
-
-        /// <summary>
-        /// Handles the Delete event of the gFields control.
-        /// </summary>
-        /// <param name="sender">The source of the event.</param>
-        /// <param name="e">The <see cref="RowEventArgs"/> instance containing the event data.</param>
-        protected void gFields_Delete( object sender, RowEventArgs e )
-        {
-            ParseControls();
-
-            if ( FormFieldsState.Any() )
-            {
-                FormFieldsState.First().Value.RemoveEntity( e.RowKeyValue.ToString().AsGuid() );
-            }
-
-            BuildControls();
-        }
-
-        /// <summary>
-        /// Handles the GridRebind event of the gFields control.
-        /// </summary>
-        /// <param name="sender">The source of the event.</param>
-        /// <param name="e">The <see cref="EventArgs"/> instance containing the event data.</param>
-        protected void gFields_GridRebind( object sender, EventArgs e )
-        {
-            BindFieldsGrid();
-        }
-
-        /// <summary>
-        /// Handles the RowDataBound event of the gFields control.
-        /// </summary>
-        /// <param name="sender">The source of the event.</param>
-        /// <param name="e">The <see cref="GridViewRowEventArgs"/> instance containing the event data.</param>
-        protected void gFields_RowDataBound( object sender, GridViewRowEventArgs e )
-        {
-            if ( e.Row.RowType == DataControlRowType.DataRow &&
-                ( e.Row.Cells[1].Text == "First Name" || e.Row.Cells[1].Text == "Last Name" ) &&
-                e.Row.Cells[2].Text == "Person Field" )
-            {
-                if ( GridFieldsDeleteIndex.HasValue )
-                {
-                    foreach ( var lb in e.Row.Cells[GridFieldsDeleteIndex.Value].ControlsOfTypeRecursive<LinkButton>() )
-                    {
-                        lb.Visible = false;
-                    }
-                }
-            }
-        }
-
-        #endregion
-
         #region Form Control Events
 
         /// <summary>
@@ -1402,6 +1287,20 @@ The first registrant's information will be used to complete the registrar inform
             ParseControls();
 
             ShowFormFieldEdit( e.FormGuid, Guid.NewGuid() );
+
+            BuildControls( true );
+        }
+
+        /// <summary>
+        /// Tfes the form filter field click.
+        /// </summary>
+        /// <param name="sender">The sender.</param>
+        /// <param name="e">The e.</param>
+        private void tfeForm_FilterFieldClick( object sender, TemplateFormFieldEventArg e )
+        {
+            ParseControls();
+
+            ShowFormFieldFilter( e.FormGuid, e.FormFieldGuid );
 
             BuildControls( true );
         }
@@ -1509,7 +1408,7 @@ The first registrant's information will be used to complete the registrar inform
         private void FieldSave()
         {
             var formGuid = hfFormGuid.Value.AsGuid();
-            
+
             if ( FormFieldsState.ContainsKey( formGuid ) )
             {
                 var attributeForm = CreateFormField( formGuid );
@@ -1568,6 +1467,13 @@ The first registrant's information will be used to complete the registrar inform
                         {
                             attributeForm.Attribute = attribute.Clone( false );
                             attributeForm.Attribute.FieldType = attribute.FieldType.Clone( false );
+                            attributeForm.Attribute.AttributeQualifiers = new List<AttributeQualifier>();
+
+                            foreach ( var qualifier in attribute.AttributeQualifiers )
+                            {
+                                attributeForm.Attribute.AttributeQualifiers.Add( qualifier.Clone( false ) );
+                            }
+
                             attributeForm.AttributeId = attribute.Id;
                         }
                     }
@@ -1907,11 +1813,11 @@ The first registrant's information will be used to complete the registrar inform
 
             if ( fee.FeeType == RegistrationFeeType.Single )
             {
-                fee.CostValue = cCost.Text.Replace("$", "");
+                fee.CostValue = cCost.Text.Replace( "$", "" );
             }
             else
             {
-                fee.CostValue = kvlMultipleFees.Value.Replace("$", "");
+                fee.CostValue = kvlMultipleFees.Value.Replace( "$", "" );
             }
             
             hfFeeGuid.Value = string.Empty;
@@ -2056,7 +1962,7 @@ The first registrant's information will be used to complete the registrar inform
                 }
                 else
                 {
-                    LoadStateDetails(registrationTemplate, rockContext);
+                    LoadStateDetails( registrationTemplate, rockContext );
                     ShowEditDetails( registrationTemplate, rockContext );
                 }
             }
@@ -2087,7 +1993,7 @@ The first registrant's information will be used to complete the registrar inform
                 if ( !defaultForm.Fields
                     .Any( f => 
                         f.FieldSource == RegistrationFieldSource.PersonField &&
-                        f.PersonFieldType == RegistrationPersonFieldType.FirstName ))
+                        f.PersonFieldType == RegistrationPersonFieldType.FirstName ) )
                 {
                     var formField = new RegistrationTemplateFormField();
                     formField.FieldSource = RegistrationFieldSource.PersonField;
@@ -2192,7 +2098,7 @@ The first registrant's information will be used to complete the registrar inform
 
             foreach ( ListItem li in cblNotify.Items )
             {
-                RegistrationNotify notify = (RegistrationNotify)li.Value.AsInteger();
+                RegistrationNotify notify = ( RegistrationNotify ) li.Value.AsInteger();
                 li.Selected = ( registrationTemplate.Notify & notify ) == notify;
             }
 
@@ -2242,7 +2148,8 @@ The first registrant's information will be used to complete the registrar inform
             tbSuccessTitle.Text = registrationTemplate.SuccessTitle;
             ceSuccessText.Text = registrationTemplate.SuccessText;
             heInstructions.Text = registrationTemplate.RegistrationInstructions;
-            BuildControls( true );
+            var defaultForm = FormState.FirstOrDefault();
+            BuildControls( true, defaultForm.Guid );
         }
 
         /// <summary>
@@ -2336,7 +2243,7 @@ The first registrant's information will be used to complete the registrar inform
         /// </summary>
         /// <param name="isActive">The is active.</param>
         /// <returns></returns>
-        protected string FormatInactiveRow(string isActive)
+        protected string FormatInactiveRow( string isActive )
         {
             try
             {
@@ -2411,10 +2318,10 @@ The first registrant's information will be used to complete the registrar inform
         private void ParseControls( bool expandInvalid = false )
         {
             ExpandedForms = new List<Guid>();
-            FormState = FormState.Take(1).ToList();
+            FormState = new List<RegistrationTemplateForm>();
 
-            int order = 1;
-            foreach ( var formEditor in phForms.Controls.OfType<RegistrationTemplateFormEditor>() )
+            int order = 0;
+            foreach ( var formEditor in phForms.ControlsOfTypeRecursive<RegistrationTemplateFormEditor>() )
             {
                 var form = formEditor.GetForm( expandInvalid );
                 form.Order = order++;
@@ -2438,13 +2345,28 @@ The first registrant's information will be used to complete the registrar inform
 
             if ( FormState != null )
             {
-                foreach ( var form in FormState.OrderBy( f => f.Order ).Skip( 1 ) )
+                var orderedForms = FormState.OrderBy( f => f.Order ).ToList();
+                var defaultFormGuid = orderedForms.First().Guid;
+                Panel pnlDefaultForm = new Panel() { CssClass = "js-default-form" };
+                Panel pnlOptionalForms = new Panel() { CssClass = "js-optional-form-list" };
+                phForms.Controls.Add( pnlDefaultForm );
+                phForms.Controls.Add( pnlOptionalForms );
+                foreach ( var form in orderedForms )
                 {
-                    BuildFormControl( phForms, setValues, form, activeFormGuid );
+                    Panel formParent;
+                    if ( form.Guid == defaultFormGuid )
+                    {
+                        formParent = pnlDefaultForm;
+                    }
+                    else
+                    {
+                        formParent = pnlOptionalForms;
+                    }
+
+                    BuildFormControl( formParent, setValues, form, activeFormGuid, defaultFormGuid, false );
                 }
             }
 
-            BindFieldsGrid();
             BindDiscountsGrid();
             BindFeesGrid();
         }
@@ -2456,8 +2378,9 @@ The first registrant's information will be used to complete the registrar inform
         /// <param name="setValues">if set to <c>true</c> [set values].</param>
         /// <param name="form">The form.</param>
         /// <param name="activeFormGuid">The active form unique identifier.</param>
+        /// <param name="defaultFormGuid">The default form unique identifier.</param>
         /// <param name="showInvalid">if set to <c>true</c> [show invalid].</param>
-        private void BuildFormControl( Control parentControl, bool setValues, RegistrationTemplateForm form, Guid? activeFormGuid = null, bool showInvalid = false )
+        private void BuildFormControl( Control parentControl, bool setValues, RegistrationTemplateForm form, Guid? activeFormGuid, Guid defaultFormGuid, bool showInvalid )
         {
             var control = new RegistrationTemplateFormEditor();
             control.ID = form.Guid.ToString( "N" );
@@ -2466,6 +2389,7 @@ The first registrant's information will be used to complete the registrar inform
 
             control.DeleteFieldClick += tfeForm_DeleteFieldClick;
             control.ReorderFieldClick += tfeForm_ReorderFieldClick;
+            control.FilterFieldClick += tfeForm_FilterFieldClick;
             control.EditFieldClick += tfeForm_EditFieldClick;
             control.RebindFieldClick += tfeForm_RebindFieldClick;
             control.DeleteFormClick += tfeForm_DeleteFormClick;
@@ -2477,7 +2401,14 @@ The first registrant's information will be used to complete the registrar inform
             if ( setValues )
             {
                 control.Expanded = ExpandedForms.Contains( form.Guid );
-                if ( !control.Expanded && showInvalid && !form.IsValid)
+
+                if ( form.Guid == defaultFormGuid )
+                {
+                    control.IsDeleteEnabled = false;
+                    control.IsDefaultForm = true;
+                }
+
+                if ( !control.Expanded && showInvalid && !form.IsValid )
                 {
                     control.Expanded = true;
                 }
@@ -2491,37 +2422,53 @@ The first registrant's information will be used to complete the registrar inform
 
         #endregion
 
-        #region Form/Field Methods
+        #region Form/FieldFilter Methods
 
         /// <summary>
-        /// Binds the fields grid.
+        /// Shows the form field filter.
         /// </summary>
-        private void BindFieldsGrid()
+        /// <param name="formGuid">The form unique identifier.</param>
+        /// <param name="formFieldGuid">The form field unique identifier.</param>
+        private void ShowFormFieldFilter( Guid formGuid, Guid formFieldGuid )
         {
-            if ( FormFieldsState != null && FormFieldsState.Any() )
+            if ( FormFieldsState.ContainsKey( formGuid ) )
             {
-                gFields.DataSource = FormFieldsState.First().Value
-                    .OrderBy( a => a.Order)
-                    .Select( a => new
-                    {
-                        a.Id,
-                        a.Guid,
-                        Name = ( a.FieldSource != RegistrationFieldSource.PersonField && a.Attribute != null ) ?
-                            a.Attribute.Name : a.PersonFieldType.ConvertToString(),
-                        FieldSource = a.FieldSource.ConvertToString(),
-                        FieldType = ( a.FieldSource != RegistrationFieldSource.PersonField && a.Attribute != null ) ? 
-                            a.Attribute.FieldTypeId : 0,
-                        a.IsInternal,
-                        a.IsSharedValue,
-                        a.ShowCurrentValue,
-                        a.IsRequired,
-                        a.IsGridField,
-                        a.ShowOnWaitlist
-                    } )
-                    .ToList();
-                gFields.DataBind();
+                ShowDialog( "FieldFilter" );
+
+                hfFormGuidFilter.Value = formGuid.ToString();
+                hfFormFieldGuidFilter.Value = formFieldGuid.ToString();
+                var formField = FormFieldsState[formGuid].FirstOrDefault( a => a.Guid == formFieldGuid );
+                var otherFormFields = FormFieldsState[formGuid].Where( a => a != formField && a.Attribute != null ).ToList();
+
+                fvreFieldVisibilityRulesEditor.ValidationGroup = dlgFieldFilter.ValidationGroup;
+                fvreFieldVisibilityRulesEditor.FieldName = formField.ToString();
+                fvreFieldVisibilityRulesEditor.ComparableAttributes = otherFormFields.Select( a => a.Attribute ).ToDictionary( k => k.Guid, v => v );
+                fvreFieldVisibilityRulesEditor.SetFieldVisibilityRules( formField.FieldVisibilityRules );
             }
+
+            BuildControls( true );
         }
+
+        /// <summary>
+        /// Handles the SaveClick event of the dlgFieldFilter control.
+        /// </summary>
+        /// <param name="sender">The source of the event.</param>
+        /// <param name="e">The <see cref="EventArgs"/> instance containing the event data.</param>
+        protected void dlgFieldFilter_SaveClick( object sender, EventArgs e )
+        {
+            Guid formGuid = hfFormGuidFilter.Value.AsGuid();
+            Guid formFieldGuid = hfFormFieldGuidFilter.Value.AsGuid();
+            var formField = FormFieldsState[formGuid].FirstOrDefault( a => a.Guid == formFieldGuid );
+            formField.FieldVisibilityRules = fvreFieldVisibilityRulesEditor.GetFieldVisibilityRules();
+
+            HideDialog();
+
+            BuildControls( true );
+        }
+
+        #endregion
+
+        #region Form/Field Methods
 
         /// <summary>
         /// Shows the form field edit.
@@ -2780,7 +2727,7 @@ The first registrant's information will be used to complete the registrar inform
         /// <param name="discountGuid">The discount unique identifier.</param>
         private void ShowDiscountEdit( Guid discountGuid )
         {
-            var discount = DiscountState.FirstOrDefault( d => d.Guid.Equals( discountGuid ));
+            var discount = DiscountState.FirstOrDefault( d => d.Guid.Equals( discountGuid ) );
             if ( discount == null )
             {
                 discount = new RegistrationTemplateDiscount();
@@ -2849,7 +2796,7 @@ The first registrant's information will be used to complete the registrar inform
         /// <param name="feeGuid">The fee unique identifier.</param>
         private void ShowFeeEdit( Guid feeGuid )
         {
-            var fee = FeeState.FirstOrDefault( d => d.Guid.Equals( feeGuid ));
+            var fee = FeeState.FirstOrDefault( d => d.Guid.Equals( feeGuid ) );
             if ( fee == null )
             {
                 fee = new RegistrationTemplateFee();
@@ -2932,6 +2879,9 @@ The first registrant's information will be used to complete the registrar inform
                 case "FEES":
                     dlgFee.Show();
                     break;
+                case "FIELDFILTER":
+                    dlgFieldFilter.Show();
+                    break;
             }
         }
 
@@ -2951,6 +2901,9 @@ The first registrant's information will be used to complete the registrar inform
                 case "FEES":
                     dlgFee.Hide();
                     break;
+                case "FIELDFILTER":
+                    dlgFieldFilter.Hide();
+                    break;
             }
 
             hfActiveDialog.Value = string.Empty;
@@ -2959,5 +2912,7 @@ The first registrant's information will be used to complete the registrar inform
         #endregion
 
         #endregion
-}
+
+
+    }
 }
