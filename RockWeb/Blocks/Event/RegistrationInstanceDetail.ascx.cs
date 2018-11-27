@@ -1,4 +1,4 @@
-// <copyright>
+﻿// <copyright>
 // Copyright by the Spark Development Network
 //
 // Licensed under the Rock Community License (the "License");
@@ -894,10 +894,10 @@ namespace RockWeb.Blocks.Event
                                 break;
 
                             case RegistrationPersonFieldType.MaritalStatus:
-                                var ddlMaritalStatusFilter = phRegistrantsRegistrantFormFieldFilters.FindControl( "ddlRegistrantsMaritalStatusFilter" ) as RockDropDownList;
-                                if ( ddlMaritalStatusFilter != null )
+                                var dvpMaritalStatusFilter = phRegistrantsRegistrantFormFieldFilters.FindControl( "dvpRegistrantsMaritalStatusFilter" ) as DefinedValuePicker;
+                                if ( dvpMaritalStatusFilter != null )
                                 {
-                                    fRegistrants.SaveUserPreference( "Marital Status", ddlMaritalStatusFilter.SelectedValue );
+                                    fRegistrants.SaveUserPreference( "Marital Status", dvpMaritalStatusFilter.SelectedValue );
                                 }
 
                                 break;
@@ -912,10 +912,10 @@ namespace RockWeb.Blocks.Event
                                 break;
 
                             case RegistrationPersonFieldType.HomePhone:
-                                var tbRegistrantsMobilePhoneFilter = phRegistrantsRegistrantFormFieldFilters.FindControl( "tbRegistrantsMobilePhoneFilter" ) as RockTextBox;
-                                if ( tbRegistrantsMobilePhoneFilter != null )
+                                var tbRegistrantsHomePhoneFilter = phRegistrantsRegistrantFormFieldFilters.FindControl( "tbRegistrantsHomePhoneFilter" ) as RockTextBox;
+                                if ( tbRegistrantsHomePhoneFilter != null )
                                 {
-                                    fRegistrants.SaveUserPreference( "Home Phone", tbRegistrantsMobilePhoneFilter.Text );
+                                    fRegistrants.SaveUserPreference( "Home Phone", tbRegistrantsHomePhoneFilter.Text );
                                 }
 
                                 break;
@@ -1018,10 +1018,10 @@ namespace RockWeb.Blocks.Event
                                 break;
 
                             case RegistrationPersonFieldType.MaritalStatus:
-                                var ddlMaritalStatusFilter = phRegistrantsRegistrantFormFieldFilters.FindControl( "ddlRegistrantsMaritalStatusFilter" ) as RockDropDownList;
-                                if ( ddlMaritalStatusFilter != null )
+                                var dvpMaritalStatusFilter = phRegistrantsRegistrantFormFieldFilters.FindControl( "dvpRegistrantsMaritalStatusFilter" ) as DefinedValuePicker;
+                                if ( dvpMaritalStatusFilter != null )
                                 {
-                                    ddlMaritalStatusFilter.SetValue( ( Guid? ) null );
+                                    dvpMaritalStatusFilter.SetValue( ( Guid? ) null );
                                 }
 
                                 break;
@@ -1309,16 +1309,16 @@ namespace RockWeb.Blocks.Event
                 if ( _homePhoneNumbers.Any() )
                 {
                     var homePhoneNumber = _homePhoneNumbers[registrant.PersonId.Value];
-                    var mobileField = e.Row.FindControl( "lRegistrantsHomePhone" ) as Literal ?? e.Row.FindControl( "lGroupPlacementsHomePhone" ) as Literal;
-                    if ( mobileField != null )
+                    var homePhoneField = e.Row.FindControl( "lRegistrantsHomePhone" ) as Literal ?? e.Row.FindControl( "lGroupPlacementsHomePhone" ) as Literal;
+                    if ( homePhoneField != null )
                     {
                         if ( homePhoneNumber == null || homePhoneNumber.NumberFormatted.IsNullOrWhiteSpace() )
                         {
-                            mobileField.Text = string.Empty;
+                            homePhoneField.Text = string.Empty;
                         }
                         else
                         {
-                            mobileField.Text = homePhoneNumber.IsUnlisted ? "Unlisted" : homePhoneNumber.NumberFormatted;
+                            homePhoneField.Text = homePhoneNumber.IsUnlisted ? "Unlisted" : homePhoneNumber.NumberFormatted;
                         }
                     }
 
@@ -1938,10 +1938,10 @@ namespace RockWeb.Blocks.Event
                                 break;
 
                             case RegistrationPersonFieldType.MaritalStatus:
-                                var ddlMaritalStatusFilter = phWaitListFormFieldFilters.FindControl( "ddlWaitlistMaritalStatusFilter" ) as RockDropDownList;
-                                if ( ddlMaritalStatusFilter != null )
+                                var dvpMaritalStatusFilter = phWaitListFormFieldFilters.FindControl( "dvpWaitlistMaritalStatusFilter" ) as DefinedValuePicker;
+                                if ( dvpMaritalStatusFilter != null )
                                 {
-                                    fWaitList.SaveUserPreference( "WL-Marital Status", "Marital Status", ddlMaritalStatusFilter.SelectedValue );
+                                    fWaitList.SaveUserPreference( "WL-Marital Status", "Marital Status", dvpMaritalStatusFilter.SelectedValue );
                                 }
 
                                 break;
@@ -2062,10 +2062,10 @@ namespace RockWeb.Blocks.Event
                                 break;
 
                             case RegistrationPersonFieldType.MaritalStatus:
-                                var ddlMaritalStatusFilter = phWaitListFormFieldFilters.FindControl( "ddlWaitlistMaritalStatusFilter" ) as RockDropDownList;
-                                if ( ddlMaritalStatusFilter != null )
+                                var dvpMaritalStatusFilter = phWaitListFormFieldFilters.FindControl( "dvpWaitlistMaritalStatusFilter" ) as DefinedValuePicker;
+                                if ( dvpMaritalStatusFilter != null )
                                 {
-                                    ddlMaritalStatusFilter.SetValue( ( Guid? ) null );
+                                    dvpMaritalStatusFilter.SetValue( ( Guid? ) null );
                                 }
 
                                 break;
@@ -2284,14 +2284,14 @@ namespace RockWeb.Blocks.Event
                 if ( mobileField != null )
                 {
 
-                    var homePhoneNumber = _homePhoneNumbers[registrant.PersonId.Value];
-                    if ( homePhoneNumber == null || homePhoneNumber.NumberFormatted.IsNullOrWhiteSpace() )
+                    var mobilePhoneNumber = _mobilePhoneNumbers[registrant.PersonId.Value];
+                    if ( mobilePhoneNumber == null || mobilePhoneNumber.NumberFormatted.IsNullOrWhiteSpace() )
                     {
                         mobileField.Text = string.Empty;
                     }
                     else
                     {
-                        mobileField.Text = homePhoneNumber.IsUnlisted ? "Unlisted" : homePhoneNumber.NumberFormatted;
+                        mobileField.Text = mobilePhoneNumber.IsUnlisted ? "Unlisted" : mobilePhoneNumber.NumberFormatted;
                     }
                 }
 
@@ -2698,6 +2698,8 @@ namespace RockWeb.Blocks.Event
                 lCost.Text = registrationInstance.Cost.FormatAsCurrency();
                 lMinimumInitialPayment.Visible = registrationInstance.MinimumInitialPayment.HasValue;
                 lMinimumInitialPayment.Text = registrationInstance.MinimumInitialPayment.HasValue ? registrationInstance.MinimumInitialPayment.Value.FormatAsCurrency() : string.Empty;
+                lDefaultPaymentAmount.Visible = registrationInstance.DefaultPayment.HasValue;
+                lDefaultPaymentAmount.Text = registrationInstance.DefaultPayment.HasValue ? registrationInstance.DefaultPayment.Value.FormatAsCurrency() : string.Empty;
             }
             else
             {
@@ -3327,10 +3329,10 @@ namespace RockWeb.Blocks.Event
                                     break;
 
                                 case RegistrationPersonFieldType.MaritalStatus:
-                                    var ddlMaritalStatusFilter = phRegistrantsRegistrantFormFieldFilters.FindControl( "ddlRegistrantsMaritalStatusFilter" ) as RockDropDownList;
-                                    if ( ddlMaritalStatusFilter != null )
+                                    var dvpMaritalStatusFilter = phRegistrantsRegistrantFormFieldFilters.FindControl( "dvpRegistrantsMaritalStatusFilter" ) as DefinedValuePicker;
+                                    if ( dvpMaritalStatusFilter != null )
                                     {
-                                        var maritalStatusId = ddlMaritalStatusFilter.SelectedValue.AsIntegerOrNull();
+                                        var maritalStatusId = dvpMaritalStatusFilter.SelectedValue.AsIntegerOrNull();
                                         if ( maritalStatusId.HasValue )
                                         {
                                             qry = qry.Where( r =>
@@ -4047,36 +4049,36 @@ namespace RockWeb.Blocks.Event
                                 break;
 
                             case RegistrationPersonFieldType.MaritalStatus:
-                                var ddlRegistrantsMaritalStatusFilter = new RockDropDownList();
-                                ddlRegistrantsMaritalStatusFilter.BindToDefinedType( DefinedTypeCache.Get( Rock.SystemGuid.DefinedType.PERSON_MARITAL_STATUS.AsGuid() ), true );
-                                ddlRegistrantsMaritalStatusFilter.ID = "ddlRegistrantsMaritalStatusFilter";
-                                ddlRegistrantsMaritalStatusFilter.Label = "Marital Status";
+                                var dvpRegistrantsMaritalStatusFilter = new DefinedValuePicker();
+                                dvpRegistrantsMaritalStatusFilter.ID = "dvpRegistrantsMaritalStatusFilter";
+                                dvpRegistrantsMaritalStatusFilter.DefinedTypeId = DefinedTypeCache.Get( Rock.SystemGuid.DefinedType.PERSON_MARITAL_STATUS.AsGuid() ).Id;
+                                dvpRegistrantsMaritalStatusFilter.Label = "Marital Status";
 
                                 if ( setValues )
                                 {
-                                    ddlRegistrantsMaritalStatusFilter.SetValue( fRegistrants.GetUserPreference( "Marital Status" ) );
+                                    dvpRegistrantsMaritalStatusFilter.SetValue( fRegistrants.GetUserPreference( "Marital Status" ) );
                                 }
 
-                                phRegistrantsRegistrantFormFieldFilters.Controls.Add( ddlRegistrantsMaritalStatusFilter );
+                                phRegistrantsRegistrantFormFieldFilters.Controls.Add( dvpRegistrantsMaritalStatusFilter );
 
-                                var ddlGroupPlacementsMaritalStatusFilter = new RockDropDownList();
-                                ddlGroupPlacementsMaritalStatusFilter.BindToDefinedType( DefinedTypeCache.Get( Rock.SystemGuid.DefinedType.PERSON_MARITAL_STATUS.AsGuid() ), true );
-                                ddlGroupPlacementsMaritalStatusFilter.ID = "ddlGroupPlacementsMaritalStatusFilter";
-                                ddlGroupPlacementsMaritalStatusFilter.Label = "Marital Status";
+                                var dvpGroupPlacementsMaritalStatusFilter = new DefinedValuePicker();
+                                dvpGroupPlacementsMaritalStatusFilter.ID = "dvpGroupPlacementsMaritalStatusFilter";
+                                dvpGroupPlacementsMaritalStatusFilter.DefinedTypeId = DefinedTypeCache.Get( Rock.SystemGuid.DefinedType.PERSON_MARITAL_STATUS.AsGuid() ).Id;
+                                dvpGroupPlacementsMaritalStatusFilter.Label = "Marital Status";
 
                                 if ( setValues )
                                 {
-                                    ddlGroupPlacementsMaritalStatusFilter.SetValue( fGroupPlacements.GetUserPreference( "GroupPlacements-Marital Status" ) );
+                                    dvpGroupPlacementsMaritalStatusFilter.SetValue( fGroupPlacements.GetUserPreference( "GroupPlacements-Marital Status" ) );
                                 }
 
-                                phGroupPlacementsFormFieldFilters.Controls.Add( ddlGroupPlacementsMaritalStatusFilter );
+                                phGroupPlacementsFormFieldFilters.Controls.Add( dvpGroupPlacementsMaritalStatusFilter );
 
-                                var ddlWaitlistMaritalStatusFilter = new RockDropDownList();
-                                ddlWaitlistMaritalStatusFilter.BindToDefinedType( DefinedTypeCache.Get( Rock.SystemGuid.DefinedType.PERSON_MARITAL_STATUS.AsGuid() ), true );
-                                ddlWaitlistMaritalStatusFilter.ID = "ddlWaitlistMaritalStatusFilter";
-                                ddlWaitlistMaritalStatusFilter.Label = "Marital Status";
-                                ddlWaitlistMaritalStatusFilter.SetValue( fRegistrants.GetUserPreference( "WL-Marital Status" ) );
-                                phWaitListFormFieldFilters.Controls.Add( ddlWaitlistMaritalStatusFilter );
+                                var dvpWaitlistMaritalStatusFilter = new DefinedValuePicker();
+                                dvpWaitlistMaritalStatusFilter.ID = "dvpWaitlistMaritalStatusFilter";
+                                dvpWaitlistMaritalStatusFilter.DefinedTypeId = DefinedTypeCache.Get( Rock.SystemGuid.DefinedType.PERSON_MARITAL_STATUS.AsGuid() ).Id;
+                                dvpWaitlistMaritalStatusFilter.Label = "Marital Status";
+                                dvpWaitlistMaritalStatusFilter.SetValue( fRegistrants.GetUserPreference( "WL-Marital Status" ) );
+                                phWaitListFormFieldFilters.Controls.Add( dvpWaitlistMaritalStatusFilter );
 
                                 dataFieldExpression = "PersonAlias.Person.MaritalStatusValue.Value";
                                 var maritalStatusField = new RockBoundField();
@@ -4521,7 +4523,7 @@ namespace RockWeb.Blocks.Event
             }
 
             // Fee Name
-            if (ddlFeeName.SelectedIndex > 0 )
+            if ( ddlFeeName.SelectedIndex > 0 )
             {
                 data = data.Where( r => r.FeeName == ddlFeeName.SelectedItem.Text );
             }
@@ -4529,7 +4531,7 @@ namespace RockWeb.Blocks.Event
             // Fee Options
             if ( cblFeeOptions.SelectedValues.Count > 0 )
             {
-                data = data.Where( r => cblFeeOptions.SelectedValues.Contains( r.Option ) );
+                data = data.Where( r => cblFeeOptions.SelectedValues.Any( v => v.Equals( r.FeeItem.Guid.ToString(), StringComparison.OrdinalIgnoreCase) ) );
             }
 
             SortProperty sortProperty = gFees.SortProperty;
@@ -4590,15 +4592,14 @@ namespace RockWeb.Blocks.Event
         {
             cblFeeOptions.Items.Clear();
 
-            string feeId = ddlFeeName.SelectedValue;
-            if ( feeId.IsNotNullOrWhiteSpace() )
+            int? feeId = ddlFeeName.SelectedValue.AsIntegerOrNull();
+            if ( feeId.HasValue )
             {
-                var registrationTemplateFeeService = new RegistrationTemplateFeeService( new RockContext() );
-                var fees = registrationTemplateFeeService.GetParsedFeeOptionsWithoutCost( feeId.AsInteger() );
+                var feeItems = new RegistrationTemplateFeeItemService( new RockContext() ).Queryable().Where( a => a.RegistrationTemplateFeeId == feeId );
 
-                foreach ( var fee in fees )
+                foreach ( var feeItem in feeItems )
                 {
-                    cblFeeOptions.Items.Add( new ListItem( fee, fee ) );
+                    cblFeeOptions.Items.Add( new ListItem( feeItem.Name, feeItem.Guid.ToString() ) );
                 }
 
                 string feeOptionValues = fFees.GetUserPreference( "FeeOptions" );
@@ -4901,10 +4902,10 @@ namespace RockWeb.Blocks.Event
                                     break;
 
                                 case RegistrationPersonFieldType.MaritalStatus:
-                                    var ddlMaritalStatusFilter = phWaitListFormFieldFilters.FindControl( "ddlWaitlistMaritalStatusFilter" ) as RockDropDownList;
-                                    if ( ddlMaritalStatusFilter != null )
+                                    var dvpMaritalStatusFilter = phWaitListFormFieldFilters.FindControl( "dvpWaitlistMaritalStatusFilter" ) as DefinedValuePicker;
+                                    if ( dvpMaritalStatusFilter != null )
                                     {
-                                        var maritalStatusId = ddlMaritalStatusFilter.SelectedValue.AsIntegerOrNull();
+                                        var maritalStatusId = dvpMaritalStatusFilter.SelectedValue.AsIntegerOrNull();
                                         if ( maritalStatusId.HasValue )
                                         {
                                             qry = qry.Where( r =>
@@ -5440,10 +5441,10 @@ namespace RockWeb.Blocks.Event
                                     break;
 
                                 case RegistrationPersonFieldType.MaritalStatus:
-                                    var ddlMaritalStatusFilter = phGroupPlacementsFormFieldFilters.FindControl( "ddlGroupPlacementsMaritalStatusFilter" ) as RockDropDownList;
-                                    if ( ddlMaritalStatusFilter != null )
+                                    var dvpMaritalStatusFilter = phGroupPlacementsFormFieldFilters.FindControl( "dvpGroupPlacementsMaritalStatusFilter" ) as DefinedValuePicker;
+                                    if ( dvpMaritalStatusFilter != null )
                                     {
-                                        var maritalStatusId = ddlMaritalStatusFilter.SelectedValue.AsIntegerOrNull();
+                                        var maritalStatusId = dvpMaritalStatusFilter.SelectedValueAsId();
                                         if ( maritalStatusId.HasValue )
                                         {
                                             qry = qry.Where( r =>
@@ -5795,10 +5796,10 @@ namespace RockWeb.Blocks.Event
                                 break;
 
                             case RegistrationPersonFieldType.MaritalStatus:
-                                var ddlMaritalStatusFilter = phGroupPlacementsFormFieldFilters.FindControl( "ddlGroupPlacementsMaritalStatusFilter" ) as RockDropDownList;
-                                if ( ddlMaritalStatusFilter != null )
+                                var dvpMaritalStatusFilter = phGroupPlacementsFormFieldFilters.FindControl( "dvpGroupPlacementsMaritalStatusFilter" ) as DefinedValuePicker;
+                                if ( dvpMaritalStatusFilter != null )
                                 {
-                                    fGroupPlacements.SaveUserPreference( "GroupPlacements-Marital Status", "Marital Status", ddlMaritalStatusFilter.SelectedValue );
+                                    fGroupPlacements.SaveUserPreference( "GroupPlacements-Marital Status", "Marital Status", dvpMaritalStatusFilter.SelectedValue );
                                 }
 
                                 break;
@@ -5919,10 +5920,10 @@ namespace RockWeb.Blocks.Event
                                 break;
 
                             case RegistrationPersonFieldType.MaritalStatus:
-                                var ddlMaritalStatusFilter = phGroupPlacementsFormFieldFilters.FindControl( "ddlGroupPlacementsMaritalStatusFilter" ) as RockDropDownList;
-                                if ( ddlMaritalStatusFilter != null )
+                                var dvpMaritalStatusFilter = phGroupPlacementsFormFieldFilters.FindControl( "dvpGroupPlacementsMaritalStatusFilter" ) as DefinedValuePicker;
+                                if ( dvpMaritalStatusFilter != null )
                                 {
-                                    ddlMaritalStatusFilter.SetValue( ( Guid? ) null );
+                                    dvpMaritalStatusFilter.SetValue( ( Guid? ) null );
                                 }
 
                                 break;
@@ -6007,7 +6008,8 @@ namespace RockWeb.Blocks.Event
                     case "First Name":
                     case "Last Name":
                     case "Email":
-                    case "Home Phone":
+                    case "HomePhone":
+                    case "Phone":
                     case "Signed Document":
                         break;
 

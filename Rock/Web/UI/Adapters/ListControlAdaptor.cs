@@ -207,7 +207,7 @@ namespace Rock.Web.UI.Adapters
                         writer.AddAttribute( "checked", "checked" );
                     }
 
-                    if ( !listControl.Enabled )
+                    if ( !listControl.Enabled || !li.Enabled )
                     {
                         writer.AddAttribute( "disabled", string.Empty );
                     }
