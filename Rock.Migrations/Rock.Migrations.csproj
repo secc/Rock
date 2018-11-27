@@ -342,6 +342,10 @@
     <Compile Include="Migrations\Version 7.0\Version 1.7.1\201801121251097_InteractionBlocks.Designer.cs">
       <DependentUpon>201801121251097_InteractionBlocks.cs</DependentUpon>
     </Compile>
+    <Compile Include="Migrations\Version 7.0\Version 1.7.1\201801140232008_HtmlSnippets.cs" />
+    <Compile Include="Migrations\Version 7.0\Version 1.7.1\201801140232008_HtmlSnippets.Designer.cs">
+      <DependentUpon>201801140232008_HtmlSnippets.cs</DependentUpon>
+    </Compile>
     <Compile Include="Migrations\Version 7.0\Version 1.7.0\201712192301416_MoveInteractionTemplates.cs" />
     <Compile Include="Migrations\Version 7.0\Version 1.7.0\201712192301416_MoveInteractionTemplates.Designer.cs">
       <DependentUpon>201712192301416_MoveInteractionTemplates.cs</DependentUpon>
@@ -3114,6 +3118,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Migrations\Version 7.0\Version 1.7.1\201801121251097_InteractionBlocks.resx">
       <DependentUpon>201801121251097_InteractionBlocks.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Migrations\Version 7.0\Version 1.7.1\201801140232008_HtmlSnippets.resx">
+      <DependentUpon>201801140232008_HtmlSnippets.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Migrations\Version 7.0\Version 1.7.0\201712192301416_MoveInteractionTemplates.resx">
       <DependentUpon>201712192301416_MoveInteractionTemplates.cs</DependentUpon>

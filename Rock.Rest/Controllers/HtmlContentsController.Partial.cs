@@ -76,10 +76,60 @@ namespace Rock.Rest.Controllers
         }
 
         /// <summary>
+        /// Gets all current HTML Snippets.
+        /// </summary>
+        [Authenticate]
+        [HttpGet]
+        [System.Web.Http.Route( "api/HtmlContents/Snippets" )]
+        public List<HtmlContents> Snippets()
+        {
+
+            int personId = GetPerson().Id;
+
+            var htmlContentService = ( HtmlContentService ) Service;
+
+            var query = htmlContentService.Queryable().Where( hc => hc.BlockId == null && hc.CreatedByPersonAliasId.HasValue
+                        && hc.CreatedByPersonAlias.PersonId == personId );
+            return query.Select( hc => new HtmlContents() { Name = hc.Name, EntityValue = hc.EntityValue, Content = hc.Content } ).ToList();
+
+        }
+
+        /// <summary>
+        /// Adds a new snippet (or creates a version for an existing one).
+        /// </summary>
+        /// <param name="htmlContents">The HTML contents for the snippet.</param>
+        [Authenticate]
+        [HttpPost]
+        [System.Web.Http.Route( "api/HtmlContents/AddSnippet" )]
+        public void AddSnippet( [FromBody] HtmlContents htmlContents )
+        {
+            Person person = GetPerson();
+
+            var htmlContentService = ( HtmlContentService ) Service;
+
+            HtmlContent newHtmlContent = new HtmlContent();
+            newHtmlContent.Name = htmlContents.Name;
+            newHtmlContent.Content = htmlContents.Content;
+            newHtmlContent.CreatedByPersonAliasId = person.PrimaryAliasId;
+            Service.Add( newHtmlContent );
+
+            Service.Context.SaveChanges();
+        }
+
+
+        /// <summary>
         /// 
         /// </summary>
         public class HtmlContents
         {
+            /// <summary>
+            /// Gets or sets the name.
+            /// </summary>
+            /// <value>
+            /// The name.
+            /// </value>
+            public string Name { get; set; }
+
             /// <summary>
             /// Gets or sets the entity value.
             /// </summary>

@@ -509,6 +509,7 @@
     <Compile Include="Reporting\DataFilter\Person\InteractionsFilter.cs" />
     <Compile Include="Reporting\DataSelect\Person\InteractionCountSelect.cs" />
     <Compile Include="Reporting\DataSelect\Person\InteractionDateSelect.cs" />
+    <Compile Include="Security\Authentication\SMSAuthentication.cs" />
     <Compile Include="Web\Cache\Entities\BlockCache.cs" />
     <Compile Include="Web\Cache\Entities\CampusCache.cs" />
     <Compile Include="Web\Cache\Entities\ContentChannelCache.cs" />
@@ -2179,8 +2180,10 @@
     <Compile Include="Workflow\Action\Communications\SendSystemEmail.cs" />
     <Compile Include="Workflow\Action\Connections\AddConnectionRequestActivity.cs" />
     <Compile Include="Workflow\Action\Connections\CreateConnectionRequest.cs" />
+    <Compile Include="Workflow\Action\Connections\SetConnectionRequestAttributes.cs" />
     <Compile Include="Workflow\Action\Connections\SetConnectionRequestState.cs" />
     <Compile Include="Workflow\Action\Connections\SetConnectionRequestConnector.cs" />
+    <Compile Include="Workflow\Action\Connections\SetConnectionRequestGroup.cs" />
     <Compile Include="Workflow\Action\Connections\SetConnectionRequestStatus.cs" />
     <Compile Include="Workflow\Action\Connections\TransferConnectionRequest.cs" />
     <Compile Include="Workflow\Action\Finance\BenevolenceRequestAdd.cs" />
@@ -2200,6 +2203,7 @@
     <Compile Include="Workflow\Action\Groups\SetGroupMemberNote.cs" />
     <Compile Include="Workflow\Action\Groups\UpdateGroupMemberStatus.cs" />
     <Compile Include="Workflow\Action\People\GetPersonFromFields.cs" />
+    <Compile Include="Workflow\Action\People\PersonAddHistory.cs" />
     <Compile Include="Workflow\Action\People\PersonAddressUpdate.cs" />
     <Compile Include="Workflow\Action\People\PersonFollowAdd.cs" />
     <Compile Include="Workflow\Action\People\PersonGetHeadOfHousehold.cs" />

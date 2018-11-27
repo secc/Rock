@@ -28,6 +28,7 @@ using System;
 using System.Diagnostics;
 using Rock.Web.Cache;
 using Humanizer;
+using Rock.Web.UI;
 
 namespace Rock.PersonProfile.Badge
 {
@@ -49,10 +50,10 @@ namespace Rock.PersonProfile.Badge
         /// </summary>
         /// <param name="badge">The badge.</param>
         /// <param name="writer">The writer.</param>
-        public override void Render( PersonBadgeCache badge, System.Web.UI.HtmlTextWriter writer )
+        public override void Render( PersonBadgeCache badge, System.Web.UI.HtmlTextWriter writer, Person person, PersonBlock parentPersonBlock )
         {
-            var value = Person.GetAttributeValue( "FirstVisit" );
-            DateTime? firstVisit = Person.GetAttributeValue( "FirstVisit" ).AsDateTime();
+            var value = person.GetAttributeValue( "FirstVisit" );
+            DateTime? firstVisit = person.GetAttributeValue( "FirstVisit" ).AsDateTime();
             if (firstVisit.HasValue)
             {
                 TimeSpan attendanceDuration = DateTime.Now - firstVisit.Value;
@@ -90,11 +91,11 @@ namespace Rock.PersonProfile.Badge
 
                 if (spanValue == "New")
                 {
-                    writer.Write(String.Format( "<div class='badge badge-attendingduration' data-toggle='tooltip' data-original-title='{0} is new this week.'>", Person.NickName));
+                    writer.Write(String.Format( "<div class='badge badge-attendingduration' data-toggle='tooltip' data-original-title='{0} is new this week.'>", person.NickName));
                 }
                 else
                 {
-                    writer.Write(String.Format( "<div class='badge badge-attendingduration' data-toggle='tooltip' data-original-title='{0} first visited {1} ago.'>", Person.NickName, spanUnit.ToQuantity(spanValue.AsInteger())));
+                    writer.Write(String.Format( "<div class='badge badge-attendingduration' data-toggle='tooltip' data-original-title='{0} first visited {1} ago.'>", person.NickName, spanUnit.ToQuantity(spanValue.AsInteger())));
                 }
 
                 writer.Write(String.Format("<div class='duration-metric {0}'>", cssClass));
