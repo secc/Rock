@@ -56,6 +56,9 @@ namespace Rock.Client
         public decimal? Cost { get; set; }
 
         /// <summary />
+        public decimal? DefaultPayment { get; set; }
+
+        /// <summary />
         public string Details { get; set; }
 
         /// <summary />
@@ -142,6 +145,7 @@ namespace Rock.Client
             this.ContactPersonAliasId = source.ContactPersonAliasId;
             this.ContactPhone = source.ContactPhone;
             this.Cost = source.Cost;
+            this.DefaultPayment = source.DefaultPayment;
             this.Details = source.Details;
             this.EndDateTime = source.EndDateTime;
             this.ForeignGuid = source.ForeignGuid;

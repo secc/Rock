@@ -47,22 +47,14 @@ namespace Rock.Migrations
                 Rock.Model.AnalyticsSourceDate.GenerateAnalyticsSourceDateData( 1, false, analyticsStartDate, analyticsEndDate );
             }
 
-            // Run the attendance occurrence migration job if it exists.
-            RunJob( SystemGuid.ServiceJob.MIGRATE_ATTENDANCE_OCCURRENCE, context );
-
-            // Run the family check-in identifier occurrence migration job if it exists.
-            RunJob( SystemGuid.ServiceJob.MIGRATE_FAMILY_CHECKIN_IDS, context );
-        }
-
-        private void RunJob( string JobGuid, Data.RockContext context )
-        {
-            // Check to see if there is a valid service job
-            var job = new Model.ServiceJobService( context ).Get( JobGuid.AsGuid() );
-            if ( job != null )
+            // MP: Migrate RegistrationTemplateFee.CostValue to RegistrationTemplateFee.FeeItems
+            using ( var rockContext = new Rock.Data.RockContext() )
             {
-                // Run the job on another thread
-                var transaction = new Transactions.RunJobNowTransaction( job.Id );
-                System.Threading.Tasks.Task.Run( () => transaction.Execute() );
+                var registrationTemplateFeeService = new Rock.Model.RegistrationTemplateFeeService( rockContext );
+#pragma warning disable 612, 618
+                registrationTemplateFeeService.MigrateFeeCostValueToFeeItems();
+#pragma warning restore 612, 618
+                rockContext.SaveChanges();
             }
         }
     }
