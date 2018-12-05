@@ -14,17 +14,12 @@
 // limitations under the License.
 // </copyright>
 //
-using System;
-using System.IO;
+using System.Collections.Generic;
 using System.Linq;
 using System.Web;
-using System.Xml;
-using System.Text;
-using System.Net;
 using Rock;
 using Rock.Data;
 using Rock.Model;
-using Rock.Security;
 using Rock.Web.Cache;
 using System.Collections.Generic;
 using Rock.Utility;
@@ -47,6 +42,18 @@ namespace RockWeb
             request = context.Request;
             response = context.Response;
 
+            string cacheKey = "Rock:GetChannelFeed:" + request.RawUrl;
+            var contentCache = RockCache.Get( cacheKey );
+            var mimeTypeCache = RockCache.Get( cacheKey + ":MimeType" );
+
+            if ( mimeTypeCache != null && mimeTypeCache != null )
+            {
+                response.ContentType = ( string ) mimeTypeCache;
+                response.Write( ( string ) contentCache );
+                response.StatusCode = 200;
+                return;
+            }
+
             RockContext rockContext = new RockContext();
 
             if ( request.HttpMethod != "GET" )
@@ -63,7 +70,7 @@ namespace RockWeb
                 DefinedValueCache dvRssTemplate;
                 string rssTemplate;
 
-                if ( !int.TryParse( request.QueryString["ChannelId"] , out channelId ))
+                if ( !int.TryParse( request.QueryString["ChannelId"], out channelId ) )
                 {
                     response.Write( "Invalid channel id." );
                     response.StatusCode = 200;
@@ -89,11 +96,10 @@ namespace RockWeb
                 {
                     response.ContentType = dvRssTemplate.GetAttributeValue( "MimeType" );
                 }
-                 
+
                 ContentChannelService channelService = new ContentChannelService( rockContext );
 
                 var channel = channelService.Queryable( "ContentChannelType" ).Where( c => c.Id == channelId ).FirstOrDefault();
-
                 if ( channel != null )
                 {
                     if ( channel.EnableRss )
@@ -114,7 +120,7 @@ namespace RockWeb
                         requestObjects.Add( "OriginalString", request.Url.OriginalString );
 
                         mergeFields.Add( "Request", requestObjects );
-                        
+
                         // check for new rss item limit
                         if ( request.QueryString["Count"] != null )
                         {
@@ -125,9 +131,9 @@ namespace RockWeb
                         ContentChannelItemService contentService = new ContentChannelItemService( rockContext );
 
                         var content = contentService.Queryable( "ContentChannelType" )
-                                        .Where( c => 
-                                            c.ContentChannelId == channel.Id && 
-                                            ( c.Status == ContentChannelItemStatus.Approved || c.ContentChannel.ContentChannelType.DisableStatus || c.ContentChannel.RequiresApproval == false ) && 
+                                        .Where( c =>
+                                            c.ContentChannelId == channel.Id &&
+                                            ( c.Status == ContentChannelItemStatus.Approved || c.ContentChannel.ContentChannelType.DisableStatus || c.ContentChannel.RequiresApproval == false ) &&
                                             c.StartDateTime <= RockDateTime.Now );
 
                         if ( channel.ContentChannelType.DateRangeType == ContentChannelDateType.DateRange )
@@ -152,7 +158,7 @@ namespace RockWeb
                         }
 
                         content = content.Take( rssItemLimit );
-                        
+
                         foreach ( var item in content )
                         {
                             item.Content = item.Content.ResolveMergeFields( mergeFields );
@@ -176,7 +182,15 @@ namespace RockWeb
                         mergeFields.Add( "RockVersion", Rock.VersionInfo.VersionInfo.GetRockProductVersionNumber() );
 
                         // show debug info
-                        response.Write( rssTemplate.ResolveMergeFields( mergeFields ) );
+                        var outputContent = rssTemplate.ResolveMergeFields( mergeFields );
+                        response.Write( outputContent );
+
+                        var expiration = RockDateTime.Now.AddMinutes( dvRssTemplate.GetAttributeValue( "CacheDuration" ).AsInteger() );
+                        if ( expiration > RockDateTime.Now )
+                        {
+                            RockCache.AddOrUpdate( cacheKey + ":MimeType", null, response.ContentType, expiration );
+                            RockCache.AddOrUpdate( cacheKey, null, outputContent, expiration );
+                        }
                     }
                     else
                     {
@@ -187,13 +201,11 @@ namespace RockWeb
                 }
                 else
                 {
-                    response.StatusCode = 200;
                     response.Write( "Invalid channel id." );
                     response.StatusCode = 200;
                     return;
                 }
 
-                
             }
             else
             {
