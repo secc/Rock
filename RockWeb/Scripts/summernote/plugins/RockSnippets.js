@@ -63,6 +63,7 @@
                         Rock.controls.modal.close();
                         updateSnippets();
                     });
+                    $modalPopupIFrame.height($('.modal-overflow').height());
                 });
 
             } else {
