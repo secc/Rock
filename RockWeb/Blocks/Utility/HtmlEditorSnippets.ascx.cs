@@ -17,10 +17,7 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.IO;
 using System.Linq;
-using System.Text;
-using System.Web;
 using Rock;
 using Rock.Attribute;
 using Rock.Data;
@@ -55,7 +52,7 @@ namespace RockWeb.Blocks.Utility
             var securityField = gSnippets.ColumnsOfType<SecurityField>().FirstOrDefault();
             if ( securityField != null )
             {
-                securityField.EntityTypeId = EntityTypeCache.Read( typeof( HtmlContent ) ).Id;
+                securityField.EntityTypeId = EntityTypeCache.Get( typeof( HtmlContent ) ).Id;
             }
 
         }
@@ -116,7 +113,22 @@ namespace RockWeb.Blocks.Utility
 
         protected void efEdit_Click( object sender, Rock.Web.UI.Controls.RowEventArgs e )
         {
-            NavigateToLinkedPage( "EditPage", new Dictionary<string, string> { { "htmlcontentid", e.RowKeyId.ToString() } } );
+            var queryParams = new Dictionary<string, string>
+            {
+                { "htmlcontentid", e.RowKeyId.ToString() }
+            };
+
+            if ( !string.IsNullOrWhiteSpace( PageParameter( "modalMode" ) ) )
+            {
+                queryParams["modalMode"] = PageParameter( "modalMode" );
+            }
+
+            if ( !string.IsNullOrWhiteSpace( PageParameter( "title" ) ) )
+            {
+                queryParams["title"] = PageParameter( "title" );
+            }
+
+            NavigateToLinkedPage( "EditPage", queryParams );
         }
 
         protected void lbfCopy_Click( object sender, Rock.Web.UI.Controls.RowEventArgs e )
@@ -128,10 +140,10 @@ namespace RockWeb.Blocks.Utility
             string newName = "Copy of " + htmlContent.Name;
             int copyNum = 1;
             bool alreadyExists = true;
-            while( alreadyExists )
+            while ( alreadyExists )
             {
                 alreadyExists = htmlContentService.Queryable().Any( hc => hc.Name == newName && hc.CreatedByPersonAliasId == CurrentPersonAliasId );
-                if (alreadyExists)
+                if ( alreadyExists )
                 {
                     copyNum++;
                     newName = "Copy " + copyNum + " of " + htmlContent.Name;

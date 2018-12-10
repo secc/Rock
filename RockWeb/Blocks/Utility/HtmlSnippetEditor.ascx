@@ -1,4 +1,10 @@
 ﻿<%@ Control Language="C#" AutoEventWireup="true" CodeFile="HtmlSnippetEditor.ascx.cs" Inherits="RockWeb.Blocks.Utility.HtmlSnippetEditor" %>
+<asp:Panel ID="pnlModalHeader" runat="server" Visible="false">
+    <h3 class="modal-title">
+        <asp:Literal ID="lTitle" runat="server"></asp:Literal>
+        <span class="js-cancel-button cursor-pointer pull-right" style="opacity: .5">&times;</span>
+    </h3>
+</asp:Panel>
 <asp:UpdatePanel runat="server" ID="upSnippets">
     <ContentTemplate>
         <Rock:RockTextBox runat="server" ID="tbName" Label="Name" Required="true" />
