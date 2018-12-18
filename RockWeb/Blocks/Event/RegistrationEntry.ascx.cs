@@ -4172,6 +4172,8 @@ namespace RockWeb.Blocks.Event
                 // If the current form, is the last one, add any fee controls
                 if ( FormCount - 1 == CurrentFormIndex && !registrant.OnWaitList )
                 {
+                    List<RegistrantInfo> otherRegistrants = RegistrationState.Registrants.Where( a => a != registrant ).ToList();
+
                     foreach ( var fee in RegistrationTemplate.Fees.Where( f => f.IsActive == true ).OrderBy( o => o.Order ) )
                     {
                         var feeValues = new List<FeeInfo>();
@@ -4180,7 +4182,7 @@ namespace RockWeb.Blocks.Event
                             feeValues = registrant.FeeValues[fee.Id];
                         }
 
-                        fee.AddFeeControl( phFees, this.RegistrationInstanceState, setValues, feeValues );
+                        fee.AddFeeControl( phFees, this.RegistrationInstanceState, setValues, feeValues, otherRegistrants );
                     }
                 }
             }
@@ -4538,7 +4540,8 @@ namespace RockWeb.Blocks.Event
         /// <param name="setValues">if set to <c>true</c> [set values].</param>
         private void CreateSummaryControls( bool setValues )
         {
-            lRegistrationTerm.Text = RegistrationTerm;
+            lRegistrationTermPrompt.Text = RegistrationTerm;
+            lRegistrationTermLoggedInPerson.Text = RegistrationTerm;
             lDiscountCodeLabel.Text = DiscountCodeTerm;
 
             if ( RegistrationTemplate.RegistrantsSameFamily == RegistrantsSameFamily.Ask )
@@ -4609,7 +4612,12 @@ namespace RockWeb.Blocks.Event
                     {
                         // If UseLoggedInPerson is enabled, only prompt for Email, and only if it is isn't known
                         pnlRegistrarInfoPrompt.Visible = false;
-                        pnlRegistrarInfoUseLoggedInPerson.Visible = CurrentPerson.Email.IsNullOrWhiteSpace();
+                        pnlRegistrarInfoUseLoggedInPerson.Visible = true;
+                        lUseLoggedInPersonFirstName.Text = CurrentPerson.NickName;
+                        lUseLoggedInPersonLastName.Text = CurrentPerson.LastName;
+                        lUseLoggedInPersonEmail.Text = CurrentPerson.Email;
+                        lUseLoggedInPersonEmail.Visible = !CurrentPerson.Email.IsNullOrWhiteSpace();
+                        tbUseLoggedInPersonEmail.Visible = CurrentPerson.Email.IsNullOrWhiteSpace();
                     }
                     else
                     {
@@ -5051,7 +5059,7 @@ namespace RockWeb.Blocks.Event
                     RegistrationState.ConfirmationEmail = CurrentPerson.Email;
                     if ( pnlRegistrarInfoUseLoggedInPerson.Visible )
                     {
-                        RegistrationState.ConfirmationEmail = cbUseLoggedInPersonEmail.Text;
+                        RegistrationState.ConfirmationEmail = tbUseLoggedInPersonEmail.Text;
                     }
                 }
                 else
