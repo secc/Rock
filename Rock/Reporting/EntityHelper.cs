@@ -223,8 +223,9 @@ namespace Rock.Reporting
                         qryAttributes = qryAttributes.Where( a => string.IsNullOrEmpty( a.EntityTypeQualifierColumn ) && string.IsNullOrEmpty( a.EntityTypeQualifierValue ) );
                     }
 
-                    var cacheAttributeList = qryAttributes.ToCacheAttributeList();
+                    cacheAttributeList = qryAttributes.ToAttributeCacheList();
 
+<<<<<<< HEAD
                     foreach ( var attributeCache in cacheAttributeList )
                     {
                         AddEntityFieldForAttribute( entityFields, attributeCache, limitToFilterableFields );
@@ -740,3 +741,4 @@ namespace Rock.Reporting
 
     #endregion
 }
+

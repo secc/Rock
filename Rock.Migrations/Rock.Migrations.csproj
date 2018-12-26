@@ -75,6 +75,14 @@
     <Compile Include="Migrations\201811192004486_RegistrationFieldVisibilityRules.Designer.cs">
       <DependentUpon>201811192004486_RegistrationFieldVisibilityRules.cs</DependentUpon>
     </Compile>
+    <Compile Include="Migrations\201811272108424_RegistrationTemplateFeeItem.cs" />
+    <Compile Include="Migrations\201811272108424_RegistrationTemplateFeeItem.Designer.cs">
+      <DependentUpon>201811272108424_RegistrationTemplateFeeItem.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Migrations\201812262333000_RegistrationAttributes.cs" />
+    <Compile Include="Migrations\201812262333000_RegistrationAttributes.Designer.cs">
+      <DependentUpon>201812262333000_RegistrationAttributes.cs</DependentUpon>
+    </Compile>
     <Compile Include="Migrations\Version 8.0\Version 1.8.1\201807200941565_Rollup_PreAlphaRelease_0719.cs" />
     <Compile Include="Migrations\Version 8.0\Version 1.8.1\201807200941565_Rollup_PreAlphaRelease_0719.Designer.cs">
       <DependentUpon>201807200941565_Rollup_PreAlphaRelease_0719.cs</DependentUpon>
@@ -2927,6 +2935,12 @@
     <EmbeddedResource Include="201811272108424_RegistrationTemplateFeeItem.resx" />
     <EmbeddedResource Include="Migrations\201811192004486_RegistrationFieldVisibilityRules.resx">
       <DependentUpon>201811192004486_RegistrationFieldVisibilityRules.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Migrations\201811272108424_RegistrationTemplateFeeItem.resx">
+      <DependentUpon>201811272108424_RegistrationTemplateFeeItem.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Migrations\201812262333000_RegistrationAttributes.resx">
+      <DependentUpon>201812262333000_RegistrationAttributes.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Migrations\Version 8.0\Version 1.8.1\201807200941565_Rollup_PreAlphaRelease_0719.resx">
       <DependentUpon>201807200941565_Rollup_PreAlphaRelease_0719.cs</DependentUpon>

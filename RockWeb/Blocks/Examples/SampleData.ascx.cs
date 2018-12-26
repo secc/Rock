@@ -775,7 +775,7 @@ namespace RockWeb.Blocks.Examples
 
                 // Find any Form elements and add them to the template
                 int formOrder = 0;
-                var registrationAttributeQualifierColumn = "RegistrationTemplateId";
+                var registrantAttributeQualifierColumn = "RegistrationTemplateId";
                 int? registrationRegistrantEntityTypeId = EntityTypeCache.Get( typeof( Rock.Model.RegistrationRegistrant ) ).Id;
                 if ( element.Elements( "forms" ).Count() > 0 )
                 {
@@ -811,8 +811,10 @@ namespace RockWeb.Blocks.Examples
                                     case "group member attribute":
                                         formField.FieldSource = RegistrationFieldSource.GroupMemberAttribute;
                                         break;
+                                    case "registrant attribute":
                                     case "registration attribute":
-                                        formField.FieldSource = RegistrationFieldSource.RegistrationAttribute;
+                                        // note this was renamed from 'registration attribute' to 'registrant attribute', but the sample data might still call it 'registration attribute'
+                                        formField.FieldSource = RegistrationFieldSource.RegistrantAttribute;
 
                                         //var qualifierValue = RegistrationTemplate.Id.ToString();
                                         var attrState = new Rock.Model.Attribute();
@@ -825,7 +827,7 @@ namespace RockWeb.Blocks.Examples
                                         if ( fieldType != null )
                                         {
                                             attrState.FieldTypeId = fieldType.Id;
-                                            var attribute = Helper.SaveAttributeEdits( attrState, registrationRegistrantEntityTypeId, registrationAttributeQualifierColumn, registrationTemplate.Id.ToString(), rockContext );
+                                            var attribute = Helper.SaveAttributeEdits( attrState, registrationRegistrantEntityTypeId, registrantAttributeQualifierColumn, registrationTemplate.Id.ToString(), rockContext );
                                             
                                             //rockContext.ChangeTracker.DetectChanges();
                                             rockContext.SaveChanges( disablePrePostProcessing: true );
@@ -847,7 +849,7 @@ namespace RockWeb.Blocks.Examples
 
                                 formField.AttributeId = null;
                                 if ( !formField.AttributeId.HasValue &&
-                                    formField.FieldSource == RegistrationFieldSource.RegistrationAttribute &&
+                                    formField.FieldSource == RegistrationFieldSource.RegistrantAttribute &&
                                     formField.Attribute != null )
                                 {
                                     var attr = AttributeCache.Get( formField.Attribute.Guid, rockContext );
@@ -2186,7 +2188,7 @@ namespace RockWeb.Blocks.Examples
                             AttributeService attributeService = new AttributeService( rockContext );
                             if ( registrationTemplate.Forms != null )
                             {
-                                foreach ( var id in registrationTemplate.Forms.SelectMany( f => f.Fields ).Where( ff => ff.FieldSource == RegistrationFieldSource.RegistrationAttribute ).Select( f => f.AttributeId ) )
+                                foreach ( var id in registrationTemplate.Forms.SelectMany( f => f.Fields ).Where( ff => ff.FieldSource == RegistrationFieldSource.RegistrantAttribute ).Select( f => f.AttributeId ) )
                                 {
                                     if ( id != null )
                                     {
