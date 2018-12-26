@@ -1035,6 +1035,33 @@ namespace Rock.Attribute
         /// <param name="numberOfColumns">The number of columns.</param>
         public static void AddEditControls( string category, List<string> attributeKeys, Rock.Attribute.IHasAttributes item, Control parentControl, string validationGroup, bool setValue, List<string> exclude, int? numberOfColumns )
         {
+            AttributeAddEditControlsOptions attributeAddEditControlsOptions = new AttributeAddEditControlsOptions
+            {
+                NumberOfColumns = numberOfColumns
+            };
+
+            attributeAddEditControlsOptions.IncludedAttributes = attributeKeys != null ? item?.Attributes.Select( a => a.Value ).Where( a => attributeKeys.Contains( a.Key ) ).ToList() : null;
+            attributeAddEditControlsOptions.ExcludedAttributes = exclude != null ? item?.Attributes.Select( a => a.Value ).Where( a => !exclude.Contains( a.Key ) && !exclude.Contains( a.Name ) ).ToList() : null;
+
+            AddEditControlsForCategory( category, item, parentControl, validationGroup, setValue, attributeAddEditControlsOptions );
+        }
+
+        /// <summary>
+        /// Adds the edit controls for category.
+        /// </summary>
+        /// <param name="categoryName">Name of the category.</param>
+        /// <param name="item">The item.</param>
+        /// <param name="parentControl">The parent control.</param>
+        /// <param name="validationGroup">The validation group.</param>
+        /// <param name="setValue">if set to <c>true</c> [set value].</param>
+        /// <param name="addEditControlsOptions">The add edit controls options.</param>
+        public static void AddEditControlsForCategory( string categoryName, IHasAttributes item, Control parentControl, string validationGroup, bool setValue, AttributeAddEditControlsOptions addEditControlsOptions )
+        {
+            int? numberOfColumns = addEditControlsOptions?.NumberOfColumns;
+            List<AttributeCache> excludedAttributes = addEditControlsOptions?.ExcludedAttributes ?? new List<AttributeCache>();
+            List<AttributeCache> attributes = addEditControlsOptions?.IncludedAttributes ?? item.Attributes.Select( a => a.Value ).Where( a => a.Categories.Any( ( CategoryCache c ) => c.Name == categoryName ) ).ToList();
+            bool showCategoryLabel = addEditControlsOptions?.ShowCategoryLabel ?? true;
+
             // ensure valid number of columns
             if ( numberOfColumns.HasValue && numberOfColumns.Value > 12 )
             {
@@ -1046,8 +1073,7 @@ namespace Rock.Attribute
 
             parentControl.Controls.Add( fieldSet );
             fieldSet.Controls.Clear();
-
-            if ( !string.IsNullOrEmpty( category ) )
+            if ( showCategoryLabel && !string.IsNullOrEmpty( categoryName ) )
             {
                 HtmlGenericControl legend = new HtmlGenericControl( "h4" );
 
@@ -1069,7 +1095,7 @@ namespace Rock.Attribute
                 }
 
                 legend.Controls.Clear();
-                legend.InnerText = category.Trim();
+                legend.InnerText = categoryName.Trim();
             }
 
             HtmlGenericControl attributeRow = parentIsDynamic ? new DynamicControlsHtmlGenericControl( "div" ) : new HtmlGenericControl( "div" );
@@ -1079,22 +1105,32 @@ namespace Rock.Attribute
                 attributeRow.AddCssClass( "row" );
             }
 
-            foreach ( string key in attributeKeys )
+            foreach ( AttributeCache attribute in attributes )
             {
-                var attribute = item.Attributes[key];
-
-                if ( attribute.IsActive && !exclude.Contains( attribute.Name ) && !exclude.Contains( attribute.Key ) )
+                if ( attribute.IsActive && !excludedAttributes.Contains( attribute ) )
                 {
                     // Add the control for editing the attribute value
+                    AttributeControlOptions attributeControlOptions = new AttributeControlOptions
+                    {
+                        SetValue = setValue,
+                        SetId = true,
+                        ValidationGroup = validationGroup,
+                        Value = setValue ? item.AttributeValues?[attribute.Key]?.Value : null,
+                        ShowPrePostHtml = ( addEditControlsOptions?.ShowPrePostHtml ?? true )
+                    };
 
                     if ( numberOfColumns.HasValue )
                     {
+<<<<<<< HEAD
                         int colSize = (int)Math.Ceiling( (double)12 / numberOfColumns.Value );
 
+=======
+                        int colSize = ( int ) Math.Ceiling( 12.0 / ( double ) numberOfColumns.Value );
+>>>>>>> 59a1da0531... + Added Registration Attributes. This allows for the collection of attributes about the registration (like child-care needs) that do not pertain to a specific registrant.
                         HtmlGenericControl attributeCol = parentIsDynamic ? new DynamicControlsHtmlGenericControl( "div" ) : new HtmlGenericControl( "div" );
                         attributeRow.Controls.Add( attributeCol );
-                        attributeCol.AddCssClass( string.Format( "col-md-{0}", colSize ) );
-                        attribute.AddControl( attributeCol.Controls, item.AttributeValues[attribute.Key].Value, validationGroup, setValue, true );
+                        attributeCol.AddCssClass( $"col-md-{colSize}" );
+                        attribute.AddControl( attributeCol.Controls, attributeControlOptions );
                     }
                     else
                     {
@@ -1184,24 +1220,50 @@ namespace Rock.Attribute
         }
 
         /// <summary>
-        /// Gets the edit values.
+        /// Gets the edit values from edit controls contained within the parentControl for the specified item
         /// </summary>
         /// <param name="parentControl">The parent control.</param>
         /// <param name="item">The item.</param>
         public static void GetEditValues( Control parentControl, Rock.Attribute.IHasAttributes item )
         {
-            if ( item?.Attributes != null )
+            var attributeEditControls = GetAttributeEditControls( parentControl, item );
+            if ( attributeEditControls != null )
             {
-                foreach ( var attribute in item.Attributes )
+                foreach ( var attributeEditControl in attributeEditControls )
                 {
-                    Control control = parentControl.FindControl( string.Format( "attribute_field_{0}", attribute.Value.Id ) );
+                    var attribute = attributeEditControl.Key;
+                    var control = attributeEditControl.Value;
                     if ( control != null )
                     {
-                        var editValue = attribute.Value.FieldType.Field.GetEditValue( control, attribute.Value.QualifierValues );
-                        item.AttributeValues[attribute.Key] = new AttributeValueCache { AttributeId = attribute.Value.Id, EntityId = item.Id, Value = editValue };
+                        var editValue = attribute.FieldType.Field.GetEditValue( control, attribute.QualifierValues );
+                        item.AttributeValues[attribute.Key] = new AttributeValueCache { AttributeId = attribute.Id, EntityId = item.Id, Value = editValue };
                     }
                 }
             }
+        }
+
+        /// <summary>
+        /// Gets a dictionary of each edit control (where Key is AttributeCache) contained within the parentControl for the specified item
+        /// </summary>
+        /// <param name="parentControl">The parent control.</param>
+        /// <param name="item">The item.</param>
+        /// <returns></returns>
+        public static Dictionary<AttributeCache, Control> GetAttributeEditControls( Control parentControl, Rock.Attribute.IHasAttributes item )
+        {
+            Dictionary<AttributeCache, Control> result = new Dictionary<AttributeCache, Control>();
+            if ( item?.Attributes != null )
+            {
+                foreach ( var attributeKeyValue in item.Attributes )
+                {
+                    Control control = parentControl.FindControl( string.Format( "attribute_field_{0}", attributeKeyValue.Value.Id ) );
+                    if ( control != null )
+                    {
+                        result.AddOrIgnore( attributeKeyValue.Value, control );
+                    }
+                }
+            }
+
+            return result;
         }
 
         /// <summary>
@@ -1281,5 +1343,58 @@ namespace Rock.Attribute
         {
             get { return Category != null ? Category.Name : string.Empty; }
         }
+    }
+
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <seealso cref="Rock.Attribute.AttributeAddControlsOptions" />
+    public class AttributeAddEditControlsOptions : AttributeAddControlsOptions
+    {
+        /// <summary>
+        /// Gets or sets the included attributes.
+        /// </summary>
+        /// <value>
+        /// The included attributes.
+        /// </value>
+        public List<AttributeCache> IncludedAttributes { get; set; }
+
+        /// <summary>
+        /// Gets or sets the number of columns.
+        /// </summary>
+        /// <value>
+        /// The number of columns.
+        /// </value>
+        public int? NumberOfColumns { get; set; }
+
+        /// <summary>
+        /// Gets or sets a value indicating whether [show pre post HTML] (if EntityType supports it)
+        /// </summary>
+        /// <value>
+        ///   <c>true</c> if [show pre post HTML]; otherwise, <c>false</c>.
+        /// </value>
+        public bool ShowPrePostHtml { get; set; } = true;
+    }
+
+    /// <summary>
+    /// 
+    /// </summary>
+    public class AttributeAddControlsOptions
+    {
+        /// <summary>
+        /// Gets or sets the excluded attributes.
+        /// </summary>
+        /// <value>
+        /// The excluded attributes.
+        /// </value>
+        public List<AttributeCache> ExcludedAttributes { get; set; }
+
+        /// <summary>
+        /// Gets or sets a value indicating whether [show category label].
+        /// </summary>
+        /// <value>
+        ///   <c>true</c> if [show category label]; otherwise, <c>false</c>.
+        /// </value>
+        public bool ShowCategoryLabel { get; set; } = true;
     }
 }
