@@ -58,10 +58,7 @@ namespace Rock.Web.UI.Controls
         /// Gets the value that should be exported to Excel
         /// </summary>
         /// <param name="row">The row.</param>
-<<<<<<< HEAD
         /// <param name="dataControlFieldCell">The data control field cell.</param>
-=======
->>>>>>> 32cf661ff8... + Improved performance of GroupMemberList block
         /// <returns></returns>
         public override object GetExportValue( GridViewRow row, DataControlFieldCell dataControlFieldCell )
         {
@@ -70,7 +67,6 @@ namespace Rock.Web.UI.Controls
         }
 
         /// <summary>
-<<<<<<< HEAD
         /// Occurs when [on data bound].
         /// </summary>
         public event EventHandler<RowEventArgs> DataBound;
@@ -89,8 +85,6 @@ namespace Rock.Web.UI.Controls
         }
 
         /// <summary>
-=======
->>>>>>> 32cf661ff8... + Improved performance of GroupMemberList block
         /// 
         /// </summary>
         /// <seealso cref="System.Web.UI.ITemplate" />

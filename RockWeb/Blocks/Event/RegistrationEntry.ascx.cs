@@ -4145,6 +4145,12 @@ namespace RockWeb.Blocks.Event
         {
             RockPage.AddScriptLink( ResolveUrl( "~/Scripts/jquery.creditCardTypeDetector.js" ) );
 
+            var controlFamilyGuid = Guid.Empty;
+            if ( CurrentPerson != null )
+            {
+                controlFamilyGuid = CurrentPerson.GetFamily().Guid;
+            }
+
             string script = string.Format(
                 @"
     // Adjust the label of 'is in the same family' based on value of first name entered

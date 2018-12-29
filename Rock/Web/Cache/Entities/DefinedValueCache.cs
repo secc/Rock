@@ -116,7 +116,8 @@ namespace Rock.Web.Cache
             base.SetFromEntity( entity );
 
             var definedValue = entity as DefinedValue;
-            if ( definedValue == null ) return;
+            if ( definedValue == null )
+                return;
 
             IsSystem = definedValue.IsSystem;
             DefinedTypeId = definedValue.DefinedTypeId;
@@ -143,7 +144,7 @@ namespace Rock.Web.Cache
         /// <param name="guid">The unique identifier.</param>
         /// <returns></returns>
         [RockObsolete( "1.8" )]
-        [Obsolete("Use Get Instead")]
+        [Obsolete( "Use Get Instead" )]
         public static DefinedValueCache Read( string guid )
         {
             return Get( guid.AsGuid() );
@@ -154,16 +155,27 @@ namespace Rock.Web.Cache
         #region Static Methods
 
         /// <summary>
-        /// Gets the name.
+        /// Gets the Value of the DefinedValue
+        /// </summary>
+        /// <param name="id">The identifier.</param>
+        /// <returns></returns>
+        public static string GetValue( int? id )
+        {
+            if ( !id.HasValue )
+                return null;
+
+            var definedValue = Get( id.Value );
+            return definedValue?.Value;
+        }
+
+        /// <summary>
+        /// Gets the Value of the DefinedValue
         /// </summary>
         /// <param name="id">The identifier.</param>
         /// <returns></returns>
         public static string GetName( int? id )
         {
-            if ( !id.HasValue ) return null;
-
-            var definedValue = Get( id.Value );
-            return definedValue?.Value;
+            return GetValue( id );
         }
 
         #endregion

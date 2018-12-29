@@ -714,7 +714,7 @@ namespace Rock.Field
         {
             if ( value.IsNotNullOrWhiteSpace() )
             {
-                return string.Format( "'{0}'", formattedValue );
+                return string.Format( "'{0}'", value );
             }
 
             return string.Empty;
