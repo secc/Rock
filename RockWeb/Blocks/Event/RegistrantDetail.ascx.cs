@@ -179,7 +179,7 @@ namespace RockWeb.Blocks.Event
                     registrant = registrantService.Get( RegistrantState.Id );
                 }
 
-                var previousRegistrantPersonIds = registrantService.Queryable().Where(a => a.RegistrationId == RegistrantState.RegistrationId)
+                var previousRegistrantPersonIds = registrantService.Queryable().Where( a => a.RegistrationId == RegistrantState.RegistrationId )
                                 .Where( r => r.PersonAlias != null )
                                 .Select( r => r.PersonAlias.PersonId )
                                 .ToList();
@@ -246,7 +246,7 @@ namespace RockWeb.Blocks.Event
                         var feeOldValue = string.Format( "'{0}' Fee (Quantity:{1:N0}, Cost:{2:C2}, Option:{3}",
                           dbFee.RegistrationTemplateFee.Name, dbFee.Quantity, dbFee.Cost, dbFee.Option );
 
-                        registrantChanges.AddChange( History.HistoryVerb.Delete, History.HistoryChangeType.Record, "Fee").SetOldValue( feeOldValue );
+                        registrantChanges.AddChange( History.HistoryVerb.Delete, History.HistoryChangeType.Record, "Fee" ).SetOldValue( feeOldValue );
                         registrant.Fees.Remove( dbFee );
                         registrantFeeService.Delete( dbFee );
                     }
@@ -291,7 +291,7 @@ namespace RockWeb.Blocks.Event
 
                         if ( dbFee.Id <= 0 )
                         {
-                            registrantChanges.AddChange( History.HistoryVerb.Add, History.HistoryChangeType.Record, "Fee").SetNewValue( feeName );
+                            registrantChanges.AddChange( History.HistoryVerb.Add, History.HistoryChangeType.Record, "Fee" ).SetNewValue( feeName );
                         }
 
                         History.EvaluateChange( registrantChanges, feeName + " Quantity", dbFee.Quantity, uiFeeOption.Quantity );
@@ -462,7 +462,7 @@ namespace RockWeb.Blocks.Event
                                 reloadedRegistrant.GroupMemberId = groupMember.Id;
                             }
                         }
-                        if (reloadedRegistrant.Registration.FirstName.IsNotNullOrWhiteSpace() && reloadedRegistrant.Registration.LastName.IsNotNullOrWhiteSpace())
+                        if ( reloadedRegistrant.Registration.FirstName.IsNotNullOrWhiteSpace() && reloadedRegistrant.Registration.LastName.IsNotNullOrWhiteSpace() )
                         {
                             reloadedRegistrant.Registration.SavePersonNotesAndHistory( reloadedRegistrant.Registration.FirstName, reloadedRegistrant.Registration.LastName, this.CurrentPersonAliasId, previousRegistrantPersonIds );
                         }
@@ -480,7 +480,7 @@ namespace RockWeb.Blocks.Event
                     null,
                     null );
             }
-            
+
             NavigateToRegistration();
         }
 
@@ -503,8 +503,8 @@ namespace RockWeb.Blocks.Event
         {
             var qryParams = new Dictionary<string, string>();
             var pageCache = PageCache.Get( RockPage.PageId );
-            if ( pageCache != null && 
-                pageCache.ParentPage != null && 
+            if ( pageCache != null &&
+                pageCache.ParentPage != null &&
                 pageCache.ParentPage.ParentPage != null &&
                 pageCache.ParentPage.ParentPage.ParentPage != null )
             {
@@ -583,8 +583,8 @@ namespace RockWeb.Blocks.Event
                         registrant.Registration.RegistrationInstance.RegistrationTemplate != null )
                     {
                         RegistrantState = new RegistrantInfo( registrant, rockContext );
-                        TemplateState = registrant.Registration.RegistrationInstance.RegistrationTemplate; 
-                        
+                        TemplateState = registrant.Registration.RegistrationInstance.RegistrationTemplate;
+
                         RegistrationInstanceId = registrant.Registration.RegistrationInstanceId;
 
                         lWizardTemplateName.Text = registrant.Registration.RegistrationInstance.RegistrationTemplate.Name;
@@ -608,7 +608,7 @@ namespace RockWeb.Blocks.Event
                         registration.RegistrationInstance.RegistrationTemplate != null )
                     {
                         TemplateState = registration.RegistrationInstance.RegistrationTemplate;
-                        
+
                         RegistrationInstanceId = registration.RegistrationInstanceId;
 
                         lWizardTemplateName.Text = registration.RegistrationInstance.RegistrationTemplate.Name;
@@ -749,7 +749,7 @@ namespace RockWeb.Blocks.Event
 
                             var attribute = AttributeCache.Get( field.AttributeId.Value );
 
-                            if ( ( setValues && value == null ) || (value.IsNullOrWhiteSpace() && field.IsRequired == true ) )
+                            if ( ( setValues && value == null ) || ( value.IsNullOrWhiteSpace() && field.IsRequired == true ) )
                             {
                                 // If the value was not set already, or if it is required and currently empty then use the default
                                 // Intentionally leaving the possibility of saving an empty string as the value for non-required fields.
@@ -795,7 +795,7 @@ namespace RockWeb.Blocks.Event
                 foreach ( var fee in TemplateState.Fees.OrderBy( f => f.Order ) )
                 {
                     var feeValues = GetFeeValues( fee );
-                    fee.AddFeeControl( phFees, registrationInstance, true, feeValues );
+                    fee.AddFeeControl( phFees, registrationInstance, true, feeValues, null );
                 }
             }
             else
@@ -811,7 +811,7 @@ namespace RockWeb.Blocks.Event
         /// <summary>
         /// Parses the controls.
         /// </summary>
-        private void ParseControls ()
+        private void ParseControls()
         {
             if ( RegistrantState != null && TemplateState != null )
             {

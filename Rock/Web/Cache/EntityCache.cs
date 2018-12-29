@@ -129,6 +129,16 @@ namespace Rock.Web.Cache
         }
 
         /// <summary>
+        /// Gets the Id for the cache object, or NULL if it doesn't exist
+        /// </summary>
+        /// <param name="guid">The unique identifier.</param>
+        /// <returns></returns>
+        public static int? GetId( Guid guid )
+        {
+            return Get( guid, null )?.Id;
+        }
+
+        /// <summary>
         /// Gets the cached object by guid using the included RockContext if needed.
         /// </summary>
         /// <param name="guid">The unique identifier.</param>
@@ -184,7 +194,7 @@ namespace Rock.Web.Cache
         /// <param name="rockContext">The rock context.</param>
         /// <returns></returns>
         [RockObsolete( "1.8" )]
-        [Obsolete("Use Get instead")]
+        [Obsolete( "Use Get instead" )]
         public static T Read( int id, RockContext rockContext = null )
         {
             return Get( id, rockContext );

@@ -116,7 +116,8 @@ namespace Rock.Web.Cache
             base.SetFromEntity( entity );
 
             var definedValue = entity as DefinedValue;
-            if ( definedValue == null ) return;
+            if ( definedValue == null )
+                return;
 
             IsSystem = definedValue.IsSystem;
             DefinedTypeId = definedValue.DefinedTypeId;
@@ -143,7 +144,7 @@ namespace Rock.Web.Cache
         /// <param name="guid">The unique identifier.</param>
         /// <returns></returns>
         [RockObsolete( "1.8" )]
-        [Obsolete("Use Get Instead")]
+        [Obsolete( "Use Get Instead" )]
         public static DefinedValueCache Read( string guid )
         {
             return Get( guid.AsGuid() );
