@@ -1110,7 +1110,7 @@ namespace Rock.Attribute
                     }
                     else
                     {
-                        attribute.AddControl( fieldSet.Controls, item.AttributeValues[attribute.Key].Value, validationGroup, setValue, true );
+                        attribute.AddControl( fieldSet.Controls, item.AttributeValues?[attribute.Key]?.Value, validationGroup, setValue, true );
                     }
                 }
             }
