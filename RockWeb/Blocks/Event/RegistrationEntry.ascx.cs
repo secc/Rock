@@ -976,7 +976,10 @@ namespace RockWeb.Blocks.Event
             CurrentFormIndex = 0;
 
             // Create registrants based on the number selected
-            SetRegistrantState( numHowMany.Value );
+            if (numHowMany.Value > 0)
+            {
+                SetRegistrantState( numHowMany.Value );
+            }
 
             SetProgressBarStepsCount();
 
