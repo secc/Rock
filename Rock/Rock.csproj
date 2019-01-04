@@ -508,7 +508,10 @@
     </Compile>
     <Compile Include="CheckIn\Registration\FamilyRegistrationState.cs" />
     <Compile Include="Field\FieldVisibilityRules.cs" />
+    <Compile Include="Model\CodeGenerated\CommunicationResponseService.cs" />
     <Compile Include="Model\CodeGenerated\RegistrationTemplateFeeItemService.cs" />
+    <Compile Include="Model\CommunicationResponse.cs" />
+    <Compile Include="Model\CommunicationResponseService.partial.cs" />
     <Compile Include="Model\RegistrationTemplateFeeItem.cs" />
     <Compile Include="Data\NoAttributeFilterExpression.cs" />
     <Compile Include="Field\ICachedEntitiesFieldType.cs" />

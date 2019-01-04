@@ -90,6 +90,7 @@
     <Compile Include="..\Rock.Version\AssemblySharedInfo.cs">
       <Link>AssemblySharedInfo.cs</Link>
     </Compile>
+    <Compile Include="Communications\TwilioTests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Rock.Rest\Controllers\CodeGenerated\CommunicationControllerTests.cs" />
     <Compile Include="Communications\MailgunTests.cs" />

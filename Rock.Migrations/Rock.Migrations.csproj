@@ -69,6 +69,10 @@
     <Compile Include="HotFixMigrations\004_FixBaptismBadge.cs" />
     <Compile Include="HotFixMigrations\005_ValueAsNumeric.cs" />
     <Compile Include="HotFixMigrations\006_StatementProcs.cs" />
+    <Compile Include="Migrations\201808302049467_Rollup_0830.cs" />
+    <Compile Include="Migrations\201808302049467_Rollup_0830.Designer.cs">
+      <DependentUpon>201808302049467_Rollup_0830.cs</DependentUpon>
+    </Compile>
     <Compile Include="Migrations\201811192004486_RegistrationFieldVisibilityRules.cs" />
     <Compile Include="Migrations\201811192004486_RegistrationFieldVisibilityRules.Designer.cs">
       <DependentUpon>201811192004486_RegistrationFieldVisibilityRules.cs</DependentUpon>
@@ -80,6 +84,10 @@
     <Compile Include="Migrations\201812262333000_RegistrationAttributes.cs" />
     <Compile Include="Migrations\201812262333000_RegistrationAttributes.Designer.cs">
       <DependentUpon>201812262333000_RegistrationAttributes.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Migrations\201901042316288_SMSConversations.cs" />
+    <Compile Include="Migrations\201901042316288_SMSConversations.Designer.cs">
+      <DependentUpon>201901042316288_SMSConversations.cs</DependentUpon>
     </Compile>
     <Compile Include="Migrations\Version 8.0\Version 1.8.1\201807200941565_Rollup_PreAlphaRelease_0719.cs" />
     <Compile Include="Migrations\Version 8.0\Version 1.8.1\201807200941565_Rollup_PreAlphaRelease_0719.Designer.cs">
@@ -2930,6 +2938,9 @@
     <Compile Include="SqlServerTypes\Loader.cs" />
   </ItemGroup>
   <ItemGroup>
+    <EmbeddedResource Include="Migrations\201808302049467_Rollup_0830.resx">
+      <DependentUpon>201808302049467_Rollup_0830.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="Migrations\201811192004486_RegistrationFieldVisibilityRules.resx">
       <DependentUpon>201811192004486_RegistrationFieldVisibilityRules.cs</DependentUpon>
     </EmbeddedResource>
@@ -2938,6 +2949,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Migrations\201812262333000_RegistrationAttributes.resx">
       <DependentUpon>201812262333000_RegistrationAttributes.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Migrations\201901042316288_SMSConversations.resx">
+      <DependentUpon>201901042316288_SMSConversations.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Migrations\Version 8.0\Version 1.8.1\201807200941565_Rollup_PreAlphaRelease_0719.resx">
       <DependentUpon>201807200941565_Rollup_PreAlphaRelease_0719.cs</DependentUpon>
