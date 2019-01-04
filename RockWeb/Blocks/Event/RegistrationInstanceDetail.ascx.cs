@@ -345,9 +345,8 @@ namespace RockWeb.Blocks.Event
         {
             ViewState["RegistrantFields"] = RegistrantFields;
             ViewState["ActiveTab"] = ActiveTab;
-            ViewState["RegistrationTemplateId"] = RegistrationTemplateId;
             ViewState["AvailableRegistrationAttributesForGrid"] = AvailableRegistrationAttributesForGrid;
-
+            ViewState["RegistrationTemplateId"] = RegistrationTemplateId;
             return base.SaveViewState();
         }
 
