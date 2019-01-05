@@ -73,7 +73,11 @@ namespace Rock.Field
             foreach ( var fieldVisibilityRule in fieldVisibilityRules.Where( a => a.ComparedToAttributeGuid.HasValue ) )
             {
                 var filterValues = new List<string>();
-                filterValues.Add( fieldVisibilityRule.ComparisonType.ConvertToString( false ) );
+                // If we have a visibility comparison type add it, otherwise skip it.
+                if ( fieldVisibilityRule.ComparisonType.ConvertToString( false ) != null)
+                {
+                    filterValues.Add( fieldVisibilityRule.ComparisonType.ConvertToString( false ) );
+                }
                 filterValues.Add( fieldVisibilityRule.ComparedToValue );
                 Expression entityCondition;
 
