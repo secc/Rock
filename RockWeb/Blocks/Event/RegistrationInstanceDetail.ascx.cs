@@ -1,4 +1,4 @@
-﻿// <copyright>
+﻿﻿// <copyright>
 // Copyright by the Spark Development Network
 //
 // Licensed under the Rock Community License (the "License");
@@ -142,8 +142,8 @@ namespace RockWeb.Blocks.Event
 
             ActiveTab = ( ViewState["ActiveTab"] as string ) ?? string.Empty;
             RegistrantFields = ViewState["RegistrantFields"] as List<RegistrantFormField>;
-            RegistrantFields = ViewState["RegistrantFields"] as List<RegistrantFormField>;
             RegistrationTemplateId = ViewState["RegistrationTemplateId"] as int? ?? 0;
+
             // don't set the values if this is a postback from a grid 'ClearFilter'
             bool setValues = this.Request.Params["__EVENTTARGET"] == null || !this.Request.Params["__EVENTTARGET"].EndsWith( "_lbClearFilter" );
             SetUserPreferencePrefix( RegistrationTemplateId.Value );
@@ -345,8 +345,9 @@ namespace RockWeb.Blocks.Event
         {
             ViewState["RegistrantFields"] = RegistrantFields;
             ViewState["ActiveTab"] = ActiveTab;
+			ViewState["RegistrationTemplateId"] = RegistrationTemplateId;
             ViewState["AvailableRegistrationAttributesForGrid"] = AvailableRegistrationAttributesForGrid;
-            ViewState["RegistrationTemplateId"] = RegistrationTemplateId;
+
             return base.SaveViewState();
         }
 
@@ -944,9 +945,7 @@ namespace RockWeb.Blocks.Event
                                 var values = attribute.FieldType.Field.GetFilterValues( filterControl, field.Attribute.QualifierValues, Rock.Reporting.FilterMode.SimpleFilter );
                                 fRegistrants.SaveUserPreference( attribute.Key, attribute.Name, attribute.FieldType.Field.GetFilterValues( filterControl, attribute.QualifierValues, Rock.Reporting.FilterMode.SimpleFilter ).ToJson() );
                             }
-                            catch
-                            {
-                            }
+                            catch { }
                         }
                     }
                 }
@@ -1086,9 +1085,7 @@ namespace RockWeb.Blocks.Event
                         e.Value = attribute.FieldType.Field.FormatFilterValues( attribute.QualifierValues, values );
                         return;
                     }
-                    catch
-                    {
-                    }
+                    catch { }
                 }
             }
 
@@ -1849,10 +1846,7 @@ namespace RockWeb.Blocks.Event
                         item.EntityId = (int)key;
                         entitySet.Items.Add( item );
                     }
-                    catch
-                    {
-                        // ignore
-                    }
+                    catch { }
                 }
 
                 if ( entitySet.Items.Any() )
@@ -1985,9 +1979,7 @@ namespace RockWeb.Blocks.Event
                                 var values = attribute.FieldType.Field.GetFilterValues( filterControl, field.Attribute.QualifierValues, Rock.Reporting.FilterMode.SimpleFilter );
                                 fWaitList.SaveUserPreference( "WL-" + attribute.Key, attribute.Name, attribute.FieldType.Field.GetFilterValues( filterControl, attribute.QualifierValues, Rock.Reporting.FilterMode.SimpleFilter ).ToJson() );
                             }
-                            catch
-                            {
-                            }
+                            catch { }
                         }
                     }
                 }
@@ -2131,9 +2123,7 @@ namespace RockWeb.Blocks.Event
                             e.Value = attribute.FieldType.Field.FormatFilterValues( attribute.QualifierValues, values );
                             return;
                         }
-                        catch
-                        {
-                        }
+                        catch { }
                     }
                 }
 
@@ -5890,9 +5880,7 @@ namespace RockWeb.Blocks.Event
                                 var values = attribute.FieldType.Field.GetFilterValues( filterControl, field.Attribute.QualifierValues, Rock.Reporting.FilterMode.SimpleFilter );
                                 fGroupPlacements.SaveUserPreference( "GroupPlacements-" + attribute.Key, attribute.Name, attribute.FieldType.Field.GetFilterValues( filterControl, attribute.QualifierValues, Rock.Reporting.FilterMode.SimpleFilter ).ToJson() );
                             }
-                            catch
-                            {
-                            }
+                            catch { }
                         }
                     }
                 }
@@ -6036,9 +6024,7 @@ namespace RockWeb.Blocks.Event
                             e.Value = attribute.FieldType.Field.FormatFilterValues( attribute.QualifierValues, values );
                             return;
                         }
-                        catch
-                        {
-                        }
+                        catch { }
                     }
                 }
 
@@ -6170,4 +6156,5 @@ namespace RockWeb.Blocks.Event
 
         #endregion
     }
+
 }
