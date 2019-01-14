@@ -89,6 +89,10 @@
     <Compile Include="Migrations\201901042316288_SMSConversations.Designer.cs">
       <DependentUpon>201901042316288_SMSConversations.cs</DependentUpon>
     </Compile>
+    <Compile Include="Migrations\201901141627393_SMSConversations1.cs" />
+    <Compile Include="Migrations\201901141627393_SMSConversations1.Designer.cs">
+      <DependentUpon>201901141627393_SMSConversations1.cs</DependentUpon>
+    </Compile>
     <Compile Include="Migrations\Version 8.0\Version 1.8.1\201807200941565_Rollup_PreAlphaRelease_0719.cs" />
     <Compile Include="Migrations\Version 8.0\Version 1.8.1\201807200941565_Rollup_PreAlphaRelease_0719.Designer.cs">
       <DependentUpon>201807200941565_Rollup_PreAlphaRelease_0719.cs</DependentUpon>
@@ -2952,6 +2956,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Migrations\201901042316288_SMSConversations.resx">
       <DependentUpon>201901042316288_SMSConversations.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Migrations\201901141627393_SMSConversations1.resx">
+      <DependentUpon>201901141627393_SMSConversations1.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Migrations\Version 8.0\Version 1.8.1\201807200941565_Rollup_PreAlphaRelease_0719.resx">
       <DependentUpon>201807200941565_Rollup_PreAlphaRelease_0719.cs</DependentUpon>
