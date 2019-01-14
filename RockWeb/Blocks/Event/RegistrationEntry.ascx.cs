@@ -82,6 +82,7 @@ namespace RockWeb.Blocks.Event
         private const string GROUP_ID_KEY = "GroupId";
         private const string CAMPUS_ID_KEY = "CampusId";
         private const string SIGN_INLINE_KEY = "SignInline";
+        private const string SIGN_INLINE_EMBED_MODE_KEY = "SignInlineEmbedMode";
         private const string DIGITAL_SIGNATURE_COMPONENT_TYPE_NAME_KEY = "DigitalSignatureComponentTypeName";
         private const string CURRENT_PANEL_KEY = "CurrentPanel";
         private const string CURRENT_REGISTRANT_INDEX_KEY = "CurrentRegistrantIndex";
@@ -537,6 +538,7 @@ namespace RockWeb.Blocks.Event
             }
 
             SignInline = ViewState[SIGN_INLINE_KEY] as bool? ?? false;
+            SignInlineEmbedMode = ViewState[SIGN_INLINE_EMBED_MODE_KEY] as string;
             DigitalSignatureComponentTypeName = ViewState[DIGITAL_SIGNATURE_COMPONENT_TYPE_NAME_KEY] as string;
             if ( !string.IsNullOrWhiteSpace( DigitalSignatureComponentTypeName ) )
             {
@@ -581,7 +583,7 @@ namespace RockWeb.Blocks.Event
                 Session[PageParameter( "registration_key" )] = "?document_id=" + PageParameter( "document_id" );
 
                 string returnUrl = GlobalAttributesCache.Read().GetValue( "PublicApplicationRoot" ).EnsureTrailingForwardslash() +
-                                    ResolveRockUrl( "~/Blocks/Event/DocumentReturn" + ( SignInlineEmbedMode == "New Tab" ? "Tab" : "" ) + ".html" ).TrimStart( '/' );
+                                    ResolveRockUrl( "~/Blocks/Event/DocumentReturn" + ( GetAttributeValue( "SignInlineEmbedMode" ) == "New Tab" ? "Tab" : "" ) + ".html" ).TrimStart( '/' );
                 Response.Redirect( returnUrl );
                 Response.Flush();
                 Response.End();
@@ -729,6 +731,7 @@ namespace RockWeb.Blocks.Event
             ViewState[REGISTRATION_INSTANCE_STATE_KEY] = JsonConvert.SerializeObject( RegistrationInstanceState, Formatting.None, jsonSetting );
             ViewState[REGISTRATION_STATE_KEY] = JsonConvert.SerializeObject( RegistrationState, Formatting.None, jsonSetting );
             ViewState[SIGN_INLINE_KEY] = SignInline;
+            ViewState[SIGN_INLINE_EMBED_MODE_KEY] = SignInlineEmbedMode;
             ViewState[DIGITAL_SIGNATURE_COMPONENT_TYPE_NAME_KEY] = DigitalSignatureComponentTypeName;
             ViewState[GROUP_ID_KEY] = GroupId;
             ViewState[CAMPUS_ID_KEY] = CampusId;
