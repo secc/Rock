@@ -16,6 +16,7 @@
 //
 using System;
 using System.Collections.Generic;
+using System.Data.Entity;
 using System.Linq;
 using System.Text;
 using System.Web;
@@ -66,8 +67,10 @@ namespace Rock.Jobs
             RockContext rockContext = new RockContext();
             var workflowService = new WorkflowService( rockContext );
 
-            var qry = workflowService.Queryable()
-                        .Where( w => workflowTypeGuids.Contains( w.WorkflowType.Guid ) );
+            var qry = workflowService.Queryable().AsNoTracking()
+                        .Where( w => workflowTypeGuids.Contains( w.WorkflowType.Guid )
+                                     && w.ActivatedDateTime.HasValue
+                                     && !w.CompletedDateTime.HasValue );
 
             if ( expirationAge.HasValue )
             {

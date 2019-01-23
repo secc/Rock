@@ -17,16 +17,10 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.IO;
-using System.Linq;
-using System.Text;
-using System.Web;
 using Rock;
-using Rock.Attribute;
 using Rock.Data;
 using Rock.Model;
 using Rock.Security;
-using Rock.Web.Cache;
 using Rock.Web.UI;
 
 namespace RockWeb.Blocks.Utility
@@ -49,14 +43,17 @@ namespace RockWeb.Blocks.Utility
 
             if ( !this.IsPostBack )
             {
+                pnlModalHeader.Visible = PageParameter( "ModalMode" ).AsBoolean();
+                lTitle.Text = PageParameter( "Title" );
+
                 var id = PageParameter( "htmlcontentid" ).AsInteger();
                 var rockContext = new RockContext();
                 HtmlContentService htmlContentService = new HtmlContentService( rockContext );
                 var htmlContent = htmlContentService.Get( id );
                 if ( htmlContent != null )
                 {
-                    if ((htmlContent.CreatedByPersonAlias != null && htmlContent.CreatedByPersonAlias.PersonId == CurrentPersonId)
-                        || htmlContent.IsAuthorized(Authorization.EDIT, CurrentPerson))
+                    if ( ( htmlContent.CreatedByPersonAlias != null && htmlContent.CreatedByPersonAlias.PersonId == CurrentPersonId )
+                        || htmlContent.IsAuthorized( Authorization.EDIT, CurrentPerson ) )
                     {
                         tbName.Text = htmlContent.Name;
                         heSnippet.Text = htmlContent.Content;
@@ -68,14 +65,26 @@ namespace RockWeb.Blocks.Utility
                         nbMessage.Text = "You are not authorized to edit this snippet.";
                         nbMessage.Visible = true;
                     }
-                } 
+                }
             }
 
         }
 
         protected void btnCancel_Click( object sender, EventArgs e )
         {
-            NavigateToParentPage();
+            var queryParams = new Dictionary<string, string>();
+
+            if ( !string.IsNullOrWhiteSpace( PageParameter( "modalMode" ) ) )
+            {
+                queryParams["modalMode"] = PageParameter( "modalMode" );
+            }
+
+            if ( !string.IsNullOrWhiteSpace( PageParameter( "title" ) ) )
+            {
+                queryParams["title"] = PageParameter( "title" );
+            }
+
+            NavigateToParentPage( queryParams );
         }
 
         protected void btnSave_Click( object sender, EventArgs e )
@@ -84,14 +93,15 @@ namespace RockWeb.Blocks.Utility
             var rockContext = new RockContext();
             HtmlContentService htmlContentService = new HtmlContentService( rockContext );
             var htmlContent = htmlContentService.Get( id );
-            if (htmlContent == null)
+            if ( htmlContent == null )
             {
                 htmlContent = new HtmlContent();
                 htmlContentService.Add( htmlContent );
                 htmlContent.CreatedByPersonAliasId = CurrentPersonAliasId;
 
-            } else if ( !(( htmlContent.CreatedByPersonAlias != null && htmlContent.CreatedByPersonAlias.PersonId == CurrentPersonId )
-                || htmlContent.IsAuthorized( Authorization.EDIT, CurrentPerson )) )
+            }
+            else if ( !( ( htmlContent.CreatedByPersonAlias != null && htmlContent.CreatedByPersonAlias.PersonId == CurrentPersonId )
+              || htmlContent.IsAuthorized( Authorization.EDIT, CurrentPerson ) ) )
             {
                 upSnippets.Visible = false;
                 nbMessage.Text = "You are not authorized to edit this snippet.";
@@ -102,7 +112,18 @@ namespace RockWeb.Blocks.Utility
             htmlContent.Content = heSnippet.Text;
 
             rockContext.SaveChanges();
-            NavigateToParentPage();
+            var queryParams = new Dictionary<string, string>();
+
+            if ( !string.IsNullOrWhiteSpace( PageParameter( "modalMode" ) ) )
+            {
+                queryParams["modalMode"] = PageParameter( "modalMode" );
+            }
+
+            if ( !string.IsNullOrWhiteSpace( PageParameter( "title" ) ) )
+            {
+                queryParams["title"] = PageParameter( "title" );
+            }
+            NavigateToParentPage( queryParams );
         }
     }
 }
