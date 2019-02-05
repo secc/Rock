@@ -1,4 +1,4 @@
-// <copyright>
+﻿// <copyright>
 // Copyright by the Spark Development Network
 //
 // Licensed under the Rock Community License (the "License");
@@ -34,30 +34,33 @@ namespace Rock.Workflow.Action
     [Export( typeof( ActionComponent ) )]
     [ExportMetadata( "ComponentName", "Generate Discount Code" )]
 
-    [CustomDropdownListField( "Registration Template", "Registration template to add the discount code to.",
-        "SELECT [Guid] AS [Value], [Name] AS [Text] FROM [RegistrationTemplate] ORDER BY [Name]", true, "", "", 0 )]
+    [WorkflowTextOrAttribute( "Registration Template", "RegistrationTemplate", "Registration template to add the discount code to.",
+        true, "", "", 0, "RegistrationTemplate", new string[] { "Rock.Field.Types.RegistrationTemplateFieldType" } )]
 
     [WorkflowTextOrAttribute( "Discount Code Length", "Discount Code Length Attribute", "Length to set the discount code (minimum value is 3)", true,
         "", "", 1, "DiscountCodeLength", new string[] { "Rock.Field.Types.IntegerFieldType" } )]
 
-    [CustomRadioListField( "Discount Type", "Type of discount to apply, percent or Amount", "Percent, Amount", true, "Percent", "", 2, "DiscountType" )]
+    [WorkflowTextOrAttribute( "Discount Code Prefix", "Discount Code Prefix", "A prefix to use for the discount code", true,
+        "", "", 2, "DiscountCodePrefix", new string[] { "Rock.Field.Types.TextFieldType" } )]
+
+    [CustomRadioListField( "Discount Type", "Type of discount to apply, percent or Amount", "Percent, Amount", true, "Percent", "", 3, "DiscountType" )]
 
     [WorkflowTextOrAttribute( "Discount Amount", "Discount Amount Attribute", "Amount in decimal to set the discount (percent or Amount)", true,
-        "", "", 3, "DiscountAmount", new string[] { "Rock.Field.Types.DecimalFieldType" } )]
+        "", "", 4, "DiscountAmount", new string[] { "Rock.Field.Types.DecimalFieldType" } )]
 
     [WorkflowTextOrAttribute( "Maximum Usage", "Maximum Usage Attribute", "The maximum number of times (registrations) that the discount code can be used.", false,
-        "", "", 4, "MaximumUsage", new string[] { "Rock.Field.Types.IntegerFieldType" } )]
+        "", "", 5, "MaximumUsage", new string[] { "Rock.Field.Types.IntegerFieldType" } )]
 
     [WorkflowTextOrAttribute( "Maximum Registrants", "Maximum Registrants Attribute", "The maximum number of registrants (per registration) that the discount code should apply to. ", false,
-        "", "", 5, "MaximumRegistrants", new string[] { "Rock.Field.Types.IntegerFieldType" } )]
+        "", "", 6, "MaximumRegistrants", new string[] { "Rock.Field.Types.IntegerFieldType" } )]
 
     [WorkflowTextOrAttribute( "Minimum Registrants", "Minimum Registrants Attribute", "The minimum number of registrants (per registration) that are required in order to use this discount code.", false,
-        "", "", 6, "MinimumRegistrants", new string[] { "Rock.Field.Types.IntegerFieldType" } )]
+        "", "", 7, "MinimumRegistrants", new string[] { "Rock.Field.Types.IntegerFieldType" } )]
 
     [WorkflowAttribute( "Effective Dates Attribute", "The date range in which the discount code is valid.", false,
-        "", "", 7, "EffectiveDates", new string[] { "Rock.Field.Types.DateRangeFieldType" } )]
+        "", "", 8, "EffectiveDates", new string[] { "Rock.Field.Types.DateRangeFieldType" } )]
 
-    [WorkflowAttribute( "Discount Code Attribute", "Attribute to save the discount code into.", false, "", "", 8, null,
+    [WorkflowAttribute( "Discount Code Attribute", "Attribute to save the discount code into.", false, "", "", 9, null,
         new string[] { "Rock.Field.Types.TextFieldType" } )]
 
     public class GenerateDiscountCode : ActionComponent
@@ -79,27 +82,28 @@ namespace Rock.Workflow.Action
             var registrationTemplateService = new RegistrationTemplateService( rockContext );
             var registrationTemplateDiscountService = new RegistrationTemplateDiscountService( rockContext );
 
-            var registrationTemplate = registrationTemplateService.Get( GetAttributeValue( action, "RegistrationTemplate" ).ResolveMergeFields( mergeFields ).AsGuid() );
+            var registrationTemplate = registrationTemplateService.Get( GetAttributeValue( action, "RegistrationTemplate", true ).ResolveMergeFields( mergeFields ).AsGuid() );
             if ( registrationTemplate == null )
             {
                 errorMessages.Add( "Could not find selected registration template" );
                 return false;
             }
 
+            string prefix = GetAttributeValue( action, "DiscountCodePrefix", true ).ResolveMergeFields( mergeFields );
             var length = GetAttributeValue( action, "DiscountCodeLength", true ).ResolveMergeFields( mergeFields ).AsInteger();
             if ( length < 3 )
             {
                 length = 3;
             }
 
-            string code = GetRandomCode( length );
+            string code = prefix + GetRandomCode( length );
             while ( registrationTemplateDiscountService
                 .Queryable().AsNoTracking()
                 .Any( d =>
                     d.RegistrationTemplateId == registrationTemplate.Id &&
                     d.Code == code ) )
             {
-                code = GetRandomCode( length );
+                code = prefix + GetRandomCode( length );
             }
 
             var discountCode = new RegistrationTemplateDiscount();

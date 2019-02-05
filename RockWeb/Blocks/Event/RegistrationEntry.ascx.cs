@@ -61,6 +61,7 @@ namespace RockWeb.Blocks.Event
     [BooleanField( "Force Email Update", "Force the email to be updated on the person's record.", false, "", 9 )]
     [BooleanField( "Show Field Descriptions", "Show the field description as help text", defaultValue: false, order: 10, key: "ShowFieldDescriptions" )]
     [CustomDropdownListField( "Digital Signature Embed Mode", "Optional setting to use a new tab rather than an Iframe for the signature request.", "Iframe,New Tab", true, "Iframe", "", 10, "SignInlineEmbedMode" )]
+    [WorkflowTypeField( "Discount Code Workflow", "The workflow to execute to automatically apply discount codes (Passes an entity which is a Dictionary containing \"RegistrationInstance\" and \"RegistrationInfo\" keys)" )]
     public partial class RegistrationEntry : RockBlock
     {
         #region Fields
@@ -5515,6 +5516,28 @@ namespace RockWeb.Blocks.Event
                         nbDiscountCode.NotificationBoxType = NotificationBoxType.Success;
                         nbDiscountCode.Text = string.Format( "The {0} '{1}' was automatically applied.", DiscountCodeTerm.ToLower(), discount.Code );
                         break;
+                    }
+                }
+
+                // If we have a Discount Code workflow
+                if ( !String.IsNullOrWhiteSpace( GetAttributeValue( "DiscountCodeWorkflow" ) ) )
+                {
+                    var workflowType = WorkflowTypeCache.Get( GetAttributeValue( "DiscountCodeWorkflow" ).AsGuid() );
+                    var workflow = Rock.Model.Workflow.Activate( workflowType, RegistrationState.FirstName + " " + RegistrationState.LastName + " - Discount Code"  );
+
+                    Dictionary<string, object> entityDictionary = new Dictionary<string, object>();
+                    entityDictionary.Add( "RegistrationInstance", RegistrationInstanceState );
+                    entityDictionary.Add( "RegistrationInfo", RegistrationState );
+                    List<string> workflowErrors;
+                    var processed = new Rock.Model.WorkflowService( new RockContext() ).Process( workflow, entityDictionary, out workflowErrors );
+
+                    tbDiscountCode.Text = RegistrationState.DiscountCode;
+
+                    foreach (string error in workflowErrors)
+                    {
+                        nbDiscountCode.NotificationBoxType = NotificationBoxType.Warning;
+                        nbDiscountCode.Text += string.Format( "{0}<br />", error );
+                        nbDiscountCode.Visible = true;
                     }
                 }
             }
