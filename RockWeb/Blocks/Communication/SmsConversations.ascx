@@ -100,6 +100,43 @@
 
             </div>
 
+            <script>
+                Sys.Application.add_load(function () {
+                    var objDiv = $(".messages-outer-container")[0];
+                    objDiv.scrollTop = objDiv.scrollHeight;
+
+                    $("#<%=upConversation.ClientID %> .js-back").click(function() {
+                        $('#<%=upConversation.ClientID %>').removeClass("has-focus");
+                        return false;
+                    });
+                });
+
+                function clearActiveDialog() {
+                    __doPostBack(null,'cancel');
+                }
+
+                var yPos;
+                var prm = Sys.WebForms.PageRequestManager.getInstance();
+
+                function BeginRequestHandler(sender, args) {
+                    if ($('#<%=upRecipients.ClientID %>') != null) {
+                        // Get X and Y positions of scrollbar before the partial postback
+                        yPos = $('#<%=upRecipients.ClientID %>').scrollTop();
+                    }
+                }
+
+                function EndRequestHandler(sender, args) {
+                    if ($('#<%=upRecipients.ClientID %>') != null) {
+                        // Set X and Y positions back to the scrollbar
+                        // after partial postback
+                        $('#<%=upRecipients.ClientID %>').scrollTop(yPos);
+                        $('#<%=tbNewMessage.ClientID %>').focus();
+                    }
+                }
+
+                prm.add_beginRequest(BeginRequestHandler);
+                prm.add_endRequest(EndRequestHandler);
+            </script>
         </div> <%-- End panel-block --%>
 
         <asp:HiddenField ID="hfActiveDialog" runat="server" />
