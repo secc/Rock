@@ -5459,6 +5459,9 @@ namespace RockWeb.Blocks.Event
                     Dictionary<string, object> entityDictionary = new Dictionary<string, object>();
                     entityDictionary.Add( "RegistrationInstance", RegistrationInstanceState );
                     entityDictionary.Add( "RegistrationInfo", RegistrationState );
+                    entityDictionary.Add( "ExistingDiscountCode", RegistrationState.DiscountCode );
+                    entityDictionary.Add( "ExistingDiscountPercentage", RegistrationState.DiscountPercentage );
+                    entityDictionary.Add( "ExistingDiscountAmount", RegistrationState.DiscountAmount );
                     List<string> workflowErrors;
                     var processed = new Rock.Model.WorkflowService( new RockContext() ).Process( workflow, entityDictionary, out workflowErrors );
 
