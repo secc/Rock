@@ -65,9 +65,11 @@ namespace Rock.Workflow.Action
 
             var mergeFields = GetMergeFields( action );
 
+            var registrationTemplateService = new RegistrationTemplateService( rockContext );
             var registrationTemplateDiscountService = new RegistrationTemplateDiscountService( rockContext );
             var discountCode = GetAttributeValue( action, "DiscountCode", true ).ResolveMergeFields( mergeFields );
-            var registrationTemplateId = GetAttributeValue( action, "RegistrationTemplate" ).ResolveMergeFields( mergeFields ).AsInteger();
+            var registrationTemplate = registrationTemplateService.Get( GetAttributeValue( action, "RegistrationTemplate", true ).ResolveMergeFields( mergeFields ).AsGuid() );
+            var registrationTemplateId = registrationTemplate != null? registrationTemplate.Id:GetAttributeValue( action, "RegistrationTemplate" ).ResolveMergeFields( mergeFields ).AsInteger();
 
             var registrationDiscountCode = registrationTemplateDiscountService
                 .Queryable()
