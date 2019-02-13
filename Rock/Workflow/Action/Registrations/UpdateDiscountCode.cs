@@ -33,9 +33,9 @@ namespace Rock.Workflow.Action
     [Description( "Updates an existing discount code on a registration template" )]
     [Export( typeof( ActionComponent ) )]
     [ExportMetadata( "ComponentName", "Update Discount Code" )]
-
-    [CustomDropdownListField( "Registration Template", "Registration template the discount code belongs to.",
-        "SELECT [Id] AS [Value], [Name] AS [Text] FROM [RegistrationTemplate] ORDER BY [Name]", true, "", "", 0 )]
+    
+    [WorkflowTextOrAttribute( "Registration Template", "RegistrationTemplate", "Registration template to add the discount code to.",
+        true, "", "", 0, "RegistrationTemplate", new string[] { "Rock.Field.Types.RegistrationTemplateFieldType" } )]
 
     [WorkflowTextOrAttribute( "Discount Code", "Discount Code Attribute", "Discount code to update.", true,
         "", "", 1, "DiscountCode", new string[] { "Rock.Field.Types.TextFieldType" } )]
@@ -63,9 +63,11 @@ namespace Rock.Workflow.Action
 
             var mergeFields = GetMergeFields( action );
 
+            var registrationTemplateService = new RegistrationTemplateService( rockContext );
             var registrationTemplateDiscountService = new RegistrationTemplateDiscountService( rockContext );
             var discountCode = GetAttributeValue( action, "DiscountCode", true ).ResolveMergeFields( mergeFields );
-            var registrationTemplateId = GetAttributeValue( action, "RegistrationTemplate" ).ResolveMergeFields( mergeFields ).AsInteger();
+            var registrationTemplate = registrationTemplateService.Get( GetAttributeValue( action, "RegistrationTemplate", true ).ResolveMergeFields( mergeFields ).AsGuid() );
+            var registrationTemplateId = registrationTemplate != null? registrationTemplate.Id:GetAttributeValue( action, "RegistrationTemplate" ).ResolveMergeFields( mergeFields ).AsInteger();
 
             var registrationDiscountCode = registrationTemplateDiscountService
                 .Queryable()
