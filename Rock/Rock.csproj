@@ -730,6 +730,7 @@
     <Compile Include="Reporting\DataFilter\Person\InteractionDataViewFilter.cs" />
     <Compile Include="Reporting\DataFilter\Person\InteractionsFilter.cs" />
     <Compile Include="Reporting\DataFilter\Person\StepDataViewFilter.cs" />
+    <Compile Include="Reporting\DataFilter\Person\InGroupGroupTypePurposeFilter.cs" />
     <Compile Include="Reporting\DataSelect\Person\InteractionCountSelect.cs" />
     <Compile Include="Reporting\DataSelect\Person\InteractionDateSelect.cs" />
     <Compile Include="SystemGuid\AssessmentType.cs" />
