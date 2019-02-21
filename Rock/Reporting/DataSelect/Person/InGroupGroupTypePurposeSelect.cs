@@ -172,8 +172,7 @@ namespace Rock.Reporting.DataSelect.Person
                 }
 
                 var groupMemberIds = groupMemberQry.Select( gm => gm.PersonId )
-                    .Distinct()
-                    .ToList();
+                    .Distinct();
 
                 var qry = new PersonService( ( RockContext ) context ).Queryable()
                     .Where( p => groupMemberIds.Contains( p.Id ) );

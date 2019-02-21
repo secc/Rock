@@ -359,8 +359,7 @@ function() {
                 }
 
                 var groupMemberIds = groupMemberQry.Select( gm => gm.PersonId )
-                    .Distinct()
-                    .ToList();
+                    .Distinct();
 
                 var qry = new PersonService( ( RockContext ) serviceInstance.Context ).Queryable()
                     .Where( p => groupMemberIds.Contains( p.Id ) );
