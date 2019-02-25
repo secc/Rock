@@ -6,7 +6,6 @@
 		it will return the individual's attendance. If a person is in two families once as a child once as an
 		adult it will pick the first role it finds.
 	</summary>
-
 	<returns>
 		* AttendanceCount
 		* SundaysInMonth
@@ -46,7 +45,7 @@ BEGIN
 	-- if role (adult/child) is unknown determine it
 	IF (@RoleGuid IS NULL)
 	BEGIN
-		SELECT TOP 1 @RoleGuid =  gtr.[Guid] 
+		SELECT TOP 1 @RoleGuid = gtr.[Guid] 
 			FROM [GroupTypeRole] gtr
 				INNER JOIN [GroupMember] gm ON gm.[GroupRoleId] = gtr.[Id]
 				INNER JOIN [Group] g ON g.[Id] = gm.[GroupId]
@@ -55,7 +54,7 @@ BEGIN
 	END
 
 	-- if start date null get today's date
-	IF @ReferenceDate is null
+	IF (@ReferenceDate IS NULL)
 		SET @ReferenceDate = getdate()
 
 	-- set data boundaries
@@ -64,80 +63,41 @@ BEGIN
 
 	-- make sure last day is not in future (in case there are errant checkin data)
 	IF (@LastDay > getdate())
-	BEGIN
 		SET @LastDay = getdate()
-	END
 
 	--PRINT 'Last Day: ' + CONVERT(VARCHAR, @LastDay, 101) 
 	--PRINT 'Start Day: ' + CONVERT(VARCHAR, @StartDay, 101) 
 
-    declare @familyMemberPersonIds table (personId int); 
-    declare @groupIds table (groupId int);
+    DECLARE @familyMemberPersonIds table ([PersonId] int); 
 
-    insert into @familyMemberPersonIds SELECT [Id] FROM [dbo].[ufnCrm_FamilyMembersOfPersonId](@PersonId);
-    insert into @groupIds SELECT [Id] FROM [dbo].[ufnCheckin_WeeklyServiceGroups]();
+	IF (@RoleGuid = @cROLE_ADULT)
+		INSERT INTO @familyMemberPersonIds SELECT [Id] FROM [dbo].[ufnCrm_FamilyMembersOfPersonId](@PersonId)
+	ELSE IF (@RoleGuid = @cROLE_CHILD)
+		INSERT INTO @familyMemberPersonIds SELECT @PersonId
 
 	-- query for attendance data
-	IF (@RoleGuid = @cROLE_ADULT)
-	BEGIN
-		SELECT 
-			COUNT([Attended]) AS [AttendanceCount]
-			, (SELECT dbo.ufnUtility_GetNumberOfSundaysInMonth(DATEPART(year, [SundayDate]), DATEPART(month, [SundayDate]), 'True' )) AS [SundaysInMonth]
-			, DATEPART(month, [SundayDate]) AS [Month]
-			, DATEPART(year, [SundayDate]) AS [Year]
-		FROM (
-
-			SELECT s.[SundayDate], [Attended]
-				FROM dbo.ufnUtility_GetSundaysBetweenDates(@StartDay, @LastDay) s
-				LEFT OUTER JOIN (	
-						SELECT 
-							DISTINCT O.[SundayDate] AS [AttendedSunday],
-							1 as [Attended]
-						FROM
-							[Attendance] a
-							INNER JOIN [AttendanceOccurrence] O ON O.[Id] = A.[OccurrenceId]
-							INNER JOIN [PersonAlias] pa ON pa.[Id] = a.[PersonAliasId]
-						WHERE 
-							O.[GroupId] IN (select groupId from @groupIds)
-							AND O.[OccurrenceDate] BETWEEN @StartDay AND @LastDay
-							AND pa.[PersonId] IN (select PersonId from @familyMemberPersonIds) 
-							AND a.[DidAttend] = 1
-						) a ON [AttendedSunday] = s.[SundayDate]
-
-		) [CheckinDates]
-		GROUP BY DATEPART(month, [SundayDate]), DATEPART(year, [SundayDate])
-		OPTION (MAXRECURSION 1000)
-	END
-	ELSE
-	BEGIN
-		SELECT 
-			COUNT([Attended]) AS [AttendanceCount]
-			, (SELECT dbo.ufnUtility_GetNumberOfSundaysInMonth(DATEPART(year, [SundayDate]), DATEPART(month, [SundayDate]), 'True' )) AS [SundaysInMonth]
-			, DATEPART(month, [SundayDate]) AS [Month]
-			, DATEPART(year, [SundayDate]) AS [Year]
-		FROM (
-
-			SELECT s.[SundayDate], [Attended]
-				FROM dbo.ufnUtility_GetSundaysBetweenDates(@StartDay, @LastDay) s
-				LEFT OUTER JOIN (	
-						SELECT 
-							DISTINCT O.[SundayDate] AS [AttendedSunday],
-							1 as [Attended]
-						FROM
-							[Attendance] a
-							INNER JOIN [AttendanceOccurrence] O ON O.[Id] = A.[OccurrenceId]
-							INNER JOIN [PersonAlias] pa ON pa.[Id] = a.[PersonAliasId]
-						WHERE 
-							O.[GroupId] IN (select groupId from @groupIds)
-							AND O.[OccurrenceDate] BETWEEN @StartDay AND @LastDay
-							AND pa.[PersonId] = @PersonId 
-							AND a.[DidAttend] = 1
-						) a ON [AttendedSunday] = s.[SundayDate]
-
-		) [CheckinDates]
-		GROUP BY DATEPART(month, [SundayDate]), DATEPART(year, [SundayDate])
-		OPTION (MAXRECURSION 1000)
-	END
-
-	
+	SELECT 
+		COUNT(b.[Attended]) AS [AttendanceCount]
+		, (SELECT dbo.ufnUtility_GetNumberOfSundaysInMonth(DATEPART(year, b.[SundayDate]), DATEPART(month, b.[SundayDate]), 'True' )) AS [SundaysInMonth]
+		, DATEPART(month, b.[SundayDate]) AS [Month]
+		, DATEPART(year, b.[SundayDate]) AS [Year]
+	FROM (
+		SELECT
+			s.[SundayDate], a.[Attended]
+		FROM
+			dbo.ufnUtility_GetSundaysBetweenDates(@StartDay, @LastDay) s
+			LEFT OUTER JOIN (
+				SELECT
+					DISTINCT ao.[SundayDate], 1 as [Attended]
+				FROM
+					[AttendanceOccurrence] ao
+					INNER JOIN (SELECT [Id] FROM [dbo].[ufnCheckin_WeeklyServiceGroups]()) wg ON ao.[GroupId] = wg.[Id]
+					INNER JOIN [Attendance] a ON ao.[Id] = a.[OccurrenceId] AND a.[DidAttend] = 1
+					INNER JOIN [PersonAlias] pa ON a.[PersonAliasId] = pa.[Id] AND pa.[PersonId] IN (SELECT [PersonId] FROM @familyMemberPersonIds)
+				WHERE
+					ao.[OccurrenceDate] BETWEEN @StartDay AND @LastDay
+			) a ON a.[SundayDate] = s.[SundayDate]
+	) b
+	GROUP BY DATEPART(month, b.[SundayDate]), DATEPART(year, b.[SundayDate])
+	OPTION (MAXRECURSION 1000)
 END
