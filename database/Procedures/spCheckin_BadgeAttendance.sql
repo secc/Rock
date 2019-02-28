@@ -56,7 +56,7 @@ BEGIN
 
 	-- if start date null get today's date
 	IF (@ReferenceDate IS NULL)
-		SET @ReferenceDate = getdate()
+		:SET @ReferenceDate = getdate()
 	END
 
 	-- set data boundaries
