@@ -3832,7 +3832,7 @@ namespace RockWeb.Blocks.Event
                                 if ( familyMembers.Any() )
                                 {
                                     ddlFamilyMembers.Visible = true;
-                                    ddlFamilyMembers.Items.Add( new ListItem() );
+                                    ddlFamilyMembers.Items.Add( new ListItem( "Other (Not Listed)", "" ) );
 
                                     foreach ( var familyMember in familyMembers )
                                     {
@@ -3841,6 +3841,9 @@ namespace RockWeb.Blocks.Event
                                         ddlFamilyMembers.Items.Add( listItem );
                                     }
                                 }
+                                // Reset everything
+                                ddlFamilyMembers.SelectedIndex = 0;
+                                SetRegistrantFields( registrant.PersonId, false );
                             }
                         }
 
@@ -4424,7 +4427,7 @@ namespace RockWeb.Blocks.Event
                     }
                 }
 
-                var familyMemberSelected = registrant.Id <= 0 && registrant.PersonId.HasValue && RegistrationTemplate.ShowCurrentFamilyMembers;
+                var familyMemberSelected = registrant.Id <= 0 && registrant.PersonId.HasValue && RegistrationTemplate.ShowCurrentFamilyMembers && ddlFamilyMembers.SelectedIndex > 0;
 
                 var form = RegistrationTemplate.Forms.OrderBy( f => f.Order ).ToList()[CurrentFormIndex];
                 foreach ( var field in form.Fields
@@ -4759,7 +4762,7 @@ namespace RockWeb.Blocks.Event
         /// Sets the registrant fields.
         /// </summary>
         /// <param name="personId">The person identifier.</param>
-        private void SetRegistrantFields( int? personId )
+        private void SetRegistrantFields( int? personId, bool setFirstLast = true )
         {
             if ( RegistrationState != null && RegistrationState.Registrants.Count > CurrentRegistrantIndex )
             {
@@ -4794,8 +4797,8 @@ namespace RockWeb.Blocks.Event
                             object dbValue = null;
 
                             if ( field.ShowCurrentValue ||
-                                ( ( field.PersonFieldType == RegistrationPersonFieldType.FirstName ||
-                                field.PersonFieldType == RegistrationPersonFieldType.LastName ) &&
+                                ( ( setFirstLast && ( field.PersonFieldType == RegistrationPersonFieldType.FirstName ||
+                                field.PersonFieldType == RegistrationPersonFieldType.LastName ) ) &&
                                 field.FieldSource == RegistrationFieldSource.PersonField ) )
                             {
                                 dbValue = registrant.GetRegistrantValue( null, person, family, field, rockContext );
