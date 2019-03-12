@@ -515,9 +515,9 @@ namespace RockWeb.Blocks.Groups
             {
                 return;
             }
-            else if (e.Key == DATE_ADDED_FILTER_KEY )
+            else if ( e.Key == DATE_ADDED_FILTER_KEY )
             {
-                e.Value = DateRangePicker.FormatDelimitedValues(e.Value);
+                e.Value = DateRangePicker.FormatDelimitedValues( e.Value );
             }
             else
             {
@@ -679,7 +679,7 @@ namespace RockWeb.Blocks.Groups
             ddlSignedDocument.SetValue( rFilter.GetUserPreference( "Signed Document" ) );
             ddlSignedDocument.Visible = _group.RequiredSignatureDocumentTemplateId.HasValue;
 
-            drpDateAdded.DelimitedValues = rFilter.GetUserPreference( DATE_ADDED_FILTER_KEY ) ;
+            drpDateAdded.DelimitedValues = rFilter.GetUserPreference( DATE_ADDED_FILTER_KEY );
             drpDateAdded.Visible = GetAttributeValue( SHOW_DATE_ADDED_KEY ).AsBoolean();
         }
 
@@ -709,7 +709,7 @@ namespace RockWeb.Blocks.Groups
                 }
 
                 foreach ( var inheritedGridColumnAttribute in ( new GroupMember() { GroupId = _group.Id } ).GetInheritedAttributes( rockContext ).Where( a => a.IsGridColumn == true && a.IsActive == true ).ToList() )
-                { 
+                {
                     if ( inheritedGridColumnAttribute.IsAuthorized( Authorization.VIEW, CurrentPerson ) )
                     {
                         AvailableAttributes.Add( inheritedGridColumnAttribute );
@@ -728,7 +728,7 @@ namespace RockWeb.Blocks.Groups
 
             // Clear dynamic controls so we can re-add them
             RemoveAttributeAndButtonColumns();
-            
+
             if ( AvailableAttributes != null )
             {
                 foreach ( var attribute in AvailableAttributes )
@@ -833,7 +833,7 @@ namespace RockWeb.Blocks.Groups
             _deleteField = new DeleteField();
             _deleteField.Click += DeleteOrArchiveGroupMember_Click;
             gGroupMembers.Columns.Add( _deleteField );
-            
+
         }
 
         /// <summary>

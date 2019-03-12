@@ -503,10 +503,13 @@
       <SubType>ASPXCodeBehind</SubType>
     </Compile>
     <Compile Include="CheckIn\CheckInMessage.cs" />
+    <Compile Include="CheckIn\CheckInSearchBlock.cs">
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="CheckIn\Registration\FamilyRegistrationState.cs" />
     <Compile Include="Field\FieldVisibilityRules.cs" />
     <Compile Include="Model\CodeGenerated\RegistrationTemplateFeeItemService.cs" />
     <Compile Include="Model\RegistrationTemplateFeeItem.cs" />
-    <Compile Include="Plugin\HotFixes\051_SparkData.cs" />
     <Compile Include="Data\NoAttributeFilterExpression.cs" />
     <Compile Include="Field\ICachedEntitiesFieldType.cs" />
     <Compile Include="Jobs\NoRetryAggregateException.cs" />
@@ -2456,7 +2459,6 @@
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Auth\" />
-    <Folder Include="CheckIn\Registration\" />
     <Folder Include="Pbx\Provider\" />
   </ItemGroup>
   <ItemGroup>

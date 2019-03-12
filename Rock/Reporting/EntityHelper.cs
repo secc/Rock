@@ -157,24 +157,12 @@ namespace Rock.Reporting
             {
                 entityFields = new List<EntityField>();
             }
-            
+
             List<PropertyInfo> entityProperties = entityType.GetProperties().ToList();
 
             // filter the properties to narrow down the ones that we want to include in EntityFields
             var filteredEntityProperties = entityProperties
-                .Where( p =>
-                    ( p.GetGetMethod() != null && !p.GetGetMethod().IsVirtual ) ||
-                    p.GetCustomAttributes( typeof( IncludeForReportingAttribute ), true ).Any() ||
-                    p.GetCustomAttributes( typeof( IncludeAsEntityProperty ), true ).Any() ||
-                    ( p.Name == "Order" && p.GetCustomAttribute( typeof( NotMappedAttribute ), true ) == null ) ||
-                    ( p.Name == "IsActive" && p.GetCustomAttribute( typeof( NotMappedAttribute ), true ) == null ) )
-                .ToList();
-
-            // Get Properties
-            foreach ( var property in filteredEntityProperties )
-            {
-                bool isReportable = !property.GetCustomAttributes( typeof( HideFromReportingAttribute ), true ).Any();
-                if ( !includeOnlyReportingFields || isReportable )
+                .Where( ( p ) =>
                 {
                     var includeForReportingAttribute = p.GetCustomAttribute<IncludeForReportingAttribute>() != null;
 
@@ -204,15 +192,10 @@ namespace Rock.Reporting
                     var isVirtual = getter?.IsVirtual == true;
                     if ( isVirtual )
                     {
-<<<<<<< HEAD
                         // NOTE: Properties that implement interface members (for example Rock.Data.IOrder) will also be marked as 'virtual final' by the compiler, so check IsFinal to determine if it was the compiler that did it.
                         // See https://docs.microsoft.com/en-us/dotnet/api/system.reflection.methodbase.isfinal?redirectedfrom=MSDN&view=netframework-4.7.2#System_Reflection_MethodBase_IsFinal
                         bool isVirtualDueToInterface = getter?.IsFinal == true;
                         if ( !isVirtualDueToInterface )
-=======
-                        var colAttr = property.GetCustomAttributes( typeof( ColumnAttribute ), true ).FirstOrDefault();
-                        if ( colAttr != null && ( ( ColumnAttribute ) colAttr ).TypeName == "Date" )
->>>>>>> 2828b6ecfb... Fixing merge issues.
                         {
                             return false;
                         }
@@ -294,15 +277,9 @@ namespace Rock.Reporting
                         Guid? definedTypeGuid = ( ( Rock.Data.DefinedValueAttribute ) definedValueAttribute ).DefinedTypeGuid;
                         if ( definedTypeGuid.HasValue )
                         {
-<<<<<<< HEAD
                             var definedType = DefinedTypeCache.Get( definedTypeGuid.Value );
                             entityField.Title = definedType != null ? definedType.Name : property.Name.Replace( "ValueId", string.Empty ).SplitCase();
                             if ( definedType != null )
-=======
-                            // Defined Value Properties
-                            Guid? definedTypeGuid = ( ( Rock.Data.DefinedValueAttribute ) definedValueAttribute ).DefinedTypeGuid;
-                            if ( definedTypeGuid.HasValue )
->>>>>>> 2828b6ecfb... Fixing merge issues.
                             {
                                 entityField.FieldType = FieldTypeCache.Get( SystemGuid.FieldType.DEFINED_VALUE.AsGuid() );
                                 entityField.FieldConfig.Add( "definedtype", new Field.ConfigurationValue( definedType.Id.ToString() ) );
