@@ -17,11 +17,10 @@
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.ComponentModel.Composition;
-
 using Rock.Attribute;
-using Rock.Web.Cache;
 using Rock.Model;
 using Rock.Web;
+using Rock.Web.Cache;
 using Rock.Web.UI;
 
 namespace Rock.PersonProfile.Badge
@@ -34,6 +33,7 @@ namespace Rock.PersonProfile.Badge
     [ExportMetadata( "ComponentName", "Personal Device" )]
 
     [LinkedPage( "Personal Devices Detail", "Page to show the details of the personal devices added.", false, order: 1 )]
+    [BooleanField( "Hide If None", "Should the badge be hidden if there are no devices registered to this person?", true, order: 2 )]
     public class PersonalDevice : BadgeComponent
     {
         /// <summary>
@@ -47,6 +47,8 @@ namespace Rock.PersonProfile.Badge
             {
                 //  create url for link to details
                 string detailPageUrl = new PageReference( GetAttributeValue( badge, "PersonalDevicesDetail" ), new Dictionary<string, string> { { "PersonGuid", person.Guid.ToString() } } ).BuildUrl();
+
+                string noneCss = GetAttributeValue( badge, "HideIfNone" ).AsBoolean() ? "none" : "";
 
                 writer.Write( $"<div class='badge badge-personaldevice badge-id-{badge.Id}' data-toggle='tooltip' data-original-title=''>" );
 
@@ -67,28 +69,28 @@ namespace Rock.PersonProfile.Badge
                                         var linkUrl = '{detailPageUrl}';
                                         var badgeContent = '';
                                         var labelContent = '';
+                                        var badgeClass = 'badge-disabled';
 
-                                        if (devicesNumber > 0) {{
-        
-                                            if ( devicesNumber > 1 ) {{
-                                                labelContent = 'There are ' + devicesNumber + ' devices linked to this individual.';                                 
-                                            }} else {{
-                                                labelContent = 'There is 1 device linked to this individual.';
-                                            }}
-        
-                                            if (linkUrl != '') {{
-                                                badgeContent = '<a href=\'' + linkUrl + '\'><div class=\'badge-content \'><i class=\'fa fa-mobile badge-icon\'></i><span class=\'deviceCount\'>' + devicesNumber + '</span></div></a>';
-                                            }} else {{
-                                                badgeContent = '<div class=\'badge-content \'><i class=\'fa fa-mobile badge-icon\'></i><span class=\'deviceCount\'>' + devicesNumber + '</span></div>';
-                                            }}
-
-                                            $('.badge-personaldevice.badge-id-{badge.Id}').html(badgeContent);
-                                            $('.badge-personaldevice.badge-id-{badge.Id}').attr('data-original-title', labelContent);
-                                            
+                                        if (devicesNumber > 0){{
+                                            badgeClass=''
                                         }}
-                                        else {{
-                                            $('.badge-personaldevice.badge-id-{badge.Id}').css('display', 'none');
-                                            $('.badge-personaldevice.badge-id-{badge.Id}').html('');
+
+                                        if ( devicesNumber !=1 ) {{
+                                            labelContent = 'There are ' + devicesNumber + ' devices linked to this individual.';                                 
+                                        }} else {{
+                                            labelContent = 'There is 1 device linked to this individual.';
+                                        }}
+        
+                                        if (linkUrl != '') {{
+                                            badgeContent = '<a href=\'' + linkUrl + '\'><div class=\'badge-content \'><i class=\''+ badgeClass +' fa fa-mobile badge-icon\'></i><span class=\'deviceCount badge-icon '+ badgeClass +'\'>' + devicesNumber + '</span></div></a>';
+                                        }} else {{
+                                            badgeContent = '<div class=\'badge-content \'><i class=\''+ badgeClass +' fa  fa-mobile badge-icon\'></i><span class=\'deviceCount badge-icon '+ badgeClass +'\'>' + devicesNumber + '</span></div>';
+                                        }}
+                                        $('.badge-personaldevice.badge-id-{badge.Id}').html(badgeContent);
+                                        $('.badge-personaldevice.badge-id-{badge.Id}').attr('data-original-title', labelContent);
+
+                                        if (devicesNumber < 1) {{
+                                            $('.badge-personaldevice.badge-id-{badge.Id}').css('display', '{noneCss}');
                                         }}
                                         
                                     }}
@@ -101,4 +103,3 @@ namespace Rock.PersonProfile.Badge
         }
     }
 }
-
