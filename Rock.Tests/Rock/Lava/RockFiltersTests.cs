@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Collections.Specialized;
 using System.Dynamic;
 using System.Linq;
 using DDay.iCal;
@@ -10,7 +9,6 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 using Rock.Lava;
 using Rock.Model;
-using Subtext.TestLibrary;
 using Xunit;
 
 namespace Rock.Tests.Rock.Lava
