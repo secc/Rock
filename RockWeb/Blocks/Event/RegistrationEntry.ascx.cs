@@ -3843,7 +3843,7 @@ namespace RockWeb.Blocks.Event
                                 }
                                 // Reset everything
                                 ddlFamilyMembers.SelectedIndex = 0;
-                                SetRegistrantFields( registrant.PersonId, false );
+                                SetRegistrantFields( null, false );
                             }
                         }
 
@@ -4797,8 +4797,8 @@ namespace RockWeb.Blocks.Event
                             object dbValue = null;
 
                             if ( field.ShowCurrentValue ||
-                                ( ( setFirstLast && ( field.PersonFieldType == RegistrationPersonFieldType.FirstName ||
-                                field.PersonFieldType == RegistrationPersonFieldType.LastName ) ) &&
+                                ( setFirstLast && ( field.PersonFieldType == RegistrationPersonFieldType.FirstName ||
+                                field.PersonFieldType == RegistrationPersonFieldType.LastName ) &&
                                 field.FieldSource == RegistrationFieldSource.PersonField ) )
                             {
                                 dbValue = registrant.GetRegistrantValue( null, person, family, field, rockContext );
