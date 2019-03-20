@@ -48,7 +48,7 @@
                                 <div class="col-md-6">
                                     <Rock:RockLiteral ID="lRequestDate" runat="server" Label="Request Date" />
                                     <Rock:RockLiteral ID="lPlacementGroup" runat="server" Label="Placement Group" />
-                                    <Rock:DynamicPlaceHolder ID="phGroupMemberAttributesView" runat="server" />
+                                    <Rock:DynamicPlaceHolder ID="phGroupMemberAttributesView" EnableViewState="false" runat="server" />
                                 </div>
                             </div>
        
@@ -142,7 +142,7 @@
                     </div>
 
                     <asp:HiddenField ID="hfGroupMemberAttributeValues" runat="server" />
-                    <Rock:DynamicPlaceHolder ID="phGroupMemberAttributes" runat="server" />
+                    <Rock:DynamicPlaceHolder ID="phGroupMemberAttributes" EnableViewState="false" runat="server" />
 
                     <Rock:NotificationBox ID="nbRequirementsWarning" runat="server" NotificationBoxType="Warning" Visible="false" />
 
