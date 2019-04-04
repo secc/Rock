@@ -488,6 +488,10 @@
     <Compile Include="Attribute\WorkflowAttributeAttribute.cs" />
     <Compile Include="Attribute\WorkflowTextOrAttributeAttribute.cs" />
     <Compile Include="Attribute\WorkflowTypeFieldAttribute.cs" />
+    <Compile Include="Communication\VideoEmbed\VideoEmbedContainer.cs" />
+    <Compile Include="Communication\VideoEmbed\VideoEmbedComponent.cs" />
+    <Compile Include="Communication\VideoEmbed\VimeoVideoEmbed.cs" />
+    <Compile Include="Communication\VideoEmbed\YoutubeEmbed.cs" />
     <Compile Include="Field\FieldVisibilityRules.cs" />
     <Compile Include="Model\CodeGenerated\RegistrationTemplateFeeItemService.cs" />
     <Compile Include="Model\RegistrationTemplateFeeItem.cs" />
