@@ -22,16 +22,13 @@
                     self.handleVideoUpdate();
                 });
 
-                //Update thumbnail on enter
+                //Update url on keyup
                 $('#component-video-url').on('keyup', function (e) {
+                    self.handleVideoUrlUpdate();
+                    //Update thumbnail on enter
                     if (e.keyCode == 13) {
                         self.handleVideoUpdate();
                     }
-                });
-
-                //update the url
-                $('#component-video-url').on('changed', function () {
-                    self.handleVideoUrlUpdate
                 });
             },
 
