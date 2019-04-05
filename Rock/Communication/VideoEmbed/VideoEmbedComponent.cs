@@ -27,10 +27,25 @@ namespace Rock.Communication.VideoEmbed
 {
     public abstract class VideoEmbedComponent : Component
     {
+        /// <summary>
+        /// Regular expression to detect if this component applies to the url.
+        /// </summary>
         public abstract string RegexFilter { get; }
 
+        /// <summary>
+        /// Generates a preview image for a video and returns its url
+        /// </summary>
+        /// <param name="videoUrl"></param>
+        /// <returns></returns>
         public abstract string GetThumbnail( string videoUrl );
 
+        /// <summary>
+        /// Adds the play button on thumbnail and returns its url
+        /// </summary>
+        /// <param name="image"></param>
+        /// <param name="fileName"></param>
+        /// <param name="overlay"></param>
+        /// <returns></returns>
         public string OverlayImage( Image image, string fileName, string overlay )
         {
             RockContext rockContext = new RockContext();
@@ -67,8 +82,6 @@ namespace Rock.Communication.VideoEmbed
                 img.Save( stream, ImageFormat.Png );
                 stream.Position = 0;
 
-
-
                 BinaryFile binaryImage = new BinaryFile
                 {
                     FileName = fileName + ".png",
@@ -88,6 +101,11 @@ namespace Rock.Communication.VideoEmbed
             }
         }
 
+        /// <summary>
+        /// Resizes thumbnail to 640 pixels wide. Perfect for email.
+        /// </summary>
+        /// <param name="image"></param>
+        /// <returns></returns>
         private static Image ScaleImage( Image image )
         {
             var ratio = ( double ) 640 / image.Width;

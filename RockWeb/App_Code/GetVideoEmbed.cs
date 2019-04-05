@@ -25,7 +25,7 @@ using Rock.Model;
 namespace RockWeb
 {
     /// <summary>
-    /// Handles retrieving file data from storage
+    /// Generates image thumbnail from video url
     /// </summary>
     public class GetVideoEmbed : IHttpHandler, IRequiresSessionState
     {
@@ -54,6 +54,7 @@ namespace RockWeb
                 response.StatusCode = 406;
                 return;
             }
+            var output = "";
 
             var currentUser = UserLoginService.GetCurrentUser();
             Person currentPerson = currentUser != null ? currentUser.Person : null;
@@ -70,7 +71,6 @@ namespace RockWeb
 
             try
             {
-                var output = "";
                 var videoUrl = request.Form["video_url"];
                 if ( videoUrl.IsNotNullOrWhiteSpace() )
                 {
@@ -90,8 +90,11 @@ namespace RockWeb
             catch ( Exception ex )
             {
                 ExceptionLogService.LogException( ex, context );
-                context.Response.StatusCode = ( int ) System.Net.HttpStatusCode.InternalServerError;
-                context.Response.Write( "error: " + ex.Message );
+            }
+            if ( string.IsNullOrWhiteSpace( output ) )
+            {
+                response.StatusCode = 404;
+                response.Write( "Not Found" );
             }
         }
     }
