@@ -23,7 +23,7 @@ using Rock.Extension;
 namespace Rock.Communication.VideoEmbed
 {
     /// <summary>
-    /// MEF Container class for Binary File Verification Components
+    /// MEF Container class for Video Embed Components
     /// </summary>
     public class VideoEmbedContainer : Container<VideoEmbedComponent, IComponentData>
     {

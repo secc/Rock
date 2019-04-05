@@ -402,15 +402,23 @@
                                         <div class="row">
                                             <div class="col-md-12">
                                                 <div class="form-group">
-                                                    <label for="component-video-url">Video URL</label>
+                                                    <label for="component-video-url">
+                                                        Video URL
+                                                        <asp:LinkButton ID="lbVideoUrlHelpText" Text="<i class='fa fa-info-circle'></i>" TabIndex="-1"  runat="server" CssClass="help"
+                                                            data-toggle="tooltip" data-placement="auto" data-container="body" data-html="true"
+                                                            data-original-title="Your video preview image will link to this URL. Preview images are generated automatically for "/>
+                                                    </label>
                                                     <div class="input-group">
                                                         <input class="form-control" id="component-video-url" type="url" />
                                                         <span class="input-group-addon" id="component-video-addon"><i class="fa fa-arrow-right"></i></span>
                                                     </div>
                                                 </div>
+                                                <div id="component-video-error" class="alert alert-warning" role="alert">
+                                                    Sorry, we couldn't generate a preview image for that URL. Please upload an image.
+                                                </div>
                                             </div>
                                             <div class="col-md-6">
-                                                <Rock:ImageUploader ID="componentVideoImageUploader" ClientIDMode="Static" runat="server" Label="Image" UploadAsTemporary="false" DoneFunctionClientScript="handleVideoImageUpdate(e, data)" DeleteFunctionClientScript="handleVideoImageUpdate()" />
+                                                <Rock:ImageUploader ID="componentVideoImageUploader" ClientIDMode="Static" runat="server" Label="Preview Image" UploadAsTemporary="false" DoneFunctionClientScript="handleVideoImageUpdate(e, data)" DeleteFunctionClientScript="handleVideoImageUpdate()" />
                                             </div>
                                         </div>
 					                </div>

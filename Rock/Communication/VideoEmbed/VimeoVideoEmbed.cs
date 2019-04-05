@@ -25,16 +25,27 @@ using System.Xml;
 
 namespace Rock.Communication.VideoEmbed
 {
+    /// <summary>
+    /// Generates a thumbnail for Vimeo videos
+    /// </summary>
     [Export( typeof( VideoEmbedComponent ) )]
     [ExportMetadata( "ComponentName", "Vimeo" )]
     [Description( "Generates Vimeo video thumbnails for email." )]
     public class VimeoVideoEmbed : VideoEmbedComponent
     {
-        public override string RegexFilter => "vimeo";
+        /// <summary>
+        /// Regex to check if is a Vimeo video and extract information
+        /// </summary>
+        public override string RegexFilter => @"(http|https)?:\/\/(www\.)?vimeo.com\/(?:channels\/(?:\w+\/)?|groups\/([^\/]*)\/videos\/|)(\d+)(?:|\/\?)";
 
+        /// <summary>
+        /// Generates the thumbnail from video url
+        /// </summary>
+        /// <param name="videoUrl">The url of the video</param>
+        /// <returns>Thumbnail url</returns>
         public override string GetThumbnail( string videoUrl )
         {
-            var match = Regex.Match( videoUrl, @"(http|https)?:\/\/(www\.)?vimeo.com\/(?:channels\/(?:\w+\/)?|groups\/([^\/]*)\/videos\/|)(\d+)(?:|\/\?)" );
+            var match = Regex.Match( videoUrl, RegexFilter );
             var videoId = match.Groups[4].Value;
             var apiURL = string.Format( "http://vimeo.com/api/v2/video/{0}.xml", videoId );
 

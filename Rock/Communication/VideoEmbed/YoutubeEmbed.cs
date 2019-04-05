@@ -24,17 +24,27 @@ using System.Web;
 
 namespace Rock.Communication.VideoEmbed
 {
-
+    /// <summary>
+    /// Generates a thumbnail for YouTube videos
+    /// </summary>
     [Export( typeof( VideoEmbedComponent ) )]
     [ExportMetadata( "ComponentName", "YouTube" )]
     [Description( "Generates YouTube video thumbnails for email." )]
     public class YoutubeEmbed : VideoEmbedComponent
     {
-        public override string RegexFilter => "youtube";
+        /// <summary>
+        /// Regex to check if is a YouTube video and extract information
+        /// </summary>
+        public override string RegexFilter => @"^((?:https?:)?\/\/)?((?:www|m)\.)?((?:youtube\.com|youtu.be))(\/(?:[\w\-]+\?v=|embed\/|v\/)?)([\w\-]+)(\S+)?$";
 
+        /// <summary>
+        /// Generates the thumbnail from video url
+        /// </summary>
+        /// <param name="videoUrl">The url of the video</param>
+        /// <returns>Thumbnail url</returns>
         public override string GetThumbnail( string videoUrl )
         {
-            var match = Regex.Match( videoUrl, @"^((?:https?:)?\/\/)?((?:www|m)\.)?((?:youtube\.com|youtu.be))(\/(?:[\w\-]+\?v=|embed\/|v\/)?)([\w\-]+)(\S+)?$" );
+            var match = Regex.Match( videoUrl, RegexFilter );
             var videoId = match.Groups[5].Value;
 
             var imageUrl = string.Format( "https://img.youtube.com/vi/{0}/maxresdefault.jpg", videoId );
