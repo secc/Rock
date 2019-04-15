@@ -624,19 +624,40 @@
 					                <!-- Button Properties -->
                                     <div id="component-button-panel" class="propertypanel propertypanel-button" data-component="button" style="display: none;">
 						                <h4 class="propertypanel-title">Button</h4>
-						                <hr />
-						                <div class="form-group">
+                                        <div class="form-group">
 							                <label for="component-button-buttontext">Button Text</label>
 							                <input class="form-control" id="component-button-buttontext" placeholder="Press Me">
 						                </div>
 
-						                <div class="form-group">
+                                        <div class="form-group">
+							                <label for="component-button-linktype">Link To</label>
+                                            <select id="component-button-linktype" class="form-control">
+                                                <option value="Url">Web Address</option>
+                                                <option value="Email">Email Address</option>
+                                                <option value="File">File</option>
+                                            </select>
+						                </div>
+
+						                <div class="form-group"id="component-button-urlfields">
 							                <label for="component-button-buttonurl">Url</label>
 							                <div class="input-group">
 								                <span class="input-group-addon"><i class="fa fa-link"></i></span>
 								                <input class="form-control" id="component-button-buttonurl" placeholder="http://yourlink.com">
 							                </div>
 						                </div>
+ 
+                                        <div class="form-group" id="component-button-emailfields">
+							                <label for="component-button-emailaddress">Email Address</label>
+								            <input class="form-control" id="component-button-emailaddress" placeholder="email@example.com">
+
+                                            <label for="component-button-emailsubject">Message Subject</label>
+								            <input class="form-control" id="component-button-emailsubject" placeholder="From Name">
+
+                                            <label for="component-button-emailbody">Message Body</label>
+                                            <textarea class="form-control" id="component-button-emailbody"></textarea>
+                                        </div>
+
+                                          <Rock:FileUploader ID="componentButtonFile" ClientIDMode="Static" runat="server" Label="File" UploadAsTemporary="false" DoneFunctionClientScript="handleButtonFileUpdate(e, data)" DeleteFunctionClientScript="handleButtonFileUpdate()" />
 
 						                <div class="row">
 							                <div class="col-md-6">
@@ -1347,7 +1368,11 @@
 			function handleImageUpdate(e, data)
 			{
 			    Rock.controls.emailEditor.imageComponentHelper.handleImageUpdate(e, data);
-			}
+            }
+
+            function handleButtonFileUpdate(e, data) {
+                Rock.controls.emailEditor.buttonComponentHelper.handleButtonFileUpdate(e, data);
+            }
 
 			// debouncing function from John Hann
 			// http://unscriptable.com/index.php/2009/03/20/debouncing-javascript-methods/

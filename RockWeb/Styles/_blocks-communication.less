@@ -16,9 +16,11 @@
   .recipient {
     float: left;
     width: 100%;
+
     @media (min-width: @screen-sm-min) {
       width: 50%;
     }
+
     @media (min-width: @screen-md-min) {
       width: 25%;
     }
@@ -100,6 +102,8 @@ iframe.email-body {
   bottom: 0;
   width: 40%;
   padding: 12px;
+  overflow-x: hidden;
+  overflow-y: auto;
   background-color: @panel-heading-bg;
 }
 
@@ -211,6 +215,7 @@ iframe.email-body {
     height: ~"calc(100vh - 200px)";
     min-height: 300px;
     border-right: 1px solid rgba(0,0,0, .2);
+
     @media (min-width: 599px) {
       min-width: 320px;
     }
@@ -279,7 +284,7 @@ iframe.email-body {
     }
   }
 
-  .messages-outer-container{
+  .messages-outer-container {
     position: relative;
     flex-grow: 1;
     padding: 15px;
@@ -342,6 +347,7 @@ iframe.email-body {
 
   .conversation-back {
     display: none;
+
     @media (max-width: 599px) {
       display: block;
     }
@@ -376,7 +382,6 @@ iframe.email-body {
     -webkit-align-items: flex-start;
     align-items: flex-start;
     -webkit-box-orient: vertical;
-
     -webkit-box-align: start;
 
     &.outbound {
@@ -400,7 +405,7 @@ iframe.email-body {
       border-radius: 20px;
     }
 
-    &.outbound .bubble{
+    &.outbound .bubble {
       color: #fff;
       background-color: #0084ff;
     }
