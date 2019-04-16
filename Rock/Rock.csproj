@@ -507,6 +507,10 @@
       <SubType>ASPXCodeBehind</SubType>
     </Compile>
     <Compile Include="CheckIn\Registration\FamilyRegistrationState.cs" />
+	<Compile Include="Communication\VideoEmbed\VideoEmbedContainer.cs" />
+    <Compile Include="Communication\VideoEmbed\VideoEmbedComponent.cs" />
+    <Compile Include="Communication\VideoEmbed\VimeoVideoEmbed.cs" />
+    <Compile Include="Communication\VideoEmbed\YoutubeEmbed.cs" />
     <Compile Include="Field\FieldVisibilityRules.cs" />
     <Compile Include="Model\CodeGenerated\CommunicationResponseService.cs" />
     <Compile Include="Model\CodeGenerated\RegistrationTemplateFeeItemService.cs" />
