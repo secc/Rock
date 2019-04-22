@@ -130,6 +130,25 @@ namespace Rock.Web.UI.Controls
         }
 
         /// <summary>
+        /// Gets or sets a value indicating whether this the Address control has a State drop-down list.
+        /// </summary>
+        /// <value>
+        ///   <c>true</c> if it uses a drop-down list; otherwise, <c>false</c>.
+        /// </value>
+        public bool HasStateList
+        {
+            get
+            {
+                return ViewState["HasStateList"] as bool? ?? false;
+            }
+
+            set
+            {
+                ViewState["HasStateList"] = value;
+            }
+        }
+
+        /// <summary>
         /// Gets or sets a value indicating whether this <see cref="RockTextBox"/> is required.
         /// </summary>
         /// <value>
@@ -341,7 +360,7 @@ namespace Rock.Web.UI.Controls
             get
             {
                 EnsureChildControls();
-                if ( _tbState.Visible )
+                if ( !HasStateList )
                 {
                     return _tbState.Text;
                 }
@@ -779,7 +798,7 @@ namespace Rock.Web.UI.Controls
 
             BindStates( _ddlCountry.SelectedValue );
 
-            if ( _tbState.Visible )
+            if ( !HasStateList )
             {
                 State = selectedStateFromEdit;
             }
@@ -912,7 +931,7 @@ namespace Rock.Web.UI.Controls
             }
             else
             {
-                _ddlCountry.SetValue( string.Empty );
+                _ddlCountry.SetValue( defaultCountryCode );
             }
         }
 
@@ -955,6 +974,7 @@ namespace Rock.Web.UI.Controls
 
             if ( stateList.Any() )
             {
+                HasStateList = true;
                 _ddlState.Visible = true;
                 _tbState.Visible = false;
 
@@ -976,6 +996,7 @@ namespace Rock.Web.UI.Controls
             }
             else
             {
+                HasStateList = false;
                 _ddlState.Visible = false;
                 _tbState.Visible = true;
             }
