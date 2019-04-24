@@ -193,10 +193,10 @@
                         var subject = $('#component-button-emailsubject').val();
                         var body = $('#component-button-emailbody').val();
                         link = 'mailto:' +
-                            encodeURIComponent();
+                            encodeURIComponent(address);
                         if (subject.length) {
                             link += '?subject=' + encodeURIComponent(subject);
-                            if (body.lenght) {
+                            if (body.length) {
                                 link += '&body=' + encodeURIComponent(body);
                             }
                         }
