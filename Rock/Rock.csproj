@@ -507,7 +507,7 @@
       <SubType>ASPXCodeBehind</SubType>
     </Compile>
     <Compile Include="CheckIn\Registration\FamilyRegistrationState.cs" />
-	<Compile Include="Communication\VideoEmbed\VideoEmbedContainer.cs" />
+    <Compile Include="Communication\VideoEmbed\VideoEmbedContainer.cs" />
     <Compile Include="Communication\VideoEmbed\VideoEmbedComponent.cs" />
     <Compile Include="Communication\VideoEmbed\VimeoVideoEmbed.cs" />
     <Compile Include="Communication\VideoEmbed\YoutubeEmbed.cs" />
@@ -550,6 +550,7 @@
       <DependentUpon>HotFixMigrationResource.resx</DependentUpon>
     </Compile>
     <Compile Include="Plugin\HotFixes\051_SparkData.cs" />
+    <Compile Include="Reporting\DataFilter\GroupMembers\SingleGroupMemberAttributesFilter.cs" />
     <Compile Include="Reporting\DataFilter\Person\AttendanceDataViewFilter.cs" />
     <Compile Include="Reporting\DataFilter\Person\HasDuplicateEmailFilter.cs" />
     <Compile Include="Reporting\DataFilter\Person\HasDuplicatePhoneFilter.cs" />
