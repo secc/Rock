@@ -888,10 +888,10 @@
 
                     <div class="row">
                         <div class="col-md-6">
-                            <Rock:RockTextBox ID="tbFromName" runat="server" Label="From Name" Required="true" ValidationGroup="vgEmailSummary" MaxLength="100" />
+                            <Rock:RockTextBox ID="tbFromName" runat="server" Label="From Name" Required="true" ValidationGroup="vgEmailSummary" MaxLength="100" Help="<span class='tip tip-lava'></span>" />
                         </div>
                         <div class="col-md-6">
-                            <Rock:EmailBox ID="ebFromAddress" runat="server" Label="From Address" Required="true" ValidationGroup="vgEmailSummary"/>
+                            <Rock:EmailBox ID="ebFromAddress" runat="server" Label="From Address" Required="true" AllowLava="true" ValidationGroup="vgEmailSummary"/>
                             <asp:HiddenField ID="hfShowAdditionalFields" runat="server" />
                             <div class="pull-right">
                                 <a href="#" class="btn btn-xs btn-link js-show-additional-fields" >Show Additional Fields</a>
@@ -902,7 +902,7 @@
                     <asp:Panel ID="pnlEmailSummaryAdditionalFields" runat="server" CssClass="js-additional-fields" style="display:none">
                         <div class="row">
                             <div class="col-md-6">
-                                <Rock:EmailBox ID="ebReplyToAddress" runat="server" Label="Reply To Address" />
+                                <Rock:EmailBox ID="ebReplyToAddress" runat="server" Label="Reply To Address" AllowLava="true" />
                             </div>
                             <div class="col-md-6">
 
@@ -912,10 +912,10 @@
                             <p><strong>Note:</strong> Because Rock personalizes emails, CC and BCC recipients will receive one email per recipient.</p>
                             <div class="row">
                                 <div class="col-md-6">
-                                    <Rock:EmailBox ID="ebCCList" runat="server" Label="CC List" AllowMultiple="true" Help="Comma-delimited list of email addresses that will be copied on the email sent to every recipient. Lava can be used to access recipent data. <span class='tip tip-lava'></span>" />
+                                    <Rock:EmailBox ID="ebCCList" runat="server" Label="CC List" AllowMultiple="true" Help="Comma-delimited list of email addresses that will be copied on the email sent to every recipient. Lava can be used to access recipent data. <span class='tip tip-lava'></span>" AllowLava="true" />
                                 </div>
                                 <div class="col-md-6">
-                                    <Rock:EmailBox ID="ebBCCList" runat="server" Label="BCC List" AllowMultiple="true" Help="Comma-delimited list of email addresses that will be blind copied on the email sent to every recipient. Lava can be used to access recipent data. <span class='tip tip-lava'></span>" />
+                                    <Rock:EmailBox ID="ebBCCList" runat="server" Label="BCC List" AllowMultiple="true" Help="Comma-delimited list of email addresses that will be blind copied on the email sent to every recipient. Lava can be used to access recipent data. <span class='tip tip-lava'></span>" AllowLava="true" />
                                 </div>
                             </div>
                         </div>
