@@ -8,11 +8,13 @@
             <div id="pnlEditDetails" class="panel panel-block" runat="server">
 
                 <div class="panel-heading">
-                    <h1 class="panel-title"><i class="fa fa-filter"></i> <asp:Literal ID="lActionTitle" runat="server" /></h1>
-                    
+                    <h1 class="panel-title"><i class="fa fa-filter"></i>
+                        <asp:Literal ID="lActionTitle" runat="server" /></h1>
+
                     <div class="panel-labels">
                         <Rock:HighlightLabel ID="hlblEditDataViewId" runat="server" />
-                        <div class="label label-primary"><asp:LinkButton ID="lbCreateReport" runat="server" OnClick="lbCreateReport_Click" ><i class="fa fa-plus"></i> Create Report</asp:LinkButton></div>
+                        <div class="label label-primary">
+                            <asp:LinkButton ID="lbCreateReport" runat="server" OnClick="lbCreateReport_Click"><i class="fa fa-plus"></i> Create Report</asp:LinkButton></div>
                     </div>
                 </div>
                 <div class="panel-body">
@@ -34,7 +36,7 @@
                                     Help="To persist this dataview, enter how often this dataview should be persisted (in minutes). A persisted dataview can improve performance by writing the filtered results to the database, especially for complex dataviews. Leave this blank to not persist this dataview." />
                             </div>
                         </div>
-                        
+
                     </fieldset>
 
                     <asp:PlaceHolder ID="phFilters" runat="server"></asp:PlaceHolder>
@@ -42,6 +44,7 @@
                     <div class="actions">
                         <asp:LinkButton ID="btnSave" runat="server" AccessKey="s" ToolTip="Alt+s" Text="Save" CssClass="btn btn-primary" OnClick="btnSave_Click" />
                         <asp:LinkButton ID="btnCancel" runat="server" AccessKey="c" ToolTip="Alt+c" Text="Cancel" CssClass="btn btn-link" CausesValidation="false" OnClick="btnCancel_Click" />
+                        <asp:LinkButton ID="btnGenerateSql" runat="server" Text="Show SQL" CssClass="btn btn-link pull-right" CausesValidation="false" OnClick="btnGenerateSql_Click" />
                         <asp:LinkButton ID="btnPreview" runat="server" Text="Preview" CssClass="btn btn-default pull-right" CausesValidation="false" OnClick="btnPreview_Click" />
                     </div>
 
@@ -52,11 +55,13 @@
             <div id="pnlViewDetails" runat="server">
                 <div class="panel panel-block" runat="server">
                     <div class="panel-heading">
-                        <h1 class="panel-title"><i class="fa fa-filter"></i> <asp:Literal ID="lReadOnlyTitle" runat="server" /></h1>
+                        <h1 class="panel-title"><i class="fa fa-filter"></i>
+                            <asp:Literal ID="lReadOnlyTitle" runat="server" /></h1>
                         <div class="panel-labels">
-                             <Rock:HighlightLabel ID="hlblDataViewId" runat="server" />
-                             <Rock:HighlightLabel ID="hlblPersisted" LabelType="Info" Text="Persisted" Visible="false" runat="server" />
-                            <div class="label label-primary"><asp:LinkButton ID="lbViewCreateReport" runat="server" OnClick="lbCreateReport_Click" ><i class="fa fa-plus"></i> Create Report</asp:LinkButton></div>
+                            <Rock:HighlightLabel ID="hlblDataViewId" runat="server" />
+                            <Rock:HighlightLabel ID="hlblPersisted" LabelType="Info" Text="Persisted" Visible="false" runat="server" />
+                            <div class="label label-primary">
+                                <asp:LinkButton ID="lbViewCreateReport" runat="server" OnClick="lbCreateReport_Click"><i class="fa fa-plus"></i> Create Report</asp:LinkButton></div>
                         </div>
                     </div>
                     <Rock:PanelDrawer ID="pdAuditDetails" runat="server"></Rock:PanelDrawer>
@@ -85,11 +90,11 @@
 
                             <div class="actions">
                                 <asp:LinkButton ID="btnEdit" runat="server" AccessKey="m" ToolTip="Alt+m" Text="Edit" CssClass="btn btn-primary" OnClick="btnEdit_Click" />
-                                <asp:LinkButton ID="btnDelete" runat="server" Text="Delete" CssClass="btn btn-link" OnClick="btnDelete_Click" /> 
+                                <asp:LinkButton ID="btnDelete" runat="server" Text="Delete" CssClass="btn btn-link" OnClick="btnDelete_Click" />
                                 <div class="pull-right">
-                                    <asp:LinkButton ID="btnCopy" runat="server" Tooltip="Copy Data View" CssClass="btn btn-default btn-sm fa fa-clone" OnClick="btnCopy_Click" />
+                                    <asp:LinkButton ID="btnCopy" runat="server" ToolTip="Copy Data View" CssClass="btn btn-default btn-sm fa fa-clone" OnClick="btnCopy_Click" />
                                     <Rock:SecurityButton ID="btnSecurity" runat="server" class="btn btn-sm btn-security" />
-                                </div>                           
+                                </div>
                                 <Rock:ModalAlert ID="mdDeleteWarning" runat="server" />
                             </div>
 
@@ -102,10 +107,10 @@
                     <div class="panel-heading">
                         <div class="row">
                             <div class="col-md-6">
-                                <h1 class="panel-title"><i class="fa fa-table"></i> Results</h1>
+                                <h1 class="panel-title"><i class="fa fa-table"></i>Results</h1>
                             </div>
                             <div class="col-md-6 text-right">
-                                    <asp:LinkButton ID="btnToggleResults" runat="server" CssClass="btn btn-default btn-xs" OnClick="btnToggleResults_Click" />
+                                <asp:LinkButton ID="btnToggleResults" runat="server" CssClass="btn btn-default btn-xs" OnClick="btnToggleResults_Click" />
                             </div>
                         </div>
                     </div>
@@ -123,7 +128,17 @@
             <Rock:ModalDialog ID="modalPreview" runat="server" Title="Preview (top 15 rows )" ValidationGroup="Preview">
                 <Content>
                     <Rock:NotificationBox ID="nbPreviewError" runat="server" NotificationBoxType="Warning" />
-                    <div class="grid"><Rock:Grid ID="gPreview" runat="server" AllowSorting="true" EmptyDataText="No Results" ShowActionRow="false" DisplayType="Light" /></div>
+                    <div class="grid">
+                        <Rock:Grid ID="gPreview" runat="server" AllowSorting="true" EmptyDataText="No Results" ShowActionRow="false" DisplayType="Light" />
+                    </div>
+                </Content>
+            </Rock:ModalDialog>
+
+            <Rock:ModalDialog runat="server" ID="mdSql" Title="Debug SQL">
+                <Content>
+                    <pre>
+                        <asp:literal runat="server" ID="ltSql" />
+                    </pre>
                 </Content>
             </Rock:ModalDialog>
 

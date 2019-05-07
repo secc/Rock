@@ -52,6 +52,7 @@ namespace RockWeb.Blocks.Reporting
 
         private const string _ViewStateKeyShowResults = "ShowResults";
         private string _settingKeyShowResults = "data-view-show-results-{blockId}";
+        private StringBuilder sbSql = new StringBuilder();
 
         /// <summary>
         /// Gets or sets the visibility of the Results Grid for the Data View.
@@ -163,7 +164,7 @@ $(document).ready(function() {
 
             if ( !Page.IsPostBack )
             {
-                this.ShowResults = GetUserPreference( _settingKeyShowResults ).AsBoolean(true);
+                this.ShowResults = GetUserPreference( _settingKeyShowResults ).AsBoolean( true );
 
                 string itemId = PageParameter( "DataViewId" );
                 if ( !string.IsNullOrWhiteSpace( itemId ) )
@@ -593,7 +594,7 @@ $(document).ready(function() {
                 btnEdit.Visible = true;
                 string errorMessage = string.Empty;
                 btnDelete.Enabled = dataViewService.CanDelete( dataView, out errorMessage );
-                if (!btnDelete.Enabled)
+                if ( !btnDelete.Enabled )
                 {
                     btnDelete.ToolTip = errorMessage;
                     btnDelete.Attributes["onclick"] = null;
@@ -793,7 +794,7 @@ $(document).ready(function() {
             {
                 foreach ( var groupSync in groupSyncs )
                 {
-                    string groupAndRole = string.Format( "{0} - {1}", (groupSync.Group != null ? groupSync.Group.Name : "(Id: " + groupSync.GroupId.ToStringSafe() + ")" ), groupSync.GroupTypeRole.Name );
+                    string groupAndRole = string.Format( "{0} - {1}", ( groupSync.Group != null ? groupSync.Group.Name : "(Id: " + groupSync.GroupId.ToStringSafe() + ")" ), groupSync.GroupTypeRole.Name );
 
                     if ( !string.IsNullOrWhiteSpace( groupDetailPage ) )
                     {
@@ -838,7 +839,7 @@ $(document).ready(function() {
                 if ( dataView.EntityTypeId.HasValue )
                 {
                     var entityTypeCache = EntityTypeCache.Get( dataView.EntityTypeId.Value, rockContext );
-                    if (entityTypeCache != null)
+                    if ( entityTypeCache != null )
                     {
                         gReport.RowItemText = entityTypeCache.FriendlyName;
                     }
@@ -907,9 +908,7 @@ $(document).ready(function() {
                         {
                             grid.CreatePreviewColumns( entityType );
                             var dbContext = dataView.GetDbContext();
-
                             var qry = dataView.GetQuery( grid.SortProperty, dbContext, GetAttributeValue( "DatabaseTimeout" ).AsIntegerOrNull() ?? 180, out errorMessages );
-
                             if ( fetchRowCount.HasValue )
                             {
                                 qry = qry.Take( fetchRowCount.Value );
@@ -950,7 +949,7 @@ $(document).ready(function() {
                 }
             }
 
-            var errorBox = ( grid == gPreview) ? nbPreviewError : nbGridError;
+            var errorBox = ( grid == gPreview ) ? nbPreviewError : nbGridError;
 
             if ( errorMessages.Any() )
             {
@@ -1005,6 +1004,34 @@ $(document).ready(function() {
             dv.EntityTypeId = etpEntityType.SelectedEntityTypeId;
             dv.DataViewFilter = ReportingHelper.GetFilterFromControls( phFilters );
             ShowPreview( dv );
+        }
+
+        protected void btnGenerateSql_Click( object sender, EventArgs e )
+        {
+            DataView dv = new DataView();
+            dv.TransformEntityTypeId = ddlTransform.SelectedValueAsInt();
+            dv.EntityTypeId = etpEntityType.SelectedEntityTypeId;
+            dv.DataViewFilter = ReportingHelper.GetFilterFromControls( phFilters );
+            var dbContext = dv.GetDbContext();
+            dbContext.Database.Log = s => DisplaySql( s );
+            List<string> errorMessages = new List<string>();
+            var qry = dv.GetQuery( null, dbContext, GetAttributeValue( "DatabaseTimeout" ).AsIntegerOrNull() ?? 180, out errorMessages );
+            var x = qry.ToList();
+        }
+
+        private void DisplaySql( string s )
+        {
+            sbSql.Append( s + "<br>" );
+        }
+
+        protected override void OnPreRender( EventArgs e )
+        {
+            base.OnPreRender( e );
+            if ( sbSql.Length > 0 )
+            {
+                ltSql.Text = sbSql.ToString();
+                mdSql.Show();
+            }
         }
 
         /// <summary>
@@ -1141,7 +1168,7 @@ $(document).ready(function() {
                         }
                         catch ( Exception ex )
                         {
-                            this.LogException( new Exception("Exception setting selection for DataViewFilter: " + filter.Guid, ex));
+                            this.LogException( new Exception( "Exception setting selection for DataViewFilter: " + filter.Guid, ex ) );
                         }
                     }
 
