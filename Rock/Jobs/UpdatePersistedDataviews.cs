@@ -14,8 +14,12 @@
 // limitations under the License.
 // </copyright>
 //
+using System;
+using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Threading.Tasks;
 using Quartz;
 using Rock.Attribute;
 using Rock.Data;
@@ -29,8 +33,14 @@ namespace Rock.Jobs
     /// <seealso cref="Quartz.IJob" />
     [DisallowConcurrentExecution]
     [IntegerField( "SQL Command Timeout", "Maximum amount of time (in seconds) to wait for each SQL command to complete. Leave blank to use the default for this job (300 seconds). ", false, 5 * 60, "General", 1, "SqlCommandTimeout" )]
+    [IntegerField( "Thread Count", "Number of concurent threads to run at a time", false, 10, "General", 1, "ThreadCount" )]
     public class UpdatePersistedDataviews : IJob
     {
+        RockContext rockContext;
+        ConcurrentBag<int> dataViews = new ConcurrentBag<int>();
+        int updatedDataViewCount = 0;
+        int sqlCommandTimeout;
+
         /// <summary>
         /// Empty constructor for job initialization
         /// <para>
@@ -49,34 +59,62 @@ namespace Rock.Jobs
         public void Execute( IJobExecutionContext context )
         {
             JobDataMap dataMap = context.JobDetail.JobDataMap;
-            int sqlCommandTimeout = dataMap.GetString( "SQLCommandTimeout" ).AsIntegerOrNull() ?? 300;
             StringBuilder results = new StringBuilder();
-            int updatedDataViewCount = 0;
-            using ( var rockContext = new RockContext() )
+            sqlCommandTimeout = dataMap.GetString( "SQLCommandTimeout" ).AsIntegerOrNull() ?? 300;
+            rockContext = new RockContext();
+
+            var currentDateTime = RockDateTime.Now;
+
+            // get a list of all the dataviews that need to be refreshed
+            var expiredPersistedDataViews = new DataViewService( rockContext ).Queryable()
+                .Where( a => a.PersistedScheduleIntervalMinutes.HasValue )
+                .Where( a =>
+                  ( a.PersistedLastRefreshDateTime == null )
+                  || ( System.Data.Entity.SqlServer.SqlFunctions.DateAdd( "mi", a.PersistedScheduleIntervalMinutes.Value, a.PersistedLastRefreshDateTime.Value ) < currentDateTime )
+                 )
+                 .Select( a => a.Id )
+                 .ToList();
+
+            foreach ( var dataView in expiredPersistedDataViews )
             {
-                var currentDateTime = RockDateTime.Now;
+                dataViews.Add( dataView );
+            }
 
-                // get a list of all the dataviews that need to be refreshed
-                var expiredPersistedDataViews = new DataViewService( rockContext ).Queryable()
-                    .Where( a => a.PersistedScheduleIntervalMinutes.HasValue )
-                    .Where( a =>
-                      ( a.PersistedLastRefreshDateTime == null )
-                      || ( System.Data.Entity.SqlServer.SqlFunctions.DateAdd( "mi", a.PersistedScheduleIntervalMinutes.Value, a.PersistedLastRefreshDateTime.Value ) < currentDateTime )
-                     );
+            List<Task> taskList = new List<Task>();
 
-                var expiredPersistedDataViewsList = expiredPersistedDataViews.ToList();
-                foreach ( var dataView in expiredPersistedDataViewsList )
+            var threadCount = dataMap.GetString( "ThreadCount" ).AsIntegerOrNull() ?? 10;
+            for ( int i = 0; i < threadCount; i++ )
+            {
+                taskList.Add( Task.Run( () => UpdateDataViews() ) );
+            }
+
+            Task.WaitAll( taskList.ToArray() );
+
+
+            results.AppendLine( $"Updated {updatedDataViewCount} {"dataview".PluralizeIf( updatedDataViewCount != 1 )}" );
+            context.UpdateLastStatusMessage( results.ToString() );
+        }
+
+        private void UpdateDataViews()
+        {
+            RockContext rockContext = new RockContext();
+            DataViewService dataViewService = new DataViewService( rockContext );
+            int dataViewId;
+            while ( dataViews.TryTake( out dataViewId ) )
+            {
+                try
                 {
-                    context.UpdateLastStatusMessage( $"Updating {dataView.Name}" );
+                    var dataView = dataViewService.Get( dataViewId );
                     dataView.PersistResult( sqlCommandTimeout );
                     dataView.PersistedLastRefreshDateTime = RockDateTime.Now;
                     rockContext.SaveChanges();
                     updatedDataViewCount++;
                 }
+                catch ( Exception e )
+                {
+                    ExceptionLogService.LogException( new Exception( "Error while persiting DataView. See inner excpeption for details.", e ) );
+                }
             }
-
-            results.AppendLine( $"Updated {updatedDataViewCount} {"dataview".PluralizeIf( updatedDataViewCount != 1 )}" );
-            context.UpdateLastStatusMessage( results.ToString() );
         }
     }
 }
