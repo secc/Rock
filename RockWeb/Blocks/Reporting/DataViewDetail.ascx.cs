@@ -1016,7 +1016,7 @@ $(document).ready(function() {
             dbContext.Database.Log = s => DisplaySql( s );
             List<string> errorMessages = new List<string>();
             var qry = dv.GetQuery( null, dbContext, GetAttributeValue( "DatabaseTimeout" ).AsIntegerOrNull() ?? 180, out errorMessages );
-            var x = qry.ToList();
+            var x = qry.FirstOrDefault();
         }
 
         private void DisplaySql( string s )
