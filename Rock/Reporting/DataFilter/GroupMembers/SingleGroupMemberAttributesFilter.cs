@@ -24,6 +24,7 @@ using System.Linq.Expressions;
 using System.Web.UI;
 using System.Web.UI.HtmlControls;
 using System.Web.UI.WebControls;
+using Newtonsoft.Json;
 using Rock.Data;
 using Rock.Model;
 using Rock.Utility;
@@ -46,70 +47,22 @@ namespace Rock.Reporting.DataFilter.GroupMember
         /// <summary>
         ///     Settings for the Data Filter Component.
         /// </summary>
-        private class FilterSettings : SettingsStringBase
+        private class FilterSettings
         {
             public List<string> AttributeFilterSettings;
             public string AttributeKey;
             public int? GroupId;
 
-            public FilterSettings()
-            {
-                AttributeFilterSettings = new List<string>();
-            }
-
-            public FilterSettings( string settingsString )
-                : this()
-            {
-                FromSelectionString( settingsString );
-            }
-
-            public override bool IsValid
+            public bool IsValid
             {
                 get
                 {
-                    if ( string.IsNullOrWhiteSpace( AttributeKey ) )
-                    {
-                        return false;
-                    }
-
-                    return true;
+                    return GroupId != null && AttributeKey.IsNotNullOrWhiteSpace();
                 }
             }
-
-            protected override void OnSetParameters( int version, IReadOnlyList<string> parameters )
+            public FilterSettings()
             {
-                // Parameter 1: Attribute Key
-                AttributeKey = DataComponentSettingsHelper.GetParameterOrEmpty( parameters, 0 );
-
-                // Parameter 2+: Remaining Parameters represent settings that are specific to the filter for the selected Attribute.
                 AttributeFilterSettings = new List<string>();
-
-                AttributeFilterSettings.AddRange( parameters.Skip( 1 ) );
-
-                // Derive GroupId from AttributeKey
-                var attributeGuid = AttributeKey.Split( '_' ).LastOrDefault().AsGuidOrNull();
-                AttributeCache attribute = null;
-                if ( attributeGuid.HasValue )
-                {
-                    attribute = AttributeCache.Get( attributeGuid.Value );
-                }
-
-                this.GroupId = null;
-                if ( attribute != null && attribute.EntityTypeQualifierColumn == "GroupId" )
-                {
-                    this.GroupId = attribute.EntityTypeQualifierValue.AsIntegerOrNull();
-                }
-            }
-
-            protected override IEnumerable<string> OnGetParameters()
-            {
-                var settings = new List<string>();
-
-                settings.Add( AttributeKey.ToStringSafe() );
-
-                settings.AddRange( AttributeFilterSettings );
-
-                return settings;
             }
         }
 
@@ -188,13 +141,20 @@ namespace Rock.Reporting.DataFilter.GroupMember
             string result = "Member Property";
             if ( !string.IsNullOrWhiteSpace( selection ) )
             {
-                var settings = new FilterSettings( selection );
+                FilterSettings settings;
+                try
+                {
+                    settings = JsonConvert.DeserializeObject<FilterSettings>( selection );
+                }
+                catch
+                {
+                    return null;
+                }
                 var entityField = GetGroupMemberAttributes( settings.GroupId ).FirstOrDefault( f => f.UniqueName == settings.AttributeKey );
                 if ( entityField != null )
                 {
                     result = entityField.FormattedFilterDescription( settings.AttributeFilterSettings );
                 }
-
                 return result;
             }
 
@@ -390,6 +350,7 @@ namespace Rock.Reporting.DataFilter.GroupMember
                     GroupPicker groupPicker = containerControl.Controls[0] as GroupPicker;
                     Guid groupGuid = Guid.Empty;
                     var groupId = groupPicker.SelectedValueAsInt();
+                    settings.GroupId = groupId;
 
                     if ( containerControl.Controls.Count > 1 )
                     {
@@ -410,11 +371,10 @@ namespace Rock.Reporting.DataFilter.GroupMember
                             }
                         }
                     }
-
                 }
             }
 
-            return settings.ToSelectionString();
+            return JsonConvert.SerializeObject( settings );
         }
 
         /// <summary>
@@ -425,7 +385,15 @@ namespace Rock.Reporting.DataFilter.GroupMember
         /// <param name="selection">The selection.</param>
         public override void SetSelection( Type entityType, Control[] controls, string selection )
         {
-            var settings = new FilterSettings( selection );
+            FilterSettings settings;
+            try
+            {
+                settings = JsonConvert.DeserializeObject<FilterSettings>( selection );
+            }
+            catch
+            {
+                return;
+            }
 
             if ( !settings.IsValid )
             {
@@ -471,7 +439,15 @@ namespace Rock.Reporting.DataFilter.GroupMember
         /// <returns></returns>
         public override Expression GetExpression( Type entityType, IService serviceInstance, ParameterExpression parameterExpression, string selection )
         {
-            var settings = new FilterSettings( selection );
+            FilterSettings settings;
+            try
+            {
+                settings = JsonConvert.DeserializeObject<FilterSettings>( selection );
+            }
+            catch
+            {
+                return null;
+            }
 
             if ( settings.IsValid && settings.AttributeFilterSettings.Any() )
             {
