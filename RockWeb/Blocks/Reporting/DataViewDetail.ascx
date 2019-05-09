@@ -144,7 +144,7 @@
                     </p>
                     <p>
                         If you don't know what any of this means don't worry about it. It's here for debugging purposes only.
-                        You can used dataviews just fine without worrying about any of it.
+                        You can use dataviews just fine without worrying about any of it.
                     </p>
                     <pre>
                         <asp:literal runat="server" ID="ltSql" />
