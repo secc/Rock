@@ -684,7 +684,12 @@
                                             <textarea class="form-control" id="component-button-emailbody"></textarea>
                                         </div>
 
-                                          <Rock:FileUploader ID="componentButtonFile" ClientIDMode="Static" runat="server" Label="File" UploadAsTemporary="false" DoneFunctionClientScript="handleButtonFileUpdate(e, data)" DeleteFunctionClientScript="handleButtonFileUpdate()" />
+                          			  
+							          <div id="componentButtonFileWrapper">
+							            <Rock:FileUploader ID="componentButtonFile" ClientIDMode="Static" runat="server" Label="File" UploadAsTemporary="false" DoneFunctionClientScript="handleButtonFileUpdate(e, data)" DeleteFunctionClientScript="handleButtonFileUpdate()" />
+							          </div>
+
+                                          
 
 						                <div class="row">
 							                <div class="col-md-6">

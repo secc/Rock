@@ -138,7 +138,7 @@
 
                         //Hide the url and show the email
                         $('#component-button-urlfields').hide();
-                        $('#componentButtonFile').hide();
+                        $('#componentButtonFileWrapper').hide();
                         $('#component-button-emailfields').show();
 
 
@@ -149,7 +149,7 @@
                         //hide other options and show file
                         $('#component-button-urlfields').hide();
                         $('#component-button-emailfields').hide();
-                        $('#componentButtonFile').show();
+                        $('#componentButtonFileWrapper').show();
                         break;
                     default:
                         //Url is default
@@ -157,7 +157,7 @@
                         buttonComponent.attr('data-button-linktype', 'Url');
 
                         //Hide the email and show the url
-                        $('#componentButtonFile').hide();
+                        $('#componentButtonFileWrapper').hide();
                         $('#component-button-emailfields').hide();
                         $('#component-button-urlfields').show();
                 }
