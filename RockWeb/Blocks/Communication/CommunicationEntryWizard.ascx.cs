@@ -104,6 +104,12 @@ namespace RockWeb.Blocks.Communication
         required: false,
         order: 10,
         key: "SimpleCommunicationPage" )]
+    [BooleanField( "Inactive Recipients Require Approval",
+        description: "If any of the recipients are inactive the communication will need to be approved",
+        defaultValue: true,
+        order: 11,
+        key: "InactiveRequireApproval" )]
+
     public partial class CommunicationEntryWizard : RockBlock, IDetailBlock
     {
         #region Fields
@@ -586,6 +592,7 @@ namespace RockWeb.Blocks.Communication
         {
             pnlRecipientSelection.Visible = true;
             SetNavigationHistory( pnlRecipientSelection );
+            
         }
 
         /// <summary>
@@ -697,6 +704,7 @@ namespace RockWeb.Blocks.Communication
         {
             if ( ppAddPerson.PersonId.HasValue )
             {
+ 
                 if ( !IndividualRecipientPersonIds.Contains( ppAddPerson.PersonId.Value ) )
                 {
                     IndividualRecipientPersonIds.Add( ppAddPerson.PersonId.Value );
@@ -717,6 +725,14 @@ namespace RockWeb.Blocks.Communication
         {
             var individualRecipientCount = this.IndividualRecipientPersonIds.Count();
             lIndividualRecipientCount.Text = string.Format( "{0} {1} selected", individualRecipientCount, "recipient".PluralizeIf( individualRecipientCount != 1 ) );
+            var inactiveRecordStatusId = DefinedValueCache.Get( Rock.SystemGuid.DefinedValue.PERSON_RECORD_STATUS_INACTIVE.AsGuid() ).Id;
+            var rockContext = new RockContext();
+            var personService = new PersonService( rockContext );
+            var inactiveRecipientCount = personService.Queryable( true ).AsNoTracking().Where( a => this.IndividualRecipientPersonIds.Contains( a.Id ) && a.RecordStatusValueId == inactiveRecordStatusId ).Count();
+            lInactiveRecipientCount.Text = string.Format( "{0} {1} selected", inactiveRecipientCount, "inactive recipient".PluralizeIf( inactiveRecipientCount != 1 ) );
+            pnlInactiveRecipientCount.Visible = inactiveRecipientCount > 0;
+            
+
         }
 
         /// <summary>
@@ -766,7 +782,8 @@ namespace RockWeb.Blocks.Communication
                     alertClass = "text-danger";
                     alertMessage = "Deceased";
                 }
-
+               
+                
                 // Email related
                 if ( string.IsNullOrWhiteSpace( recipientPerson.Email ) )
                 {
@@ -2144,14 +2161,20 @@ sendCountTerm.PluralizeIf( sendCount != 1 ) );
                 return;
             }
 
+            var inactiveRecordStatusId = DefinedValueCache.Get( Rock.SystemGuid.DefinedValue.PERSON_RECORD_STATUS_INACTIVE.AsGuid() ).Id;
             var rockContext = new RockContext();
             Rock.Model.Communication communication = UpdateCommunication( rockContext );
+            var personService = new PersonService( rockContext );
+            var inactiveRecipientCount = personService.Queryable( true ).AsNoTracking().Where( a => this.IndividualRecipientPersonIds.Contains( a.Id ) && a.RecordStatusValueId == inactiveRecordStatusId ).Count();
+
 
             int maxRecipients = GetAttributeValue( "MaximumRecipients" ).AsIntegerOrNull() ?? int.MaxValue;
+            bool inactiveApprove = GetAttributeValue( "InactiveRequireApproval" ).AsBoolean();
+          
             bool userCanApprove = IsUserAuthorized( "Approve" );
             var recipientCount = communication.Recipients.Count();
             string message = string.Empty;
-            if ( recipientCount > maxRecipients && !userCanApprove )
+            if (( inactiveApprove && inactiveRecipientCount > 0 && !userCanApprove ) || ( recipientCount > maxRecipients && !userCanApprove ))
             {
                 communication.Status = CommunicationStatus.PendingApproval;
                 message = "Communication has been submitted for approval.";
