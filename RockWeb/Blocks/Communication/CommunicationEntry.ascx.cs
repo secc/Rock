@@ -139,6 +139,8 @@ namespace RockWeb.Blocks.Communication
         Category = "HTML Editor Settings",
         Order = 2 )]
 
+    [BooleanField( "Inactive Recipients Require Approval", "If any of the recipients are inactive the communication will need to be approved", true, "", 12 )]
+
     public partial class CommunicationEntry : RockBlock
     {
         #region Attribute Keys
@@ -761,8 +763,15 @@ namespace RockWeb.Blocks.Communication
                         communication.Status = CommunicationStatus.Draft;
                         rockContext.SaveChanges();
 
-                        if ( CheckApprovalRequired( communication.Recipients.Count() ) && !IsUserAuthorized( "Approve" ) )
-                        {
+                        var personService = new PersonService( rockContext );
+                        var inactiveRecordStatusId = DefinedValueCache.Get( Rock.SystemGuid.DefinedValue.PERSON_RECORD_STATUS_INACTIVE.AsGuid() ).Id;
+                        var recipientPersonIds = this.Recipients.Select( r => r.PersonId ).ToList();
+                        var inactiveRecipientCount = personService.Queryable( true ).AsNoTracking().Where( a => recipientPersonIds.Contains( a.Id ) && a.RecordStatusValueId == inactiveRecordStatusId ).Count();
+
+                        bool inactiveApprove = GetAttributeValue( "InactiveRecipientsRequireApproval" ).AsBoolean();
+                        if ( CheckApprovalRequired( communication.Recipients.Count()) && !IsUserAuthorized( "Approve" ) 
+                            || ( inactiveApprove && inactiveRecipientCount > 0 && !IsUserAuthorized( "Approve" ) ))
+                       {
                             communication.Status = CommunicationStatus.PendingApproval;
                             message = "Communication has been submitted for approval.";
                         }
