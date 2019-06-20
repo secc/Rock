@@ -1,4 +1,4 @@
-// <copyright>
+﻿// <copyright>
 // Copyright by the Spark Development Network
 //
 // Licensed under the Rock Community License (the "License");
@@ -505,18 +505,19 @@ namespace RockWeb.Blocks.Administration
             foreach ( RepeaterItem rItem in rInteractions.Items )
             {
                 RockCheckBox isInterationTypeEnabled = rItem.FindControl( "cbInterationType" ) as RockCheckBox;
-                if ( isInterationTypeEnabled.Checked )
-                {
+   //             if ( isInterationTypeEnabled.Checked )
+   //             {
                     _reactivateSettings.Interactions = _reactivateSettings.Interactions ?? new List<InteractionItem>();
                     HiddenField interactionTypeId = rItem.FindControl( "hfInteractionTypeId" ) as HiddenField;
                     NumberBox lastInteractionDays = rItem.FindControl( "nbInteractionDays" ) as NumberBox;
                     var item = new InteractionItem( interactionTypeId.Value.AsGuid(), string.Empty )
                     {
-                        IsInteractionTypeEnabled = true,
+                        //IsInteractionTypeEnabled = true,
+                        IsInteractionTypeEnabled = isInterationTypeEnabled.Checked,
                         LastInteractionDays = lastInteractionDays.Text.AsInteger()
                     };
                     _reactivateSettings.Interactions.Add( item );
-                }
+     //           }
             }
 
             // Inactivate
