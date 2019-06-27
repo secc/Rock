@@ -223,6 +223,10 @@ namespace RockWeb.Blocks.Communication
             fupMobileAttachment.BinaryFileTypeGuid = this.GetAttributeValue( AttributeKey.AttachmentBinaryFileType ).AsGuidOrNull() ?? Rock.SystemGuid.BinaryFiletype.DEFAULT.AsGuid();
 
             hfSMSCharLimit.Value = ( this.GetAttributeValue( AttributeKey.CharacterLimit ).AsIntegerOrNull() ?? 160 ).ToString();
+            var videoProviders = Rock.Communication.VideoEmbed.VideoEmbedContainer.Instance.Dictionary.Select( c => c.Value.Key );
+            lbVideoUrlHelpText.Attributes["data-original-title"] += ( videoProviders.Count() > 1 ? string.Join( ", ", videoProviders.Take( videoProviders.Count() - 1 ) ) + " and " + videoProviders.Last() : videoProviders.FirstOrDefault() ) + ".";
+
+            hfSMSCharLimit.Value = ( this.GetAttributeValue( "CharacterLimit" ).AsIntegerOrNull() ?? 160 ).ToString();
 
             gIndividualRecipients.DataKeyNames = new string[] { "Id" };
             gIndividualRecipients.GridRebind += gIndividualRecipients_GridRebind;
