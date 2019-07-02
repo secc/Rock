@@ -638,6 +638,14 @@ namespace Rock.Data
         public DbSet<DataViewPersistedValue> DataViewPersistedValues { get; set; }
 
         /// <summary>
+        /// Gets or sets the data view sql filter stores.
+        /// </summary>
+        /// <value>
+        /// The data view sql filter stores.
+        /// </value>
+        public DbSet<DataViewSQLFilterStore> DataViewSQLFilterStores { get; set; }
+
+        /// <summary>
         /// Gets or sets the Defined Types.
         /// </summary>
         /// <value>

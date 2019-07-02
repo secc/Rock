@@ -276,6 +276,10 @@ namespace Rock.Model
                                     {
                                         return ( component as IDataFilterWithOverrides ).GetExpressionWithOverrides( filteredEntityType, serviceInstance, parameter, dataViewFilterOverrides, selection );
                                     }
+                                    else if ( component is IDataFilterRequireFilterId )
+                                    {
+                                        return ( component as IDataFilterRequireFilterId ).GetExpression( filteredEntityType, serviceInstance, parameter, selection, Id );
+                                    }
                                     else
                                     {
                                         return component.GetExpression( filteredEntityType, serviceInstance, parameter, selection );

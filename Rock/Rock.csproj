@@ -434,6 +434,7 @@
     <Compile Include="Model\CodeGenerated\SmsActionService.cs" />
     <Compile Include="Model\CodeGenerated\NoteAttachmentService.cs" />
     <Compile Include="Model\CodeGenerated\PersonScheduleExclusionService.cs" />
+    <Compile Include="Model\DataViewSQLFilterStore.cs" />
     <Compile Include="Model\GroupLocationScheduleConfig.cs" />
     <Compile Include="Model\GroupMemberAssignment.cs" />
     <Compile Include="Model\GroupMemberAssignmentService.Partial.cs" />
@@ -523,8 +524,10 @@
     <Compile Include="Reporting\DataFilter\Person\HasDuplicatePhoneFilter.cs" />
     <Compile Include="Reporting\DataFilter\Person\InteractionDataViewFilter.cs" />
     <Compile Include="Reporting\DataFilter\Person\InteractionsFilter.cs" />
+    <Compile Include="Reporting\DataFilter\SQLFilter.cs" />
     <Compile Include="Reporting\DataSelect\Person\InteractionCountSelect.cs" />
     <Compile Include="Reporting\DataSelect\Person\InteractionDateSelect.cs" />
+    <Compile Include="Reporting\IDataFilterRequireFilterId.cs" />
     <Compile Include="SystemGuid\AssessmentType.cs" />
     <Compile Include="SystemGuid\ContentChannelType.cs" />
     <Compile Include="SystemGuid\Layout.cs" />
