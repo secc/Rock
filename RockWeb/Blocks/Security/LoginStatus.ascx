@@ -1,12 +1,15 @@
 ﻿<%@ Control Language="C#" AutoEventWireup="true" CodeFile="LoginStatus.ascx.cs" Inherits="RockWeb.Blocks.Security.LoginStatus" %>
 
-<ul class="nav navbar-nav loginstatus">    
-    <li class="dropdown" ID="liDropdown" runat="server">
+<ul class="nav navbar-nav loginstatus">
+    <li class="dropdown" id="liDropdown" runat="server">
 
         <a class="dropdown-toggle navbar-link" href="#" data-toggle="dropdown">
-            <div id="divProfilePhoto" runat="server" class="profile-photo"></div>
+            <div id="divProfilePhoto" runat="server" class="profile-photo">
+                <asp:Literal runat="server" ID="lNotifications" />
+            </div>
+            <asp:PlaceHolder ID="phHello" runat="server">
+                <asp:Literal ID="lHello" runat="server" /></asp:PlaceHolder>
 
-            <asp:PlaceHolder ID="phHello" runat="server"><asp:Literal ID="lHello" runat="server" /></asp:PlaceHolder>
             <b class="fa fa-caret-down"></b>
         </a>
 
@@ -26,13 +29,20 @@
                     <asp:HyperLink ID="hlMyProfile" runat="server" Text="My Profile" />
                 </li>
             </asp:PlaceHolder>
+            <asp:PlaceHolder ID="phMyDashboard" runat="server">
+                <li>
+                    <asp:HyperLink ID="hlMyDashboard" runat="server" Text="My Dashboard" />
+                </li>
+            </asp:PlaceHolder>
             <asp:Literal ID="lDropdownItems" runat="server" />
             <li class="divider"></li>
-            <li><asp:LinkButton ID="lbLoginLogout" runat="server" OnClick="lbLoginLogout_Click" CausesValidation="false"></asp:LinkButton></li>
+            <li>
+                <asp:LinkButton ID="lbLoginLogout" runat="server" OnClick="lbLoginLogout_Click" CausesValidation="false"></asp:LinkButton></li>
         </ul>
 
     </li>
-    <li ID="liLogin" runat="server" Visible="false"><asp:LinkButton ID="lbLogin" runat="server" OnClick="lbLoginLogout_Click" CausesValidation="false" Text="Login"></asp:LinkButton></li>
+    <li id="liLogin" runat="server" visible="false">
+        <asp:LinkButton ID="lbLogin" runat="server" OnClick="lbLoginLogout_Click" CausesValidation="false" Text="Login"></asp:LinkButton></li>
 </ul>
 <asp:HiddenField ID="hfActionType" runat="server" />
 

@@ -25,6 +25,8 @@ using Rock.Security;
 using System.Text;
 using System.Text.RegularExpressions;
 using Rock.Model;
+using Rock.Data;
+using Rock.Web.Cache;
 
 namespace RockWeb.Blocks.Security
 {
@@ -38,7 +40,9 @@ namespace RockWeb.Blocks.Security
     [LinkedPage( "My Account Page", "Page for user to manage their account (if blank will use 'MyAccount' page route)", false )]
     [LinkedPage( "My Profile Page", "Page for user to view their person profile (if blank option will not be displayed)", false )]
     [LinkedPage( "My Settings Page", "Page for user to view their settings (if blank option will not be displayed)", false )]
+    [LinkedPage( "My Dashboard Page", "Page for user to view their dashboard (if blank option will not be displayed)", false )]
     [KeyValueListField( "Logged In Page List", "List of pages to show in the dropdown when the user is logged in. The link field takes Lava with the CurrentPerson merge fields. Place the text 'divider' in the title field to add a divider.", false, "", "Title", "Link" )]
+    [BooleanField( "Enable Notifications", "Display a notification of new workflows or connections." )]
 
     public partial class LoginStatus : Rock.Web.UI.RockBlock
     {
@@ -77,6 +81,12 @@ namespace RockWeb.Blocks.Security
             var currentPerson = CurrentPerson;
             if ( currentPerson != null )
             {
+                //Reset our clock when we look at our dashboard.
+                if ( PageCache.Guid == GetAttributeValue( "MyDashboardPage" ).AsGuid() )
+                {
+                    SetUserPreference( "LastViewedDashboard", Rock.RockDateTime.Now.ToString() );
+                }
+
                 phHello.Visible = true;
                 lHello.Text = string.Format( "<span>Hello {0}</span>", currentPerson.NickName );
 
@@ -110,9 +120,30 @@ namespace RockWeb.Blocks.Security
                     phMySettings.Visible = false;
                 }
 
+                if ( GetAttributeValue( "EnableNotifications" ).AsBoolean() )
+                {
+                    int notificationCount = GetNotificationCount();
+                    if ( notificationCount > 0 )
+                    {
+                        var notificationText = string.Format( " <div class='badge badge-danger'>{0}</div>", notificationCount );
+                        lNotifications.Text = notificationText;
+                        hlMyDashboard.Text += notificationText;
+                    }
+                }
+
+                var myDashboardUrl = LinkedPageUrl( "MyDashboardPage", null );
+                if ( !string.IsNullOrWhiteSpace( myDashboardUrl ) )
+                {
+                    hlMyDashboard.NavigateUrl = myDashboardUrl;
+                }
+                else
+                {
+                    phMyDashboard.Visible = false;
+                }
+
                 lbLoginLogout.Text = LOG_OUT;
 
-                divProfilePhoto.Attributes.Add( "style", String.Format( "background-image: url('{0}');", Rock.Model.Person.GetPersonPhotoUrl( currentPerson, 200, 200 )));
+                divProfilePhoto.Attributes.Add( "style", String.Format( "background-image: url('{0}');", Rock.Model.Person.GetPersonPhotoUrl( currentPerson, 200, 200 ) ) );
 
                 var navPagesString = GetAttributeValue( "LoggedInPageList" );
 
@@ -135,7 +166,7 @@ namespace RockWeb.Blocks.Security
                         }
                         else
                         {
-                            sbPageMarkup.Append( string.Format( "<li><a href='{0}'>{1}</a>", Page.ResolveUrl(page.Link.ResolveMergeFields(mergeFields)), page.Title ) );
+                            sbPageMarkup.Append( string.Format( "<li><a href='{0}'>{1}</a>", Page.ResolveUrl( page.Link.ResolveMergeFields( mergeFields ) ), page.Title ) );
                         }
                     }
 
@@ -156,6 +187,29 @@ namespace RockWeb.Blocks.Security
             }
 
             hfActionType.Value = lbLoginLogout.Text;
+        }
+
+        private int GetNotificationCount()
+        {
+            var lastChecked = GetUserPreference( "LastViewedDashboard" ).AsDateTime();
+            if ( !lastChecked.HasValue )
+            {
+                lastChecked = RockDateTime.Now.AddMonths( -3 );
+            }
+            RockContext rockContext = new RockContext();
+
+            //Workflow assigned to the person
+            var workflowCount = new WorkflowActionService( rockContext ).GetActiveForms( CurrentPerson ).Where( a => a.CreatedDateTime > lastChecked.Value ).Count();
+
+            //Connections - If a new connecion was made, a connection was just transfered, or a future followup just came up
+            DateTime midnightToday = RockDateTime.Today.AddDays( 1 );
+            var connectionRequests = new ConnectionRequestService( rockContext ).Queryable()
+                .Where( r => r.ConnectorPersonAlias != null && r.ConnectorPersonAlias.PersonId == CurrentPersonId )
+                .Where( r => ( r.ConnectionState == ConnectionState.Active && ( r.CreatedDateTime > lastChecked.Value || r.ConnectionRequestActivities.Where( a => a.CreatedDateTime > lastChecked.Value && a.ConnectionActivityType.Name == "Transferred" ).Any() ) ) ||
+                             ( r.ConnectionState == ConnectionState.FutureFollowUp && r.FollowupDate.HasValue && r.FollowupDate.Value < midnightToday ) && r.FollowupDate.Value > lastChecked.Value )
+                             .Count();
+
+            return workflowCount + connectionRequests;
         }
 
         #endregion
@@ -198,7 +252,7 @@ namespace RockWeb.Blocks.Security
                 // After logging out check to see if an anonymous user is allowed to view the current page.  If so
                 // redirect back to the current page, otherwise redirect to the site's default page
                 var currentPage = Rock.Web.Cache.PageCache.Get( RockPage.PageId );
-                if ( currentPage != null && currentPage.IsAuthorized(Authorization.VIEW, null))
+                if ( currentPage != null && currentPage.IsAuthorized( Authorization.VIEW, null ) )
                 {
                     string url = CurrentPageReference.BuildUrl( true );
                     Response.Redirect( url );
