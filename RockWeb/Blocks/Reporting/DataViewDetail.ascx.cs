@@ -44,8 +44,9 @@ namespace RockWeb.Blocks.Reporting
     [LinkedPage( "Data View Detail Page", "The page to display a data view.", false, order: 0 )]
     [LinkedPage( "Report Detail Page", "The page to display a report.", false, order: 1 )]
     [LinkedPage( "Group Detail Page", "The page to display a group.", false, order: 2 )]
-    [IntegerField( "Database Timeout", "The number of seconds to wait before reporting a database timeout.", false, 180, order: 3 )]
-    [LinkedPage( "Report Detail Page", "Page used to create new report.", false, order: 4 )]
+    [LinkedPage( "Group Requirement Type Detail Page", "The page to display a group.", false, order: 3 )]
+    [IntegerField( "Database Timeout", "The number of seconds to wait before reporting a database timeout.", false, 180, order: 4 )]
+    [LinkedPage( "Report Detail Page", "Page used to create new report.", false, order: 5 )]
     public partial class DataViewDetail : RockBlock, IDetailBlock
     {
         #region Properties
@@ -809,6 +810,45 @@ $(document).ready(function() {
                 descriptionListGroupSync.Add( "Groups", sbGroups );
                 lGroups.Text = descriptionListGroupSync.Html;
             }
+
+            //Group Requirement Type
+            DescriptionList groupRequirementTypeList = new DescriptionList();
+            StringBuilder sbGroupRequirementTypes = new StringBuilder();
+
+            var grPage = PageCache.Get( GetAttributeValue( "GroupRequirementTypeDetailPage" ).AsGuid() );
+            var showGroupRequirementShowLink = false;
+
+            if ( grPage != null && grPage.IsAuthorized( Rock.Security.Authorization.VIEW, CurrentPerson ) )
+            {
+                showGroupRequirementShowLink = true;
+
+            }
+            GroupRequirementTypeService groupRequirementTypeService = new GroupRequirementTypeService( rockContext );
+            var groupRequirementTypes = groupRequirementTypeService.Queryable()
+                .Where( g => g.RequirementCheckType == RequirementCheckType.Dataview && ( g.WarningDataViewId == dataView.Id || g.DataViewId == dataView.Id ) )
+                .ToList();
+
+            if ( groupRequirementTypes.Count() > 0 )
+            {
+                foreach ( var groupRequirementType in groupRequirementTypes )
+                {
+
+                    if ( showGroupRequirementShowLink )
+                    {
+                        sbGroupRequirementTypes.Append( "<a href=\"" + LinkedPageUrl( "GroupRequirementTypeDetailPage", new Dictionary<string, string>() { { "GroupRequirementTypeId", groupRequirementType.Id.ToString() } } ) + "\">" + groupRequirementType.Name + "</a><br/>" );
+                    }
+                    else
+                    {
+                        sbGroupRequirementTypes.Append( string.Format( "{0}<br/>", groupRequirementType.Name ) );
+                    }
+                }
+
+                groupRequirementTypeList.Add( "Group Requirement Types", sbGroupRequirementTypes );
+                lGroupRequirementTypes.Text = groupRequirementTypeList.Html;
+
+            }
+
+
 
             ShowReport( dataView );
         }

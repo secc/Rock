@@ -85,6 +85,7 @@
                                     <asp:Literal ID="lDataViews" runat="server" />
                                     <asp:Literal ID="lReports" runat="server" />
                                     <asp:Literal ID="lGroups" runat="server" />
+                                    <asp:Literal ID="lGroupRequirementTypes" runat="server" />
                                 </div>
                             </div>
 
