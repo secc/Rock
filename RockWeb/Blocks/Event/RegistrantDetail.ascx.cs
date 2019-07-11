@@ -1,4 +1,4 @@
-// Copyright by the Spark Development Network
+﻿// Copyright by the Spark Development Network
 //
 // Licensed under the Rock Community License (the "License");
 // you may not use this file except in compliance with the License.
@@ -829,7 +829,8 @@ namespace RockWeb.Blocks.Event
                 foreach ( var fee in TemplateState.Fees.OrderBy( f => f.Order ) )
                 {
                     var feeValues = GetFeeValues( fee );
-                    fee.AddFeeControl( phFees, registrationInstance, true, feeValues, null );
+                    if (feeValues != null)
+                        fee.AddFeeControl( phFees, registrationInstance, true, feeValues, null );
                 }
             }
             else
