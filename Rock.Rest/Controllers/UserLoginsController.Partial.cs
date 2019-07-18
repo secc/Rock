@@ -15,7 +15,9 @@
 // </copyright>
 //
 using System;
+using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Web.Http;
@@ -26,11 +28,17 @@ using Rock.Rest.Filters;
 
 namespace Rock.Rest.Controllers
 {
+
     /// <summary>
     /// Users REST API
     /// </summary>
     public partial class UserLoginsController
     {
+        private int _rateLimitingExpirationMinutes = 30;
+        private static object _delayLock = new object();
+        private static List<IPRecord> IPRecords { get; set; }
+
+
         /// <summary>
         /// Tests if a username is available
         /// </summary>
@@ -41,6 +49,14 @@ namespace Rock.Rest.Controllers
         [System.Web.Http.Route( "api/userlogins/available" )]
         public bool Available( string username )
         {
+            // We will be using a delay to limit the number of calls per IP address (for security)
+            //  - Start by creating a fairly long timeout
+            System.Web.HttpContext.Current.Server.ScriptTimeout = 300;
+            //  - Now caculate a delay which will effectively double the 
+            //    amount of time each request within a timeout window takes
+            var delay = GetDelay( GetIpAddress() );
+            System.Threading.Thread.Sleep( Convert.ToInt32( delay ) );
+
             return ( (UserLoginService)Service ).GetByUserName( username ) == null;
         }
 
@@ -113,5 +129,83 @@ namespace Rock.Rest.Controllers
                 }
             }
         }
+
+
+        /// <summary>
+        /// Calculates a delay for subsequent calls from the same IP address (Rate Limiting)
+        /// </summary>
+        /// <param name="ip"></param>
+        /// <returns></returns>
+        private double GetDelay( string ip )
+        {
+
+            lock (_delayLock)
+            {
+                if (IPRecords == null)
+                {
+                    IPRecords = new List<IPRecord>();
+                }
+                // Add a new record each time a specific IP address makes a request
+                IPRecords.Add( new IPRecord( ip ) );
+
+                // Remove expired records
+                var expired = Rock.RockDateTime.Now.AddMinutes( 0 - _rateLimitingExpirationMinutes );
+                IPRecords.RemoveAll( r => r.DateTime <= expired );
+
+                //Slow down exponentially.
+                double delay = 2; //2ms
+                delay = Math.Pow( delay, IPRecords.Where( r => r.IPAddress == ip ).Count() );
+                return delay;
+            }
+        }
+
+        /// <summary>
+        /// Method for getting the user's IP address.
+        /// Used in rate limiting.
+        /// </summary>
+        /// <returns></returns>
+        private string GetIpAddress()
+        {
+            System.Web.HttpContext context = System.Web.HttpContext.Current;
+            string ipAddress = context.Request.ServerVariables["HTTP_X_FORWARDED_FOR"];
+
+            if (!string.IsNullOrEmpty( ipAddress ))
+            {
+                string[] addresses = ipAddress.Split( ',' );
+                if (addresses.Length != 0)
+                {
+                    var forwardedIp = addresses[0];
+                    var splitAddresss = forwardedIp.Split( ':' ); //Remove the occasional port
+                    return splitAddresss[0];
+                }
+            }
+            return context.Request.ServerVariables["REMOTE_ADDR"];
+        }
+    }
+
+    /// <summary>
+    /// Helper class for rate limiting
+    /// </summary>
+    public class IPRecord
+    {
+        /// <summary>
+        /// Constructor method
+        /// </summary>
+        /// <param name="ipAddress"></param>
+        public IPRecord( string ipAddress )
+        {
+            IPAddress = ipAddress;
+            DateTime = Rock.RockDateTime.Now;
+        }
+
+        /// <summary>
+        /// The value of the item being reserved
+        /// </summary>
+        public string IPAddress { get; set; }
+
+        /// <summary>
+        /// Time at which the item was reserved
+        /// </summary>
+        public DateTime DateTime { get; set; }
     }
 }
