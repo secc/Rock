@@ -424,6 +424,7 @@ namespace RockWeb.Blocks.Administration
 
             // Adult Children
             cbAdultChildren.Checked = _adultChildrenSettings.IsEnabled;
+            cbisOnlyMoveActive.Checked = _adultChildrenSettings.IsOnlyMoveActive;
             cbisMoveGraduated.Checked = _adultChildrenSettings.IsOnlyMoveGraduated;
             pnlAdultChildren.Enabled = _adultChildrenSettings.IsEnabled;
             nbAdultAge.Text = _adultChildrenSettings.AdultAge.ToString();
@@ -589,6 +590,7 @@ namespace RockWeb.Blocks.Administration
 
             // Adult Children
             _adultChildrenSettings.IsEnabled = cbAdultChildren.Checked;
+            _adultChildrenSettings.IsOnlyMoveActive = cbisOnlyMoveActive.Checked;
             _adultChildrenSettings.IsOnlyMoveGraduated = cbisMoveGraduated.Checked;
             _adultChildrenSettings.AdultAge = nbAdultAge.Text.AsIntegerOrNull() ?? 18;
             _adultChildrenSettings.ParentRelationshipId = rpParentRelationship.GroupRoleId;

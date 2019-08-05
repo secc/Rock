@@ -527,7 +527,7 @@ Update Family Status: {updateFamilyStatus}
         /// </summary>
         /// <param name="context">The context.</param>
         /// <returns></returns>
-        /// <exception cref="Exception">Could not determine the 'Family' group type.</exception>
+        /// <exception cref="Exception">Could not determine the 'Family' group type</exception>
         private string UpdateFamilyCampus( IJobExecutionContext context )
         {
             try
