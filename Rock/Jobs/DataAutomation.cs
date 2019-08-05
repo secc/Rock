@@ -889,10 +889,15 @@ Update Family Status: {updateFamilyStatus}
                             m.Person.BirthDate.HasValue &&
                             m.Person.BirthDate <= adultBirthdate &&
                             m.Person.RecordStatusValue != null &&
-                            m.Person.RecordStatusValue.Guid == activeRecordStatusGuid &&
-                            !m.Person.IsLockedAsChild );
+                           !m.Person.IsLockedAsChild );
 
-                    if ( settings.IsOnlyMoveGraduated )
+                    if ( settings.IsOnlyMoveActive )
+                    {
+                        // Children with Active Status Only
+                        qry = qry.Where( p => p.Person.RecordStatusValue.Guid == activeRecordStatusGuid );
+                    }
+
+                        if ( settings.IsOnlyMoveGraduated )
                     {
                         int maxGradYear = CalculateMaxGradYear();
                         // Children who have a graduation year and have graduated
