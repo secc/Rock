@@ -41,6 +41,15 @@ namespace Rock.CheckIn
         public Schedule Schedule { get; set; }
 
         /// <summary>
+        /// Gets or sets the debug date time.
+        /// </summary>
+        /// <value>
+        /// The date time.
+        /// </value>
+        [DataMember]
+        public DateTime? DebugDateTime { get; set; }
+
+        /// <summary>
         /// Gets or sets the check in times.
         /// </summary>
         /// <value>
@@ -68,6 +77,10 @@ namespace Rock.CheckIn
         {
             get
             {
+                if ( DebugDateTime.HasValue )
+                {
+                    return DebugDateTime.Value;
+                }
                 if ( CampusId.HasValue )
                 {
                     var campus = CampusCache.Get( CampusId.Value );
