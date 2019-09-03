@@ -84,6 +84,16 @@ namespace Rock.CheckIn
 
         /// <summary>
         /// The group types (Checkin Areas) associated with this kiosk
+        /// Gets a date time to emulate for debugging purposes.
+        /// </summary>
+        /// <value>
+        /// The date time.
+        /// </value>
+        [DataMember]
+        public DateTime? DebugDateTime => Device.GetAttributeValue( "core_device_DebugDateTime").AsDateTime();
+
+        /// <summary>
+        /// The group types associated with this kiosk
         /// </summary>
         /// <value>
         /// The group types.
@@ -355,7 +365,11 @@ namespace Rock.CheckIn
             allLocations.Add( location.Id );
 
             DateTime currentDateTime = RockDateTime.Now;
-            if ( campusId.HasValue )
+            if ( kioskDevice.DebugDateTime.HasValue )
+            {
+                currentDateTime = kioskDevice.DebugDateTime.Value;
+            }
+            else if ( campusId.HasValue )
             {
                 currentDateTime = CampusCache.Get( campusId.Value )?.CurrentDateTime ?? RockDateTime.Now;
             }
@@ -380,6 +394,7 @@ namespace Rock.CheckIn
                     else
                     {
                         var kioskSchedule = new KioskSchedule( schedule );
+                        kioskSchedule.DebugDateTime = kioskDevice.DebugDateTime;
                         kioskSchedule.CampusId = kioskLocation.CampusId;
                         kioskSchedule.CheckInTimes = schedule.GetCheckInTimes( currentDateTime );
                         if ( kioskSchedule.IsCheckInActive || kioskSchedule.IsCheckOutActive || kioskSchedule.NextActiveDateTime.HasValue )
