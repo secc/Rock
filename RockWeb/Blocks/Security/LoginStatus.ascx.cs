@@ -125,7 +125,7 @@ namespace RockWeb.Blocks.Security
                     int notificationCount = GetNotificationCount();
                     if ( notificationCount > 0 )
                     {
-                        var notificationText = string.Format( " <div class='badge badge-danger'>{0}</div>", notificationCount );
+                        var notificationText = string.Format( " <div class='notification'>{0}</div>", notificationCount );
                         lNotifications.Text = notificationText;
                         hlMyDashboard.Text += notificationText;
                     }
