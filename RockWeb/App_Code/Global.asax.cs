@@ -831,7 +831,7 @@ namespace RockWeb
             routes.Ignore("{resource}.axd/{*pathInfo}");
 
             //Add page routes
-            var pageRoutes = pageRouteService.Queryable().OrderBy( r => r.Route).ToList();
+            var pageRoutes = pageRouteService.Queryable().ToList().OrderBy( r => r.Route, StringComparer.OrdinalIgnoreCase );
 
             foreach ( var pageRoute in pageRoutes )
             {
