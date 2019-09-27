@@ -8,7 +8,7 @@
 
     Sys.Application.add_load(function () {
         $('div.js-same-family').find('input:radio').on('click', function () {
-            if ($(this).val() == '1') {
+            if ($(this).val() > 0) {
                 $('.js-current-family-members').slideDown();
             } else {
                 var $div = $('.js-current-family-members');
@@ -17,7 +17,6 @@
             }
         });
     });
-
 </script>
 
 <asp:UpdatePanel ID="upDetail" runat="server">
@@ -71,7 +70,6 @@
                                     <div class="col-xs-6">
                                         <Rock:NumberBox MinimumValue="1" ID="nbMaxRegistrants" runat="server" Label="Maximum Registrants"
                                             Help="The maximum number of registrants that user is allowed to register. Leave blank for unlimited." Visible="false" />
-
                                     </div>
                                 </div>
 
@@ -79,11 +77,9 @@
                                     <div class="col-xs-6">
                                         <Rock:RockRadioButtonList ID="rblRegistrantsInSameFamily" runat="server" Label="Registrants In Same Family" RepeatDirection="Horizontal" CssClass="js-same-family"
                                             Help="Typical relationship of registrants that user would register." />
-
                                         <div id="divCurrentFamilyMembers" runat="server" class="js-current-family-members" >
-
                                             <Rock:RockCheckBox ID="cbShowCurrentFamilyMembers" runat="server" Label="Show Family Members" Text="Yes"
-                                                Help="If Registrants in Same Family option is set to 'Yes', should the person registering be able to select people from their family when registering (vs. having to enter the family member's information manually)?" />
+                                                Help="If Registrants in Same Family option is set to 'Yes' or 'Ask', should the person registering be able to select people from their family when registering (vs. having to enter the family member's information manually)?" />
                                         </div>
 
                                         <Rock:RockCheckBox id="cbWaitListEnabled" runat="server" Label="Enable Wait List" Text="Yes" Help="Should a wait list be enabled when the maximum number of registrants is reached." />
@@ -192,7 +188,6 @@
                         <div class="pull-right">
                             <asp:LinkButton ID="lbAddForm" runat="server" CssClass="btn btn-action btn-xs" OnClick="lbAddForm_Click" CausesValidation="false"><i class="fa fa-plus"></i> Add Form</asp:LinkButton>
                         </div>
-
                     </Rock:PanelWidget>
 
                     <%-- Registration Attributes --%>
@@ -367,7 +362,6 @@
                         <asp:LinkButton ID="btnSave" runat="server" AccessKey="s" ToolTip="Alt+s" Text="Save" CssClass="btn btn-primary" OnClick="btnSave_Click" />
                         <asp:LinkButton ID="btnCancel" runat="server" AccessKey="c" ToolTip="Alt+c" Text="Cancel" CssClass="btn btn-link" CausesValidation="false" OnClick="btnCancel_Click" />
                     </div>
-
                 </div>
 
                 <fieldset id="fieldsetViewDetails" runat="server">
@@ -416,13 +410,9 @@
                             <asp:LinkButton ID="btnCopy" runat="server" CssClass="btn btn-default btn-sm btn-square fa fa-clone" OnClick="btnCopy_Click"/>
                             <Rock:SecurityButton ID="btnSecurity" runat="server" class="btn btn-sm btn-security" />
                         </span>
-
                     </div>
-                
                 </fieldset>
-
             </div>
-
         </asp:Panel>
 
         <asp:HiddenField ID="hfActiveDialogID" runat="server" />
@@ -607,7 +597,6 @@
                 });
 
             });
-
         </script>
     </ContentTemplate>
 </asp:UpdatePanel>
