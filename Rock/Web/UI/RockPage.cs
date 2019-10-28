@@ -1596,6 +1596,39 @@ namespace Rock.Web.UI
                 }
             }
 
+            // If we are not being impersonated by a user, then we want to do some additional checks
+            var impersonatedByUser = Session["ImpersonatedByUser"] as UserLogin;
+            if ( impersonatedByUser == null && impersonatedPersonKeyIdentity.IsNotNullOrWhiteSpace() )
+            { 
+                // Check to see if the current page is in the whitelist of pages allowing impersonation
+                List<string> pageIds = GlobalAttributesCache.Value( "ImpersonationPageWhitelist" ).SplitDelimitedValues().ToList();
+                if ( pageIds.Count > 0 && !pageIds.Contains( _pageCache.Id.ToString() ) )
+                {
+                    Authorization.SignOut();
+                    Session["InvalidPersonToken"] = true;
+                    Response.Redirect( PageReference.BuildUrl( true ), false );
+                    Context.ApplicationInstance.CompleteRequest();
+                    return false;
+                }
+
+                // If we have a blacklist group
+                Guid? blackListGroupGuid = GlobalAttributesCache.Value( "ImpersonationPersonBlacklist" ).AsGuidOrNull();
+                if ( blackListGroupGuid.HasValue )
+                {
+                    GroupService groupService = new GroupService( rockContext );
+                    Group blackListGroup = groupService.Get( blackListGroupGuid.Value );
+                    // Check to see if the person being impersonated is on the list
+                    if ( blackListGroup != null && blackListGroup.Members.Any(m => m.PersonId == CurrentUser.PersonId && m.IsArchived == false && m.GroupMemberStatus == GroupMemberStatus.Active ) )
+                    {
+                        Authorization.SignOut();
+                        Session["InvalidPersonToken"] = true;
+                        Response.Redirect( PageReference.BuildUrl( true ), false );
+                        Context.ApplicationInstance.CompleteRequest();
+                        return false;
+                    }
+                }
+            }
+
             // if there is a impersonatedPersonKeyParam specified, and it isn't already associated with the current HttpContext.Current.User.Identity,
             // then set the currentuser and ticket using the impersonatedPersonKeyParam
             if ( !string.IsNullOrEmpty( impersonatedPersonKeyParam ) && impersonatedPersonKeyParam != impersonatedPersonKeyIdentity )
