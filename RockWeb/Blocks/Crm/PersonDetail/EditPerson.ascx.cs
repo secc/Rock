@@ -388,14 +388,14 @@ namespace RockWeb.Blocks.Crm.PersonDetail
 
                         // Remove any changed or removed numbers
                         var phoneNumberService = new PhoneNumberService( rockContext );
-                                               var phoneNumbersToRemove = person.PhoneNumbers
-                                                   .Where( n => !phoneNumbersScreen.Any( n2 => n2.Number == n.Number && n2.NumberTypeValueId == n.NumberTypeValueId ) ).ToList();
+                        var phoneNumbersToRemove = person.PhoneNumbers
+                            .Where( n => !phoneNumbersScreen.Any( n2 => n2.Number == n.Number && n2.NumberTypeValueId == n.NumberTypeValueId ) ).ToList();
 
-                                               foreach ( var phoneNumber in phoneNumbersToRemove )
-                                               {
-                                                   person.PhoneNumbers.Remove( phoneNumber );
-                                                   phoneNumberService.Delete( phoneNumber );
-                                               }
+                        foreach ( var phoneNumber in phoneNumbersToRemove )
+                        {
+                            person.PhoneNumbers.Remove( phoneNumber );
+                            phoneNumberService.Delete( phoneNumber );
+                        }
                                                
   
 
@@ -737,7 +737,7 @@ namespace RockWeb.Blocks.Crm.PersonDetail
                             phoneNumber.NumberFormatted = PhoneNumber.FormattedNumber( phoneNumber.CountryCode, phoneNumber.Number );
                         }
 
-                        phoneNumbers.Add( phoneNumber );
+                    phoneNumbers.Add( phoneNumber );
                     }
                 }
 
