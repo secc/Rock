@@ -266,7 +266,7 @@ namespace RockWeb.Blocks.Administration
             {
                 SetPanel( pwUpdateCampus, pnlCampusUpdate, "Update Family Campus", cbCampusUpdate.Checked );
             }
-            
+
             SetPanel( pwReactivatePeople, pnlReactivatePeople, "Reactivate People", cbReactivatePeople.Checked );
             SetPanel( pwInactivatePeople, pnlInactivatePeople, "Inactivate People", cbInactivatePeople.Checked );
             SetPanel( pwAdultChildren, pnlAdultChildren, "Move Adult Children", cbAdultChildren.Checked );
@@ -402,7 +402,7 @@ namespace RockWeb.Blocks.Administration
                 }
 
                 // Now UNCHECK all channels that were NOT *previously* saved
-                var remainingChannels = inactivateChannelTypes.Where( c => ! _inactivateSettings.NoInteractions.Any( x => x.Guid == c.Guid ) );
+                var remainingChannels = inactivateChannelTypes.Where( c => !_inactivateSettings.NoInteractions.Any( x => x.Guid == c.Guid ) );
                 foreach ( var nonSavedInteractionItem in remainingChannels )
                 {
                     nonSavedInteractionItem.IsInteractionTypeEnabled = false;
@@ -446,6 +446,7 @@ namespace RockWeb.Blocks.Administration
 
             // Adult Children
             cbAdultChildren.Checked = _adultChildrenSettings.IsEnabled;
+            cbisOnlyMoveActive.Checked = _adultChildrenSettings.IsOnlyMoveActive;
             cbisMoveGraduated.Checked = _adultChildrenSettings.IsOnlyMoveGraduated;
             pnlAdultChildren.Enabled = _adultChildrenSettings.IsEnabled;
             nbAdultAge.Text = _adultChildrenSettings.AdultAge.ToString();
@@ -463,7 +464,7 @@ namespace RockWeb.Blocks.Administration
                 .Select( a => new PersonConnectionStatusDataView
                 {
                     PersonConnectionStatusValue = a,
-                    DataViewId = _updatePersonConnectionStatus.ConnectionStatusValueIdDataviewIdMapping.GetValueOrNull(a.Id)
+                    DataViewId = _updatePersonConnectionStatus.ConnectionStatusValueIdDataviewIdMapping.GetValueOrNull( a.Id )
                 } ).ToList();
 
             rptPersonConnectionStatusDataView.DataSource = personConnectionStatusDataViewSettingsList;
@@ -534,7 +535,7 @@ namespace RockWeb.Blocks.Administration
                     NumberBox lastInteractionDays = rItem.FindControl( "nbInteractionDays" ) as NumberBox;
                     var item = new InteractionItem( interactionTypeId.Value.AsGuid(), string.Empty )
                     {
-                        IsInteractionTypeEnabled = true,
+                        IsInteractionTypeEnabled = isInterationTypeEnabled.Checked,
                         LastInteractionDays = lastInteractionDays.Text.AsInteger()
                     };
                     _reactivateSettings.Interactions.Add( item );
@@ -568,19 +569,18 @@ namespace RockWeb.Blocks.Administration
             foreach ( RepeaterItem rItem in rNoInteractions.Items )
             {
                 RockCheckBox isInterationTypeEnabled = rItem.FindControl( "cbInterationType" ) as RockCheckBox;
-                if ( isInterationTypeEnabled.Checked )
-                {
-                    _inactivateSettings.NoInteractions = _inactivateSettings.NoInteractions ?? new List<InteractionItem>();
-                    HiddenField interactionTypeId = rItem.FindControl( "hfInteractionTypeId" ) as HiddenField;
-                    NumberBox lastInteractionDays = rItem.FindControl( "nbNoInteractionDays" ) as NumberBox;
-                    var item = new InteractionItem( interactionTypeId.Value.AsGuid(), string.Empty )
-                    {
-                        IsInteractionTypeEnabled = true,
-                        LastInteractionDays = lastInteractionDays.Text.AsInteger()
-                    };
 
-                    _inactivateSettings.NoInteractions.Add( item );
-                }
+                _inactivateSettings.NoInteractions = _inactivateSettings.NoInteractions ?? new List<InteractionItem>();
+                HiddenField interactionTypeId = rItem.FindControl( "hfInteractionTypeId" ) as HiddenField;
+                NumberBox lastInteractionDays = rItem.FindControl( "nbNoInteractionDays" ) as NumberBox;
+                var item = new InteractionItem( interactionTypeId.Value.AsGuid(), string.Empty )
+                {
+                    IsInteractionTypeEnabled = isInterationTypeEnabled.Checked,
+                    LastInteractionDays = lastInteractionDays.Text.AsInteger()
+                };
+
+                _inactivateSettings.NoInteractions.Add( item );
+
             }
 
             // Campus Update
@@ -611,6 +611,7 @@ namespace RockWeb.Blocks.Administration
 
             // Adult Children
             _adultChildrenSettings.IsEnabled = cbAdultChildren.Checked;
+            _adultChildrenSettings.IsOnlyMoveActive = cbisOnlyMoveActive.Checked;
             _adultChildrenSettings.IsOnlyMoveGraduated = cbisMoveGraduated.Checked;
             _adultChildrenSettings.AdultAge = nbAdultAge.Text.AsIntegerOrNull() ?? 18;
             _adultChildrenSettings.ParentRelationshipId = rpParentRelationship.GroupRoleId;
@@ -623,7 +624,7 @@ namespace RockWeb.Blocks.Administration
             // Update Connection Status
             _updatePersonConnectionStatus.IsEnabled = cbUpdatePersonConnectionStatus.Checked;
             _updatePersonConnectionStatus.ConnectionStatusValueIdDataviewIdMapping.Clear();
-            foreach (var item in rptPersonConnectionStatusDataView.Items.OfType<RepeaterItem>())
+            foreach ( var item in rptPersonConnectionStatusDataView.Items.OfType<RepeaterItem>() )
             {
                 HiddenField hfPersonConnectionStatusValueId = item.FindControl( "hfPersonConnectionStatusValueId" ) as HiddenField;
                 DataViewItemPicker dvpPersonConnectionStatusDataView = item.FindControl( "dvpPersonConnectionStatusDataView" ) as DataViewItemPicker;

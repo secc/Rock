@@ -1,4 +1,4 @@
-// <copyright>
+﻿// <copyright>
 // Copyright by the Spark Development Network
 //
 // Licensed under the Rock Community License (the "License");
@@ -36,6 +36,7 @@ namespace Rock.Utility.Settings.DataAutomation
             UseSameHomeAddress = true;
             UseSameHomePhone = true;
             IsOnlyMoveGraduated = false;
+            IsOnlyMoveGraduated = false;
             MaximumRecords = 200;
             var knownRelGroupType = GroupTypeCache.Get( Rock.SystemGuid.GroupType.GROUPTYPE_KNOWN_RELATIONSHIPS.AsGuid() );
             if ( knownRelGroupType != null )
@@ -62,6 +63,14 @@ namespace Rock.Utility.Settings.DataAutomation
         ///   <c>true</c> if the data automation job should only move graduated children; otherwise, if children should be moved regardless of if they've graduated <c>false</c>.
         /// </value>
         public bool IsOnlyMoveGraduated { get; set; }
+
+        /// <summary>
+        /// Gets or sets a value indicating whether to only move children who are active
+        /// </summary>
+        /// <value>
+        ///   <c>true</c> if the data automation job should only move active children; otherwise, if children should be moved regardless of if they've active <c>false</c>.
+        /// </value>
+        public bool IsOnlyMoveActive { get; set; }
 
         /// <summary>
         /// Gets or sets the adult age.
