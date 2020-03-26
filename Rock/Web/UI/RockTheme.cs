@@ -32,8 +32,8 @@ namespace Rock.Web.UI
     /// </summary>
     public class RockTheme
     {
-        static private string _themeDirectory = HttpRuntime.AppDomainAppPath + "Themes";
-        
+        static private string _themeDirectory = System.Web.Hosting.HostingEnvironment.MapPath( "~/Themes" );
+
         /// <summary>
         /// Gets or sets the name.
         /// </summary>
