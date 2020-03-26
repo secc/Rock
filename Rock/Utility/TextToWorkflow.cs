@@ -194,9 +194,20 @@ namespace Rock.Utility
 
             // Get the person ids for people who's Mobile number matches the received From number
             var mobilePhoneType = DefinedValueCache.Get( SystemGuid.DefinedValue.PERSON_PHONE_TYPE_MOBILE );
-            var peopleWithMobileNumber = phoneNumberService
-                .Queryable().AsNoTracking()
-                .Where( n => ( n.CountryCode ?? "" ) + ( n.Number ?? "" ) == phoneNumber )
+
+            var peopleWithMobileNumberQuery = phoneNumberService
+                .Queryable().AsNoTracking();
+            // North American mobile phone numbers always include the country code and area code
+            if ( phoneNumber.Length == 11 && phoneNumber.StartsWith( "1" ) )
+            {
+                peopleWithMobileNumberQuery = peopleWithMobileNumberQuery.Where( t => t.Number == phoneNumber.Substring( 1 ) && ( t.CountryCode ?? "" ) == "1" );
+            }
+            else
+            {
+                peopleWithMobileNumberQuery = peopleWithMobileNumberQuery.Where( n => ( n.CountryCode ?? "" ) + ( n.Number ?? "" ) == phoneNumber );
+            }
+
+            var peopleWithMobileNumber = peopleWithMobileNumberQuery
                 .Select( n => new
                 {
                     n.PersonId,
