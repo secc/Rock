@@ -88,12 +88,6 @@ namespace RockWeb
 
         public string FullPath( string templatePath )
         {
-
-            if ( templatePath == null )
-            {
-                throw new FileSystemException( "LavaFileSystem Illegal Template Name", templatePath );
-            }
-
             if ( templatePath != null && HttpContext.Current != null )
             {
                 if ( templatePath.StartsWith( "~~" ) &&
@@ -105,12 +99,17 @@ namespace RockWeb
                         rockPage.Layout != null &&
                         rockPage.Layout.Site != null )
                     {
-                        templatePath = Path.Combine( AppDomain.CurrentDomain.BaseDirectory, "Themes", rockPage.Layout.Site.Theme + ( templatePath.Length > 2 ? templatePath.Substring( 2 ) : string.Empty ) );
+                        templatePath = "~/Themes/" + rockPage.Layout.Site.Theme + ( templatePath.Length > 2 ? templatePath.Substring( 2 ) : string.Empty );
                     }
                 }
             }
 
-            return templatePath;
+            if ( templatePath == null )
+            {
+                throw new FileSystemException( "LavaFileSystem Illegal Template Name", templatePath );
+            }
+
+            return System.Web.Hosting.HostingEnvironment.MapPath( templatePath );
         }
 
     }
