@@ -157,6 +157,13 @@ namespace Rock.Transactions
             try
             {
                 _ipAddress = RockPage.GetClientIpAddress();
+                
+                if ( _ipAddress.Length > 45 )
+                {
+                    ExceptionLogService.LogException( new ConstraintException( "Interaction Transaction attempted to log an IP address that was too long: " + _ipAddress ) );
+                    _ipAddress = _ipAddress.Substring( 0, 45 );
+                }
+
             }
             catch
             {
