@@ -160,7 +160,7 @@ namespace Rock.Transactions
                 
                 if ( _ipAddress.Length > 45 )
                 {
-                    ExceptionLogService.LogException( new ConstraintException( "Interaction Transaction attempted to log an IP address that was too long: " + _ipAddress ) );
+                    ExceptionLogService.LogException( new Exception( "Interaction Transaction attempted to log an IP address that was too long: " + _ipAddress ) );
                     _ipAddress = _ipAddress.Substring( 0, 45 );
                 }
 
