@@ -671,12 +671,37 @@
 						                </div>
 
 						                <div class="form-group">
+                                              <label for="component-button-linktype">Link To</label>
+                                            <select id="component-button-linktype" class="form-control">
+                                                <option value="Url">Web Address</option>
+                                                <option value="Email">Email Address</option>
+                                                <option value="File">File</option>
+                                            </select>
+						                </div>
+
+						                <div class="form-group"id="component-button-urlfields">
 							                <label for="component-button-buttonurl">Url</label>
 							                <div class="input-group">
 								                <span class="input-group-addon"><i class="fa fa-link"></i></span>
 								                <input class="form-control" id="component-button-buttonurl" placeholder="http://yourlink.com">
 							                </div>
 						                </div>
+
+                                           <div class="form-group" id="component-button-emailfields">
+							                <label for="component-button-emailaddress">Email Address</label>
+								            <input class="form-control" id="component-button-emailaddress" placeholder="email@example.com">
+
+                                            <label for="component-button-emailsubject">Message Subject</label>
+								            <input class="form-control" id="component-button-emailsubject" placeholder="From Name">
+
+                                            <label for="component-button-emailbody">Message Body</label>
+                                            <textarea class="form-control" id="component-button-emailbody"></textarea>
+                                        </div>
+
+                                        <div id="componentButtonFileWrapper">
+                                          <Rock:FileUploader ID="componentButtonFile" ClientIDMode="Static" runat="server" Label="File" UploadAsTemporary="false"
+                                              DoneFunctionClientScript=" Rock.controls.emailEditor.buttonComponentHelper.handleButtonFileUpdate(e, data)" DeleteFunctionClientScript=" Rock.controls.emailEditor.buttonComponentHelper.handleButtonFileUpdate()" />
+                                        </div>
 
 						                <div class="row">
 							                <div class="col-md-6">

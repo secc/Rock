@@ -226,6 +226,7 @@ namespace RockWeb.Blocks.Communication
             componentImageUploader.BinaryFileTypeGuid = this.GetAttributeValue( AttributeKey.ImageBinaryFileType ).AsGuidOrNull() ?? Rock.SystemGuid.BinaryFiletype.DEFAULT.AsGuid();
             fupEmailAttachments.BinaryFileTypeGuid = this.GetAttributeValue( AttributeKey.AttachmentBinaryFileType ).AsGuidOrNull() ?? Rock.SystemGuid.BinaryFiletype.DEFAULT.AsGuid();
             fupMobileAttachment.BinaryFileTypeGuid = this.GetAttributeValue( AttributeKey.AttachmentBinaryFileType ).AsGuidOrNull() ?? Rock.SystemGuid.BinaryFiletype.DEFAULT.AsGuid();
+            componentButtonFile.BinaryFileTypeGuid = this.GetAttributeValue( "AttachmentBinaryFileType" ).AsGuidOrNull() ?? Rock.SystemGuid.BinaryFiletype.DEFAULT.AsGuid();
 
             hfSMSCharLimit.Value = ( this.GetAttributeValue( AttributeKey.CharacterLimit ).AsIntegerOrNull() ?? 160 ).ToString();
             var videoProviders = Rock.Communication.VideoEmbed.VideoEmbedContainer.Instance.Dictionary.Select( c => c.Value.Key );

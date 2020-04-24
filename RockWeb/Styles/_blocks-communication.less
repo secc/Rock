@@ -16,9 +16,11 @@
   .recipient {
     float: left;
     width: 100%;
+
     @media (min-width: @screen-sm-min) {
       width: 50%;
     }
+
     @media (min-width: @screen-md-min) {
       width: 25%;
     }
@@ -155,6 +157,13 @@ iframe.email-body {
   margin-top: 0;
 }
 
+.propertypanel-button {
+  height: 800px;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 0px 15px 0px 0px;
+}
+
 // 4. Communication Analytics
 // -------------------------
 
@@ -211,6 +220,7 @@ iframe.email-body {
     height: ~"calc(100vh - 200px)";
     min-height: 300px;
     border-right: 1px solid rgba(0,0,0, .2);
+
     @media (min-width: 599px) {
       min-width: 320px;
     }
@@ -279,7 +289,7 @@ iframe.email-body {
     }
   }
 
-  .messages-outer-container{
+  .messages-outer-container {
     position: relative;
     flex-grow: 1;
     padding: 15px;
@@ -342,6 +352,7 @@ iframe.email-body {
 
   .conversation-back {
     display: none;
+
     @media (max-width: 599px) {
       display: block;
     }
@@ -376,7 +387,6 @@ iframe.email-body {
     -webkit-align-items: flex-start;
     align-items: flex-start;
     -webkit-box-orient: vertical;
-
     -webkit-box-align: start;
 
     &.outbound {
@@ -400,7 +410,7 @@ iframe.email-body {
       border-radius: 20px;
     }
 
-    &.outbound .bubble{
+    &.outbound .bubble {
       color: #fff;
       background-color: #0084ff;
     }
@@ -543,7 +553,7 @@ iframe.email-body {
     color: #fff;
     text-align: center;
     content: counter(section);
-    counter-increment: section;                 /* Increment the value of section counter by 1 */
+    counter-increment: section; /* Increment the value of section counter by 1 */
     background-color: @btn-action-bg;
     border: 2px solid #fff;
     border-radius: 50%;
@@ -610,7 +620,7 @@ iframe.email-body {
   }
 }
 
-.sms-pipeline  {
+.sms-pipeline {
   .sms-heading {
     max-width: 500px;
     padding: 20px 16px;
