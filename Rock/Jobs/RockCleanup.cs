@@ -216,7 +216,7 @@ namespace Rock.Jobs
             /// </summary>
             /// <param name="title">The title.</param>
             /// <param name="ex">The ex.</param>
-            public RockCleanupException(string title, Exception ex ): base()
+            public RockCleanupException( string title, Exception ex ) : base( ex.Message, ex.InnerException )
             {
                 _title = title;
                 _exception = ex;
@@ -238,6 +238,7 @@ namespace Rock.Jobs
                     var innerException = _exception.InnerException;
                     while ( innerException != null)
                     {
+                        stackTrace += "\n\n" + innerException.Message;
                         stackTrace += "\n" + innerException.StackTrace;
                         innerException = innerException.InnerException;
                     }
