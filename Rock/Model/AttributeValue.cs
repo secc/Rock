@@ -778,6 +778,7 @@ namespace Rock.Model
             {
             var rockContext = new RockContext();
             var attributeMatrixService = new AttributeMatrixService( rockContext );
+            var attributeService = new AttributeService(rockContext);
             var attributeValueService = new AttributeValueService( rockContext );
 
             var matrixGuidQuery = attributeMatrixService.Queryable().AsNoTracking().Where( am =>
