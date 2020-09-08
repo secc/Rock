@@ -42,99 +42,105 @@ namespace Rock.Rest.Controllers
         [System.Web.Http.Route( "api/Presence" )]
         public HttpResponseMessage Post( List<MACPresence> presenceList )
         {
-            using ( var rockContext = new RockContext() )
+            try
             {
-                var interactionChannel = new InteractionChannelService( rockContext ).Get( Rock.SystemGuid.InteractionChannel.WIFI_PRESENCE.AsGuid() );
-                if ( interactionChannel != null )
+                using ( var rockContext = new RockContext() )
                 {
-                    var interactionComponentIds = new Dictionary<string, int>();
-
-                    var personalDeviceService = new PersonalDeviceService( rockContext );
-                    var interactionService = new InteractionService( rockContext );
-                    var interactionComponentService = new InteractionComponentService( rockContext );
-
-                    // Can't set to local time here as it won't compute DST correctly later.
-                    var epochTime = new DateTime( 1970, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc );
-
-                    foreach ( var macPresence in presenceList.Where( l => l.Mac != null && l.Mac != "" ) )
+                    var interactionChannel = new InteractionChannelService( rockContext ).Get( Rock.SystemGuid.InteractionChannel.WIFI_PRESENCE.AsGuid() );
+                    if ( interactionChannel != null )
                     {
-                        var device = personalDeviceService.GetByMACAddress( macPresence.Mac );
-                        if ( device == null )
-                        {
-                            device = new PersonalDevice();
-                            device.MACAddress = macPresence.Mac;
-                            personalDeviceService.Add( device );
+                        var interactionComponentIds = new Dictionary<string, int>();
 
-                            rockContext.SaveChanges();
-                        }
+                        var personalDeviceService = new PersonalDeviceService( rockContext );
+                        var interactionService = new InteractionService( rockContext );
+                        var interactionComponentService = new InteractionComponentService( rockContext );
 
-                        if ( macPresence.Presence != null && macPresence.Presence.Any() )
+                        // Can't set to local time here as it won't compute DST correctly later.
+                        var epochTime = new DateTime( 1970, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc );
+
+                        foreach ( var macPresence in presenceList.Where( l => l.Mac != null && l.Mac != "" ) )
                         {
-                            foreach ( var presence in macPresence.Presence )
+                            var device = personalDeviceService.GetByMACAddress( macPresence.Mac );
+                            if ( device == null )
                             {
-                                // Calc data needed for new and existing data
-                                DateTime interactionStart = epochTime.AddSeconds( presence.Arrive ).ToLocalTime();
-                                DateTime interactionEnd = epochTime.AddSeconds( presence.Depart ).ToLocalTime();
-                                TimeSpan ts = interactionEnd.Subtract( interactionStart );
-                                string duration = ( ts.TotalMinutes >= 60 ? $"{ts:%h} hours and " : "" ) + $"{ts:%m} minutes";
-
-                                Interaction interaction = interactionService.Queryable().Where( i => i.ForeignKey != null && i.ForeignKey == presence.SessionId ).FirstOrDefault();
-                                if ( interaction == null )
-                                {
-                                    if ( !interactionComponentIds.ContainsKey( presence.Space ) )
-                                    {
-                                        var component = interactionComponentService
-                                            .Queryable().AsNoTracking()
-                                            .Where( c =>
-                                                c.ChannelId == interactionChannel.Id &&
-                                                c.Name == presence.Space )
-                                            .FirstOrDefault();
-                                        if ( component == null )
-                                        {
-                                            component = new InteractionComponent();
-                                            interactionComponentService.Add( component );
-                                            component.ChannelId = interactionChannel.Id;
-                                            component.Name = presence.Space;
-                                            rockContext.SaveChanges();
-                                        }
-
-                                        interactionComponentIds.Add( presence.Space, component.Id );
-                                    }
-
-                                    interaction = new Interaction();
-                                    interaction.InteractionDateTime = interactionStart;
-                                    interaction.InteractionEndDateTime = interactionEnd;
-                                    interaction.Operation = "Present";
-                                    interaction.InteractionSummary = $"Arrived at {presence.Space} on {interactionStart.ToShortDateTimeString()}. Stayed for {duration}.";
-                                    interaction.InteractionComponentId = interactionComponentIds[presence.Space];
-                                    interaction.InteractionData = presence.ToJson();
-                                    interaction.PersonalDeviceId = device.Id;
-                                    interaction.PersonAliasId = device.PersonAliasId;
-                                    interaction.ForeignKey = presence.SessionId;
-
-                                    interactionService.Add( interaction );
-                                }
-                                else
-                                {
-                                    // Update the existing interaction
-                                    interaction.InteractionEndDateTime = interactionEnd;
-                                    interaction.InteractionSummary = $"Arrived at {presence.Space} on {interactionStart.ToShortDateTimeString()}. Stayed for {duration}.";
-                                    interaction.InteractionData = presence.ToJson();
-                                }
+                                device = new PersonalDevice();
+                                device.MACAddress = macPresence.Mac;
+                                personalDeviceService.Add( device );
 
                                 rockContext.SaveChanges();
                             }
-                        }
-                    }
 
-                    var response = ControllerContext.Request.CreateResponse( HttpStatusCode.Created );
-                    return response;
+                            if ( macPresence.Presence != null && macPresence.Presence.Any() )
+                            {
+                                foreach ( var presence in macPresence.Presence )
+                                {
+                                    // Calc data needed for new and existing data
+                                    DateTime interactionStart = epochTime.AddSeconds( presence.Arrive ).ToLocalTime();
+                                    DateTime interactionEnd = epochTime.AddSeconds( presence.Depart ).ToLocalTime();
+                                    TimeSpan ts = interactionEnd.Subtract( interactionStart );
+                                    string duration = ( ts.TotalMinutes >= 60 ? $"{ts:%h} hours and " : "" ) + $"{ts:%m} minutes";
+
+                                    Interaction interaction = interactionService.Queryable().Where( i => i.ForeignKey != null && i.ForeignKey == presence.SessionId ).FirstOrDefault();
+                                    if ( interaction == null )
+                                    {
+                                        if ( !interactionComponentIds.ContainsKey( presence.Space ) )
+                                        {
+                                            var component = interactionComponentService
+                                                .Queryable().AsNoTracking()
+                                                .Where( c =>
+                                                    c.ChannelId == interactionChannel.Id &&
+                                                    c.Name == presence.Space )
+                                                .FirstOrDefault();
+                                            if ( component == null )
+                                            {
+                                                component = new InteractionComponent();
+                                                interactionComponentService.Add( component );
+                                                component.ChannelId = interactionChannel.Id;
+                                                component.Name = presence.Space;
+                                                rockContext.SaveChanges();
+                                            }
+
+                                            interactionComponentIds.Add( presence.Space, component.Id );
+                                        }
+
+                                        interaction = new Interaction();
+                                        interaction.InteractionDateTime = interactionStart;
+                                        interaction.InteractionEndDateTime = interactionEnd;
+                                        interaction.Operation = "Present";
+                                        interaction.InteractionSummary = $"Arrived at {presence.Space} on {interactionStart.ToShortDateTimeString()}. Stayed for {duration}.";
+                                        interaction.InteractionComponentId = interactionComponentIds[presence.Space];
+                                        interaction.InteractionData = presence.ToJson();
+                                        interaction.PersonalDeviceId = device.Id;
+                                        interaction.PersonAliasId = device.PersonAliasId;
+                                        interaction.ForeignKey = presence.SessionId;
+
+                                        interactionService.Add( interaction );
+                                    }
+                                    else
+                                    {
+                                        // Update the existing interaction
+                                        interaction.InteractionEndDateTime = interactionEnd;
+                                        interaction.InteractionSummary = $"Arrived at {presence.Space} on {interactionStart.ToShortDateTimeString()}. Stayed for {duration}.";
+                                        interaction.InteractionData = presence.ToJson();
+                                    }
+
+                                    rockContext.SaveChanges();
+                                }
+                            }
+                        }
+
+                        var response = ControllerContext.Request.CreateResponse( HttpStatusCode.Created );
+                        return response;
+                    }
+                    else
+                    {
+                        var response = ControllerContext.Request.CreateErrorResponse( HttpStatusCode.BadRequest, "A WiFi Presense Interaction Channel Was Not Found!" );
+                        throw new HttpResponseException( response );
+                    }
                 }
-                else
-                {
-                    var response = ControllerContext.Request.CreateErrorResponse( HttpStatusCode.BadRequest, "A WiFi Presense Interaction Channel Was Not Found!" );
-                    throw new HttpResponseException( response );
-                }
+            } catch (Exception e)
+            {
+                throw new Exception( "Exception was thrown when logging a presence interaction: \n"+presenceList.ToJson(), e );
             }
         }
 
