@@ -74,57 +74,63 @@ namespace Rock.Rest.Controllers
                             {
                                 foreach ( var presence in macPresence.Presence )
                                 {
-                                    // Calc data needed for new and existing data
-                                    DateTime interactionStart = epochTime.AddSeconds( presence.Arrive ).ToLocalTime();
-                                    DateTime interactionEnd = epochTime.AddSeconds( presence.Depart ).ToLocalTime();
-                                    TimeSpan ts = interactionEnd.Subtract( interactionStart );
-                                    string duration = ( ts.TotalMinutes >= 60 ? $"{ts:%h} hours and " : "" ) + $"{ts:%m} minutes";
-
-                                    Interaction interaction = interactionService.Queryable().Where( i => i.ForeignKey != null && i.ForeignKey == presence.SessionId ).FirstOrDefault();
-                                    if ( interaction == null )
+                                    // This wraps each loop in it's own transaction and relaxes the isolation level in an attempt to make sure this operation
+                                    // is as fast as possible and does not block or wait for other interaction logging
+                                    using ( var dbContextTransaction = rockContext.Database.BeginTransaction( System.Data.IsolationLevel.ReadUncommitted ) )
                                     {
-                                        if ( !interactionComponentIds.ContainsKey( presence.Space ) )
+                                        // Calc data needed for new and existing data
+                                        DateTime interactionStart = epochTime.AddSeconds( presence.Arrive ).ToLocalTime();
+                                        DateTime interactionEnd = epochTime.AddSeconds( presence.Depart ).ToLocalTime();
+                                        TimeSpan ts = interactionEnd.Subtract( interactionStart );
+                                        string duration = ( ts.TotalMinutes >= 60 ? $"{ts:%h} hours and " : "" ) + $"{ts:%m} minutes";
+
+                                        Interaction interaction = interactionService.Queryable().Where( i => i.ForeignKey != null && i.ForeignKey == presence.SessionId ).FirstOrDefault();
+                                        if ( interaction == null )
                                         {
-                                            var component = interactionComponentService
-                                                .Queryable().AsNoTracking()
-                                                .Where( c =>
-                                                    c.ChannelId == interactionChannel.Id &&
-                                                    c.Name == presence.Space )
-                                                .FirstOrDefault();
-                                            if ( component == null )
+                                            if ( !interactionComponentIds.ContainsKey( presence.Space ) )
                                             {
-                                                component = new InteractionComponent();
-                                                interactionComponentService.Add( component );
-                                                component.ChannelId = interactionChannel.Id;
-                                                component.Name = presence.Space;
-                                                rockContext.SaveChanges();
+                                                var component = interactionComponentService
+                                                    .Queryable().AsNoTracking()
+                                                    .Where( c =>
+                                                        c.ChannelId == interactionChannel.Id &&
+                                                        c.Name == presence.Space )
+                                                    .FirstOrDefault();
+                                                if ( component == null )
+                                                {
+                                                    component = new InteractionComponent();
+                                                    interactionComponentService.Add( component );
+                                                    component.ChannelId = interactionChannel.Id;
+                                                    component.Name = presence.Space;
+                                                    rockContext.SaveChanges( true );
+                                                }
+
+                                                interactionComponentIds.Add( presence.Space, component.Id );
                                             }
 
-                                            interactionComponentIds.Add( presence.Space, component.Id );
+                                            interaction = new Interaction();
+                                            interaction.InteractionDateTime = interactionStart;
+                                            interaction.InteractionEndDateTime = interactionEnd;
+                                            interaction.Operation = "Present";
+                                            interaction.InteractionSummary = $"Arrived at {presence.Space} on {interactionStart.ToShortDateTimeString()}. Stayed for {duration}.";
+                                            interaction.InteractionComponentId = interactionComponentIds[presence.Space];
+                                            interaction.InteractionData = presence.ToJson();
+                                            interaction.PersonalDeviceId = device.Id;
+                                            interaction.PersonAliasId = device.PersonAliasId;
+                                            interaction.ForeignKey = presence.SessionId;
+
+                                            interactionService.Add( interaction );
+                                        }
+                                        else
+                                        {
+                                            // Update the existing interaction
+                                            interaction.InteractionEndDateTime = interactionEnd;
+                                            interaction.InteractionSummary = $"Arrived at {presence.Space} on {interactionStart.ToShortDateTimeString()}. Stayed for {duration}.";
+                                            interaction.InteractionData = presence.ToJson();
                                         }
 
-                                        interaction = new Interaction();
-                                        interaction.InteractionDateTime = interactionStart;
-                                        interaction.InteractionEndDateTime = interactionEnd;
-                                        interaction.Operation = "Present";
-                                        interaction.InteractionSummary = $"Arrived at {presence.Space} on {interactionStart.ToShortDateTimeString()}. Stayed for {duration}.";
-                                        interaction.InteractionComponentId = interactionComponentIds[presence.Space];
-                                        interaction.InteractionData = presence.ToJson();
-                                        interaction.PersonalDeviceId = device.Id;
-                                        interaction.PersonAliasId = device.PersonAliasId;
-                                        interaction.ForeignKey = presence.SessionId;
-
-                                        interactionService.Add( interaction );
+                                        rockContext.SaveChanges( true );
+                                        dbContextTransaction.Commit();
                                     }
-                                    else
-                                    {
-                                        // Update the existing interaction
-                                        interaction.InteractionEndDateTime = interactionEnd;
-                                        interaction.InteractionSummary = $"Arrived at {presence.Space} on {interactionStart.ToShortDateTimeString()}. Stayed for {duration}.";
-                                        interaction.InteractionData = presence.ToJson();
-                                    }
-
-                                    rockContext.SaveChanges();
                                 }
                             }
                         }
