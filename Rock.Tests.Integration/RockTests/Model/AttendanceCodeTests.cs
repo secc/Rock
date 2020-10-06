@@ -218,7 +218,7 @@ namespace Rock.Tests.Integration.Model
                                     .Where( group => group.Count() > 1 )
                                     .Select( group => group.Key );
 
-            Assert.IsTrue( duplicates.Count() == 0, "repeated codes: " + string.Join(", ", duplicates ) );
+            Assert.IsTrue( duplicates.Count() == 0, "repeated codes: " + string.Join( ", ", duplicates ) );
         }
 
         /// <summary>
@@ -366,7 +366,7 @@ namespace Rock.Tests.Integration.Model
 
                 Assert.IsFalse( hasMatchIsBad, "bad codes were: " + string.Join( ", ", matches ) );
             }
-            catch( TimeoutException )
+            catch ( TimeoutException )
             {
                 // If an infinite loop was detected, but we tried at least 600 codes then
                 // we'll consider this a pass.
@@ -410,7 +410,7 @@ namespace Rock.Tests.Integration.Model
         /// Codes containing parts combined into noGood codes, such as "P" + "55",
         /// should not occur.
         /// </summary>
-        [Ignore("Known issue in v8 and earlier. Remove this ignore when fixed.")]
+        [Ignore( "Known issue in v8 and earlier. Remove this ignore when fixed." )]
         [TestMethod]
         public void AlphaOnlyWithNumericOnlyCodesShouldSkipBadCodes()
         {
@@ -425,9 +425,9 @@ namespace Rock.Tests.Integration.Model
             var matches = codeList.Where( c => AttendanceCodeService.noGood.Any( ng => c.Contains( ng ) ) );
             bool hasMatchIsBad = matches.Any();
 
-            Assert.IsFalse( hasMatchIsBad , "bad codes were: " + string.Join(", ", matches ) );
+            Assert.IsFalse( hasMatchIsBad, "bad codes were: " + string.Join( ", ", matches ) );
         }
-        
+
         #endregion
 
     }
