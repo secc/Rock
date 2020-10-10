@@ -269,8 +269,8 @@ namespace Rock.Security.ExternalAuthentication
             userLogin.Password = EncodeBcrypt( password );
             rockContext.SaveChanges();
 
-            var recipients = new List<RecipientData>();
-            recipients.Add( new RecipientData( phoneNumber ) );
+            var recipients = new List<RockSMSMessageRecipient>();
+            recipients.Add( RockSMSMessageRecipient.CreateAnonymous(phoneNumber, null ) );
 
             var smsMessage = new RockSMSMessage
             {
@@ -441,9 +441,21 @@ namespace Rock.Security.ExternalAuthentication
     /// </summary>
     public static class SMSRecords
     {
+        /// <summary>
+        /// Delay lock semaphore
+        /// </summary>
         public static object _delayLock = new object();
+        /// <summary>
+        /// Reserve lock semaphore
+        /// </summary>
         public static object _reserveLock = new object();
+        /// <summary>
+        /// List of SMS Records
+        /// </summary>
         public static List<SMSRecord> Records { get; set; }
+        /// <summary>
+        /// List of Active Items
+        /// </summary>
         public static List<string> ActiveItems { get; set; }
 
         /// <summary>

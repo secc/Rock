@@ -491,10 +491,7 @@ namespace Rock.Reporting.DataFilter.GroupMember
                 fakeGroupMember.Group = group;
 
                 Rock.Attribute.Helper.LoadAttributes( fakeGroupMember );
-                foreach ( var attribute in fakeGroupMember.Attributes.Select( a => a.Value ) )
-                {
-                    EntityHelper.AddEntityFieldForAttribute( entityAttributeFields, attribute );
-                }
+                EntityHelper.AddEntityFieldsForAttributeList( entityAttributeFields, fakeGroupMember.Attributes.Select( a => a.Value ).ToList() );
 
                 int index = 0;
                 foreach ( var entityProperty in entityAttributeFields.OrderBy( p => p.TitleWithoutQualifier ).ThenBy( p => p.Name ) )

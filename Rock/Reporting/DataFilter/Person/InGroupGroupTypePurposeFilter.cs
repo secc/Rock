@@ -169,7 +169,7 @@ function() {
         /// <summary>
         /// The Group Type Purpose Dropdown
         /// </summary>
-        private RockDropDownList dllGroupTypePurpose = null;
+        private DefinedValuePicker dllGroupTypePurpose = null;
 
         /// <summary>
         /// The Member Role Type Dropdown
@@ -187,12 +187,11 @@ function() {
             {
                 selectedPurposeId = dllGroupTypePurpose.SelectedValueAsId();
             }
-
-            dllGroupTypePurpose = new RockDropDownList();
+            dllGroupTypePurpose = new DefinedValuePicker();
             dllGroupTypePurpose.ID = filterControl.ID + "_groupTypePurposePicker";
             dllGroupTypePurpose.CssClass = "js-group-type-purpose";
             dllGroupTypePurpose.Label = "Group Type Purpose";
-            dllGroupTypePurpose.BindToDefinedType( DefinedTypeCache.Get( SystemGuid.DefinedType.GROUPTYPE_PURPOSE ) );
+            dllGroupTypePurpose.DefinedTypeId = DefinedTypeCache.Get( SystemGuid.DefinedType.GROUPTYPE_PURPOSE ).Id;
             dllGroupTypePurpose.AutoPostBack = true;
             dllGroupTypePurpose.SelectedValue = selectedPurposeId.ToString();
             filterControl.Controls.Add( dllGroupTypePurpose );
