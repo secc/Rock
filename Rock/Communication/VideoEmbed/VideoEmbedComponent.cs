@@ -25,6 +25,9 @@ using Rock.Web.Cache;
 
 namespace Rock.Communication.VideoEmbed
 {
+    /// <summary>
+    /// Video Embed Component
+    /// </summary>
     public abstract class VideoEmbedComponent : Component
     {
         /// <summary>

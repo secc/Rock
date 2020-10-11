@@ -20,9 +20,6 @@ using System.Linq;
 using System.Text;
 
 using System.Collections.Concurrent;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 using Quartz;
 
@@ -68,7 +65,7 @@ namespace Rock.Jobs
             JobDataMap dataMap = context.JobDetail.JobDataMap;
 
             StringBuilder results = new StringBuilder();
-            int sqlCommandTimeout = dataMap.GetString( TIMEOUT_KEY ).AsIntegerOrNull() ?? 300;
+            sqlCommandTimeout = dataMap.GetString( TIMEOUT_KEY ).AsIntegerOrNull() ?? 300;
             rockContext = new RockContext();
 
             var currentDateTime = RockDateTime.Now;

@@ -68,7 +68,7 @@ namespace Rock.Security.ExternalAuthentication
         }
 
         /// <summary>
-        /// Initializes the <see cref="Database" /> class.
+        /// Initializes the <see cref="SMSAuthentication" /> class.
         /// </summary>
         static SMSAuthentication()
         {
@@ -315,6 +315,7 @@ namespace Rock.Security.ExternalAuthentication
         /// </summary>
         /// <param name="phoneNumber"></param>
         /// <param name="rockContext"></param>
+        /// <param name="error"></param>
         /// <returns></returns>
         public Person GetNumberOwner( string phoneNumber, RockContext rockContext, out string error )
         {
