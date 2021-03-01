@@ -18,7 +18,9 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.ComponentModel.Composition;
+using System.Linq;
 
+using Rock;
 using Rock.Attribute;
 using Rock.Data;
 using Rock.Model;
@@ -53,7 +55,9 @@ namespace Rock.Workflow.Action
             var attribute = AttributeCache.Get( GetAttributeValue( action, "Attribute" ).AsGuid(), rockContext );
             if ( attribute != null )
             {
-                string value = value = GetAttributeValue( action, "Value", true ).ResolveMergeFields( GetMergeFields( action ) );
+                var mergeFields = GetMergeFields( action );
+                mergeFields.Add( "Entity", entity );
+                string value = value = GetAttributeValue( action, "Value", true ).ResolveMergeFields( mergeFields );
                 if ( attribute.FieldTypeId == FieldTypeCache.Get( SystemGuid.FieldType.ENCRYPTED_TEXT.AsGuid(), rockContext ).Id ||
                     attribute.FieldTypeId == FieldTypeCache.Get( SystemGuid.FieldType.SSN.AsGuid(), rockContext ).Id )
                 {
