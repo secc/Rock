@@ -500,29 +500,37 @@ namespace Rock.Model
                     updatedEntityIdsQry = updatedEntityIdsQry.ToList().AsQueryable();
                 }
 
-                var persistedValuesToRemove = savedDataViewPersistedValues.Where( a => !updatedEntityIdsQry.Any( x => x == a.EntityId ) );
-                var persistedEntityIdsToInsert = updatedEntityIdsQry.Where( x => !savedDataViewPersistedValues.Any( a => a.EntityId == x ) ).ToList();
-
-                int removeCount = persistedValuesToRemove.Count();
-                if ( removeCount > 0 )
+                try
                 {
-                    // increase the batch size if there are a bunch of rows (and this is a narrow table with no references to it)
-                    int? deleteBatchSize = removeCount > 50000 ? 25000 : ( int? ) null;
 
-                    int rowRemoved = rockContext.BulkDelete( persistedValuesToRemove, deleteBatchSize );
+                    var persistedValuesToRemove = savedDataViewPersistedValues.Where( a => !updatedEntityIdsQry.Any( x => x == a.EntityId ) );
+                    var persistedEntityIdsToInsert = updatedEntityIdsQry.Where( x => !savedDataViewPersistedValues.Any( a => a.EntityId == x ) ).ToList();
+
+                    int removeCount = persistedValuesToRemove.Count();
+                    if ( removeCount > 0 )
+                    {
+                        // increase the batch size if there are a bunch of rows (and this is a narrow table with no references to it)
+                        int? deleteBatchSize = removeCount > 50000 ? 25000 : ( int? ) null;
+
+                        int rowRemoved = rockContext.BulkDelete( persistedValuesToRemove, deleteBatchSize );
+                    }
+
+                    if ( persistedEntityIdsToInsert.Any() )
+                    {
+                        List<DataViewPersistedValue> persistedValuesToInsert = persistedEntityIdsToInsert.OrderBy( a => a )
+                            .Select( a =>
+                            new DataViewPersistedValue
+                            {
+                                DataViewId = this.Id,
+                                EntityId = a
+                            } ).ToList();
+
+                        rockContext.BulkInsert( persistedValuesToInsert );
+                    }
                 }
-
-                if ( persistedEntityIdsToInsert.Any() )
+                catch ( Exception e )
                 {
-                    List<DataViewPersistedValue> persistedValuesToInsert = persistedEntityIdsToInsert.OrderBy( a => a )
-                        .Select( a =>
-                        new DataViewPersistedValue
-                        {
-                            DataViewId = this.Id,
-                            EntityId = a
-                        } ).ToList();
-
-                    rockContext.BulkInsert( persistedValuesToInsert );
+                    throw new Exception( "Stephens Custom Exception", new Exception( "DataView: " + this.Id.ToString(), e ) );
                 }
             }
         }
