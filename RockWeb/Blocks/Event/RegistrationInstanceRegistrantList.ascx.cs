@@ -749,7 +749,7 @@ namespace RockWeb.Blocks.Event
             if ( _mobilePhoneNumbers.Any() )
             {
                 var mobileNumber = _mobilePhoneNumbers[registrant.PersonId.Value];
-                var mobileField = e.Row.FindControl( "lRegistrantsMobile" ) as Literal ?? e.Row.FindControl( "lGroupPlacementsMobile" ) as Literal;
+                var mobileField = e.Row.FindControl( "lMobile" ) as Literal ?? e.Row.FindControl( "lGroupPlacementsMobile" ) as Literal;
                 if ( mobileField != null )
                 {
                     if ( mobileNumber == null || mobileNumber.NumberFormatted.IsNullOrWhiteSpace() )
@@ -766,7 +766,7 @@ namespace RockWeb.Blocks.Event
             if ( _homePhoneNumbers.Any() )
             {
                 var homePhoneNumber = _homePhoneNumbers[registrant.PersonId.Value];
-                var homePhoneField = e.Row.FindControl( "lRegistrantsHomePhone" ) as Literal ?? e.Row.FindControl( "lGroupPlacementsHomePhone" ) as Literal;
+                var homePhoneField = e.Row.FindControl( "lHomePhone" ) as Literal ?? e.Row.FindControl( "lGroupPlacementsHomePhone" ) as Literal;
                 if ( homePhoneField != null )
                 {
                     if ( homePhoneNumber == null || homePhoneNumber.NumberFormatted.IsNullOrWhiteSpace() )
@@ -1383,6 +1383,8 @@ namespace RockWeb.Blocks.Event
                         qry = qry.Where( r => groupMemberQry.Any( g => g.Id == r.GroupMemberId ) );
                     }
                 }
+
+                var t = qry.ToList();
 
                 // Sort the query
                 IOrderedQueryable<RegistrationRegistrant> orderedQry = null;
