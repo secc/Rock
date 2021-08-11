@@ -4698,6 +4698,7 @@ namespace RockWeb.Blocks.Connection
                         Name = ct.Name,
                         IconCssClass = ct.IconCssClass,
                         DaysUntilRequestIdle = ct.DaysUntilRequestIdle,
+                        Order = ct.Order,
                         ConnectionOpportunities = ct.ConnectionOpportunities
                             .Where( co => co.IsActive )
                             .Select( co => new ConnectionOpportunityViewModel
@@ -4717,7 +4718,8 @@ namespace RockWeb.Blocks.Connection
                             .ToList()
                     } )
                     .ToList()
-                    .OrderBy( ct => ct.Name )
+                    .OrderBy( ct => ct.Order )
+                    .ThenBy( ct => ct.Name )
                     .ThenBy( ct => ct.Id )
                     .ToList();
 
@@ -5043,10 +5045,7 @@ namespace RockWeb.Blocks.Connection
 
             return service.Queryable()
                 .AsNoTracking()
-                .Where( at =>
-                    ( !at.ConnectionTypeId.HasValue ||
-                    at.ConnectionTypeId == connectionType.Id ) &&
-                    at.IsActive );
+                .Where( at => at.ConnectionTypeId == connectionType.Id && at.IsActive );
         }
 
         /// <summary>
@@ -5310,6 +5309,11 @@ namespace RockWeb.Blocks.Connection
             /// Gets or sets the icon CSS class.
             /// </summary>
             public string IconCssClass { get; set; }
+
+            /// <summary>
+            /// Gets or sets the order.
+            /// </summary>
+            public int Order { get; set; }
 
             /// <summary>
             /// Gets or sets the days until request idle.
