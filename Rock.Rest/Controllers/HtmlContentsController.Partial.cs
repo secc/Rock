@@ -1,4 +1,4 @@
-// <copyright>
+﻿// <copyright>
 // Copyright by the Spark Development Network
 //
 // Licensed under the Rock Community License (the "License");
@@ -14,6 +14,8 @@
 // limitations under the License.
 // </copyright>
 //
+using System.Collections.Generic;
+using System.Collections.Generic;
 using System.Linq;
 using System.Web.Http;
 
@@ -62,10 +64,58 @@ namespace Rock.Rest.Controllers
         }
 
         /// <summary>
+        /// Gets all current HTML Snippets.
+        /// </summary>
+        [Authenticate]
+        [HttpGet]
+        [System.Web.Http.Route( "api/HtmlContents/Snippets" )]
+        [Rock.SystemGuid.RestActionGuid( "E27128D1-280F-43B3-A8E9-9DC209E4B7B7" )]
+        public List<HtmlContents> Snippets()
+        {
+            int personId = GetPerson().Id;
+
+            var htmlContentService = ( HtmlContentService ) Service;
+
+            var query = htmlContentService.Queryable().Where( hc => hc.BlockId == null && hc.CreatedByPersonAliasId.HasValue
+                                                && hc.CreatedByPersonAlias.PersonId == personId );
+            return query.Select( hc => new HtmlContents() { Name = hc.Name, EntityValue = hc.EntityValue, Content = hc.Content } ).ToList();
+        }
+
+        /// <summary>
+        /// Adds a new snippet (or creates a version for an existing one).
+        /// </summary>
+        /// <param name="htmlContents">The HTML contents for the snippet.</param>
+        [Authenticate]
+        [HttpPost]
+        [System.Web.Http.Route( "api/HtmlContents/AddSnippet" )]
+        [Rock.SystemGuid.RestActionGuid( "7FF2DA95-F7E1-4515-8ABC-37D5F8CAE4A4" )]
+        public void AddSnippet( [FromBody] HtmlContents htmlContents )
+        {
+            Person person = GetPerson();
+
+            HtmlContent newHtmlContent = new HtmlContent();
+
+            newHtmlContent.Name = htmlContents.Name;
+            newHtmlContent.Content = htmlContents.Content;
+            newHtmlContent.CreatedByPersonAliasId = person.PrimaryAliasId;
+            Service.Add( newHtmlContent );
+
+            Service.Context.SaveChanges();
+        }
+
+        /// <summary>
         ///
         /// </summary>
         public class HtmlContents
         {
+            /// <summary>
+            /// Gets or sets the name.
+            /// </summary>
+            /// <value>
+            /// The name.
+            /// </value>
+            public string Name { get; set; }
+
             /// <summary>
             /// Gets or sets the entity value.
             /// </summary>
