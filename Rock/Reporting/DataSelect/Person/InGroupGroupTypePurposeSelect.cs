@@ -193,13 +193,13 @@ namespace Rock.Reporting.DataSelect.Person
         public override System.Web.UI.Control[] CreateChildControls( System.Web.UI.Control parentControl )
         {
 
-            RockDropDownList dllGroupTypePurpose = new RockDropDownList();
-            dllGroupTypePurpose.ID = parentControl.ID + "_groupTypePurposePicker";
-            dllGroupTypePurpose.CssClass = "js-group-type-purpose";
-            dllGroupTypePurpose.Label = "Group Type Purpose";
-            dllGroupTypePurpose.BindToDefinedType( DefinedTypeCache.Get( SystemGuid.DefinedType.GROUPTYPE_PURPOSE ) );
-            dllGroupTypePurpose.AutoPostBack = true;
-            parentControl.Controls.Add( dllGroupTypePurpose );
+            DefinedValuePicker dvpGroupTypePurpose = new DefinedValuePicker();
+            dvpGroupTypePurpose.ID = parentControl.ID + "_groupTypePurposePicker";
+            dvpGroupTypePurpose.CssClass = "js-group-type-purpose";
+            dvpGroupTypePurpose.Label = "Group Type Purpose";
+            dvpGroupTypePurpose.DefinedTypeId = DefinedTypeCache.Get( SystemGuid.DefinedType.GROUPTYPE_PURPOSE ).Id;
+            dvpGroupTypePurpose.AutoPostBack = true;
+            parentControl.Controls.Add( dvpGroupTypePurpose );
 
             RockDropDownList ddlMemberRoleType = new RockDropDownList();
             ddlMemberRoleType.Label = "with Role Type";
@@ -230,7 +230,7 @@ namespace Rock.Reporting.DataSelect.Person
             ddlGroupStatus.SetValue( true.ToString() );
             parentControl.Controls.Add( ddlGroupStatus );
 
-            return new Control[4] { dllGroupTypePurpose, ddlMemberRoleType, ddlGroupMemberStatus, ddlGroupStatus };
+            return new Control[4] { dvpGroupTypePurpose, ddlMemberRoleType, ddlGroupMemberStatus, ddlGroupStatus };
         }
 
         /// <summary>
