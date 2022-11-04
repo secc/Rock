@@ -830,7 +830,7 @@ namespace RockWeb.Blocks.Connection
             lRequestModalViewModeEmail.Text = GetEmailLinkMarkup( viewModel.PersonId, viewModel.PersonEmail );
             aRequestModalViewModeProfileLink.Attributes["href"] = string.Format( "/person/{0}", viewModel.PersonId );
             btnRequestModalViewModeTransfer.Visible = DoShowTransferButton();
-            btnRequestModalViewModeConnect.Visible = viewModel.CanConnect && CanUserEditConnectionRequest();
+            btnRequestModalViewModeConnect.Visible = viewModel.CanConnect && CanUserConnect() && CanUserEditConnectionRequest();
             btnRequestModalViewModeEdit.Visible = CanUserEditConnectionRequest();
             lbRequestModalViewModeAddActivity.Visible = CanUserEditConnectionRequest();
             rRequestModalViewModeConnectorSelect.Visible = CanUserEditConnectionRequest();
@@ -1785,8 +1785,15 @@ namespace RockWeb.Blocks.Connection
             var connectorPersonAliasId = viewModel == null ? null : viewModel.ConnectorPersonAliasId;
 
             BindConnectorOptions( ddlRequestModalAddEditModeConnector, true, campusId, connectorPersonAliasId );
-            rblRequestModalAddEditModeState.BindToEnum<ConnectionState>();
+            if ( !CanUserConnect() )
+            {
+                rblRequestModalAddEditModeState.BindToEnum<ConnectionState>( ignoreTypes: new ConnectionState[] { ConnectionState.Connected } );
+            }
 
+            else
+            {
+                rblRequestModalAddEditModeState.BindToEnum<ConnectionState>();
+            }
             // Status
             rblRequestModalAddEditModeStatus.Items.Clear();
             var allStatuses = GetConnectionType().ConnectionStatuses
@@ -2334,6 +2341,42 @@ namespace RockWeb.Blocks.Connection
 
             var connectionOpportunities = GetConnectionOpportunities();
             return connectionOpportunities != null && connectionOpportunities.Count > 1 && CanUserEditConnectionRequest();
+        }
+
+        /// <summary>
+        /// SECC: Performs check to see if the user can connect the request based on if
+        /// Safety and Security needs to approve the connection request.
+        /// </summary>
+        /// <returns></returns>
+        private bool CanUserConnect()
+        {
+            var connectionOpportunity = GetConnectionOpportunity();
+            connectionOpportunity.LoadAttributes();
+            var requiresSecurityToConnect = connectionOpportunity.GetAttributeValue( "SecurityToConnect" ).AsBooleanOrNull();
+
+            //does not require security check
+            if ( !requiresSecurityToConnect.HasValue || !requiresSecurityToConnect.Value )
+            {
+                return true;
+            }
+
+            var connectableStatuses = connectionOpportunity.GetAttributeValue( "ConnectableStatuses" ).SplitDelimitedValues()
+                .Select( v => v.AsIntegerOrNull() )
+                .Where( v => v.HasValue )
+                .ToList();
+
+            // if no connectable statuses defined, skip
+            if ( connectableStatuses.Count() == 0 )
+            {
+                return true;
+            }
+
+            var connectionRequest = GetConnectionRequest();
+
+            return connectableStatuses.Contains( connectionRequest.ConnectionStatusId ) || connectionRequest.ConnectionState == ConnectionState.Connected;
+
+
+
         }
 
         private bool CanUserEditConnectionRequest()
