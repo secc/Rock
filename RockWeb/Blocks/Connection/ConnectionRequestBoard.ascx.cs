@@ -2373,7 +2373,10 @@ namespace RockWeb.Blocks.Connection
 
             var connectionRequest = GetConnectionRequest();
 
-            return connectableStatuses.Contains( connectionRequest.ConnectionStatusId ) || connectionRequest.ConnectionState == ConnectionState.Connected;
+           
+
+            return connectionRequest != null &&
+                (connectableStatuses.Contains( connectionRequest.ConnectionStatusId ) || connectionRequest.ConnectionState == ConnectionState.Connected);
 
 
 
