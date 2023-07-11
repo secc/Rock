@@ -243,8 +243,8 @@ namespace RockWeb.Blocks.Event
         private enum AddPlacementGroupTab
         {
             AddNewGroup,
-            AddExistingGroups,
-            AddGroupFromParent
+            AddExistingGroup,
+            AddMultipleGroups
         }
 
         #endregion
@@ -695,7 +695,7 @@ namespace RockWeb.Blocks.Event
             {
                 // if they can't add groups of this type, only show the Add to Existing group option
                 bgAddNewOrExistingPlacementGroup.Visible = false;
-                bgAddNewOrExistingPlacementGroup.SetValue( AddPlacementGroupTab.AddExistingGroups.ConvertToInt().ToString() );
+                bgAddNewOrExistingPlacementGroup.SetValue( AddPlacementGroupTab.AddExistingGroup.ConvertToInt().ToString() );
                 pnlAddNewPlacementGroup.Visible = false;
             }
             else
@@ -1064,33 +1064,32 @@ namespace RockWeb.Blocks.Event
             nbAddExistingPlacementMultipleGroupsWarning.Visible = false;
             nbAddExistingPlacementGroupWarning.Visible = false;
 
-            if ( bgAddNewOrExistingPlacementGroup.SelectedValue == AddPlacementGroupTab.AddExistingGroups.ConvertToInt().ToString() )
+            if ( bgAddNewOrExistingPlacementGroup.SelectedValue == AddPlacementGroupTab.AddExistingGroup.ConvertToInt().ToString() )
             {
-                placementGroups = new List<Group>();
-                var existingGroupIds = gpAddExistingPlacementGroup.SelectedValuesAsInt();
-
-                foreach ( var groupId in existingGroupIds )
+                var existingGroupId = gpAddExistingPlacementGroup.SelectedValue.AsIntegerOrNull();
+                if ( !existingGroupId.HasValue )
                 {
-                    var existingPlacementGroup = new GroupService( rockContext ).Get( groupId );
-                    if ( existingPlacementGroup == null )
-                    {
-                        continue;
-                    }
-
-                    var groupType = GroupTypeCache.Get( groupTypeId );
-
-                    if ( groupTypeId != existingPlacementGroup.GroupTypeId )
-                    {
-                        continue;
-                    }
-
-                    placementGroups.Add( existingPlacementGroup );
+                    return;
                 }
 
+                var existingPlacementGroup = new GroupService( rockContext ).Get( existingGroupId.Value );
+                if ( existingPlacementGroup == null )
+                {
+                    return;
+                }
 
+                var groupType = GroupTypeCache.Get( groupTypeId );
 
+                if ( groupTypeId != existingPlacementGroup.GroupTypeId )
+                {
+                    nbAddExistingPlacementGroupWarning.Text = "Group must have a group type of " + groupType.Name + ".";
+                    return;
+                }
+
+                placementGroups = new List<Group>();
+                placementGroups.Add( existingPlacementGroup );
             }
-            else if ( bgAddNewOrExistingPlacementGroup.SelectedValue == AddPlacementGroupTab.AddGroupFromParent.ConvertToInt().ToString() )
+            else if ( bgAddNewOrExistingPlacementGroup.SelectedValue == AddPlacementGroupTab.AddMultipleGroups.ConvertToInt().ToString() )
             {
                 var parentGroupId = gpAddExistingPlacementGroupsFromParent.SelectedValueAsId();
                 if ( parentGroupId == null )
@@ -1178,8 +1177,8 @@ namespace RockWeb.Blocks.Event
         /// <param name="e">The <see cref="System.EventArgs" /> instance containing the event data.</param>
         protected void bgAddNewOrExistingPlacementGroup_SelectedIndexChanged( object sender, EventArgs e )
         {
-            pnlAddMultipleGroups.Visible = bgAddNewOrExistingPlacementGroup.SelectedValue == AddPlacementGroupTab.AddGroupFromParent.ConvertToInt().ToString();
-            pnlAddExistingPlacementGroup.Visible = bgAddNewOrExistingPlacementGroup.SelectedValue == AddPlacementGroupTab.AddExistingGroups.ConvertToInt().ToString();
+            pnlAddMultipleGroups.Visible = bgAddNewOrExistingPlacementGroup.SelectedValue == AddPlacementGroupTab.AddMultipleGroups.ConvertToInt().ToString();
+            pnlAddExistingPlacementGroup.Visible = bgAddNewOrExistingPlacementGroup.SelectedValue == AddPlacementGroupTab.AddExistingGroup.ConvertToInt().ToString();
             pnlAddNewPlacementGroup.Visible = bgAddNewOrExistingPlacementGroup.SelectedValue == AddPlacementGroupTab.AddNewGroup.ConvertToInt().ToString();
         }
 
@@ -1232,20 +1231,17 @@ namespace RockWeb.Blocks.Event
         /// <param name="e">The <see cref="EventArgs"/> instance containing the event data.</param>
         protected void gpAddExistingPlacementGroup_SelectItem( object sender, EventArgs e )
         {
-            nbAddExistingPlacementGroupWarning.Visible = false;
-
             int groupTypeId = hfRegistrationTemplatePlacementGroupTypeId.Value.AsInteger();
-            var groupIds = gpAddExistingPlacementGroup.SelectedValuesAsInt();
-
-            foreach ( var groupId in groupIds )
+            var selectedGroup = new GroupService( new RockContext() ).Get( gpAddExistingPlacementGroup.SelectedValue.AsInteger() );
+            if ( !IsValidExistingGroup( selectedGroup, groupTypeId ) )
             {
-                var selectedGroup = new GroupService( new RockContext() ).Get( groupId );
-                if ( !IsValidExistingGroup( selectedGroup, groupTypeId ) )
-                {
-                    var groupType = GroupTypeCache.Get( groupTypeId );
-                    nbAddExistingPlacementGroupWarning.Text = string.Format( "The selected groups must be a {0} group", groupType );
-                    nbAddExistingPlacementGroupWarning.Visible = true;
-                }
+                var groupType = GroupTypeCache.Get( groupTypeId );
+                nbAddExistingPlacementGroupWarning.Text = string.Format( "The selected group must be a {0} group", groupType );
+                nbAddExistingPlacementGroupWarning.Visible = true;
+            }
+            else
+            {
+                nbAddExistingPlacementGroupWarning.Visible = false;
             }
         }
 
@@ -1265,7 +1261,7 @@ namespace RockWeb.Blocks.Event
             }
 
             string errorMessage;
-            if ( !HasValidChildGroups( parentGroupId.Value, groupTypeId, out errorMessage ) )
+            if (!HasValidChildGroups( parentGroupId.Value, groupTypeId, out errorMessage ))
             {
                 nbAddExistingPlacementMultipleGroupsWarning.Visible = true;
                 nbAddExistingPlacementMultipleGroupsWarning.Text = errorMessage;
@@ -1283,7 +1279,7 @@ namespace RockWeb.Blocks.Event
         /// </returns>
         private bool IsValidExistingGroup( Group selectedGroup, int groupTypeId )
         {
-            return selectedGroup != null && selectedGroup.GroupTypeId == groupTypeId;
+            return selectedGroup.GroupTypeId == groupTypeId;
         }
 
         /// <summary>
