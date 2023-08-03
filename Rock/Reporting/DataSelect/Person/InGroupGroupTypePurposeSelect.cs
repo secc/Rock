@@ -193,11 +193,11 @@ namespace Rock.Reporting.DataSelect.Person
         public override System.Web.UI.Control[] CreateChildControls( System.Web.UI.Control parentControl )
         {
 
-            RockDropDownList dllGroupTypePurpose = new RockDropDownList();
+            DefinedValuePicker dllGroupTypePurpose = new DefinedValuePicker();
             dllGroupTypePurpose.ID = parentControl.ID + "_groupTypePurposePicker";
             dllGroupTypePurpose.CssClass = "js-group-type-purpose";
             dllGroupTypePurpose.Label = "Group Type Purpose";
-            dllGroupTypePurpose.BindToDefinedType( DefinedTypeCache.Get( SystemGuid.DefinedType.GROUPTYPE_PURPOSE ) );
+            dllGroupTypePurpose.DefinedTypeId = DefinedTypeCache.Get( SystemGuid.DefinedType.GROUPTYPE_PURPOSE ).Id;
             dllGroupTypePurpose.AutoPostBack = true;
             parentControl.Controls.Add( dllGroupTypePurpose );
 
