@@ -843,12 +843,12 @@ namespace Rock.Model
                 .Select( am => am.Guid.ToString() );
 
             var matrixFieldType = FieldTypeCache.Get( SystemGuid.FieldType.MATRIX );
-            var attributeIdQuery = attributeService.Queryable().AsNoTracking().Where( a =>
-                a.FieldTypeId == matrixFieldType.Id )
-                .Select( a => a.Id );
 
-            var attributeValue = attributeValueService.Queryable().AsNoTracking().FirstOrDefault( av =>
-                 attributeIdQuery.Contains(av.AttributeId) && matrixGuidQuery.Contains( av.Value ) );
+            var attributeValue = attributeValueService.Queryable().AsNoTracking()
+                .Where( av => av.Attribute.FieldTypeId == matrixFieldType.Id )
+                .Where( av => av.Value != string.Empty)
+                .Where( av => matrixGuidQuery.Contains( av.Value ) )
+                .FirstOrDefault();
 
             return attributeValue;
         }
