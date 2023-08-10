@@ -23,13 +23,13 @@ using System.Web.UI.WebControls;
 
 using Rock;
 using Rock.Attribute;
-using Rock.Web.Cache;
 using Rock.Data;
+using Rock.Field.Types;
 using Rock.Model;
 using Rock.Transactions;
+using Rock.Web.Cache;
 using Rock.Web.UI;
 using Rock.Web.UI.Controls;
-using Rock.Field.Types;
 
 namespace RockWeb.Blocks.Cms
 {
@@ -56,8 +56,8 @@ namespace RockWeb.Blocks.Cms
 
     [ContentChannelField(
         "Content Channel",
-        Description = "Limits content channel items to a specific channel.",
-        IsRequired = true,
+        Description = "Limits content channel items to a specific channel. In most cases you'll want to provide a Content Channel to limit which channel is shown — especially if you're using non-globally unique slugs.",
+        IsRequired = false,
         DefaultValue = "",
         Category = "CustomSetting",
         Key = AttributeKey.ContentChannel )]

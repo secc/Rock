@@ -2,9 +2,10 @@ set nocount on
 
 /* Change these settings to your liking*/
 declare
-    @yearsBack int = 1,
-    @maxPersonCount INT = 40000, /* limit to first X persons in the database (Handy for testing Statement Generator) */ 
-    @maxTransactionCount int = 100000, 
+    @yearsBack int = 10,
+    @randomizePersonList bit = 1,  /* set to false to use a consistent set of X people (ordered by Person.Id) instead of using a randomized set */
+    @maxPersonCount INT = 1000, /* limit to a count of X persons in the database (Handy for testing Statement Generator) */
+    @maxTransactionCount int = 500000, 
     @maxBatchNumber INT = 1000
 
 declare
@@ -60,6 +61,8 @@ BEGIN
         ,[Status]
         ,[ControlAmount]
         ,[Guid]
+        ,[CreatedDateTime]
+        ,[ModifiedDateTime]
         )
     VALUES (
         @BatchName
@@ -67,6 +70,8 @@ BEGIN
         ,1
         ,0.00
         ,newid()
+        ,@BatchDate,
+        SYSDATETIME()
         )
      end
     SET @BatchNumber = @BatchNumber + 1;
@@ -78,8 +83,22 @@ BEGIN
     DEALLOCATE personAliasIdCursor;
 END
 
+declare @personAliasIds table ( id Int not null );
+
+-- Get a list of person alias ids into a temporary table so that the loop uses the same set of PersonAliasIds every time
+-- Exclude Giver Anonymous and Anonymous Visitor
+insert into @personAliasIds
+select top( @maxPersonCount ) pa.Id from 
+    PersonAlias pa
+    inner join Person p on pa.PersonId = p.Id
+    where p.[Guid] not in ('7ebc167b-512d-4683-9d80-98b6bb02e1b9', '802235dc-3ca5-94b0-4326-aace71180f48') 
+    order by 
+    case when @randomizePersonList = 1 then CHECKSUM(NEWID()) else PersonId end
+
+
 -- put all personIds in randomly ordered cursor to speed up getting a random personAliasId for each attendance
-declare personAliasIdCursor cursor LOCAL FAST_FORWARD for select top( @maxPersonCount ) Id from PersonAlias order by newid();
+declare personAliasIdCursor cursor LOCAL FAST_FORWARD for select Id from @personAliasIds 
+
 open personAliasIdCursor;
 
 IF CURSOR_STATUS('global','batchIdCursor')>=-1
@@ -116,7 +135,32 @@ begin
 
     while (@TransactionCountPerPerson < @MaxTransactionCountPerPerson AND @transactionCounter < @maxTransactionCount)
     begin
-        set @transactionAmount = ROUND(rand() * 5000, 2);
+        -- select a random amount with smaller rounded off amounts being more common than random amounts
+        SET @transactionAmount = (SELECT round(w.r, 1)
+                FROM (
+                    SELECT (
+                            CASE floor(rand(CHECKSUM(newid())) * 12)
+                                WHEN 1
+                                    THEN 100.00
+                                WHEN 2
+                                    THEN 100.00
+                                WHEN 3
+                                    THEN 150.00
+                                WHEN 4
+                                    THEN 200.00
+                                WHEN 5
+                                    THEN 20.00
+                                WHEN 6
+                                    THEN 20.00
+                                WHEN 7
+                                    THEN 25.00
+                                WHEN 8
+                                    THEN 250.00
+                                ELSE RAND() * 1000
+                                END
+                            ) [r]
+                    ) w)
+
 
         SET @TransactionCountPerPerson = @TransactionCountPerPerson + 1;
 
@@ -145,7 +189,21 @@ begin
           set @creditCardType = @creditCardTypeVisa
         end
 
-        insert into FinancialPaymentDetail ( CurrencyTypeValueId, CreditCardTypeValueId, [Guid] ) values (@currencyType, @creditCardType, NEWID());
+        INSERT INTO FinancialPaymentDetail (
+            CurrencyTypeValueId
+            ,CreditCardTypeValueId
+            ,[Guid]
+            ,[CreatedDateTime]
+            ,[ModifiedDateTime]
+            )
+        VALUES (
+            @currencyType
+            ,@creditCardType
+            ,NEWID()
+            ,@transactionDateTime
+            ,SYSDATETIME()
+            );
+
         set @financialPaymentDetailId = SCOPE_IDENTITY()
 
         if (@transactionCounter % 100 = 0 )
@@ -182,7 +240,9 @@ begin
                     ,[CheckMicrEncrypted]
                     ,[CheckMicrHash]
                     ,[CheckMicrParts]
-                    ,[Guid])
+                    ,[Guid]
+                    ,[CreatedDateTime]
+                    ,[ModifiedDateTime])
                 VALUES
                     (@authorizedPersonAliasId
                     ,@batchId
@@ -198,6 +258,8 @@ begin
                     ,@checkMicrHash
                     ,@checkMicrParts
                     ,NEWID()
+                    ,@transactionDateTime
+                    ,SYSDATETIME()
         )
         set @transactionId = SCOPE_IDENTITY()
  
@@ -209,7 +271,9 @@ begin
                     ,[Summary]
                     ,[EntityTypeId]
                     ,[EntityId]
-                    ,[Guid])
+                    ,[Guid]
+                    ,[CreatedDateTime]
+                    ,[ModifiedDateTime])
                 VALUES
                     (@transactionId
                     ,@accountId
@@ -217,10 +281,13 @@ begin
                     ,null
                     ,null
                     ,null
-                    ,NEWID())
+                    ,NEWID()
+                    ,@transactionDateTime
+                    ,SYSDATETIME())
 
         set @transactionCounter += 1;
-        set @transactionDateTime = DATEADD(ss, (86000*@daysBack/@maxTransactionCount), @transactionDateTime);
+        declare @randomSecondsAgo int = (RAND(CHECKSUM(newid())))*@daysBack*86400;
+        set @transactionDateTime = DATEADD(ss, -@randomSecondsAgo, GetDate());
         if (@transactionCounter % 10000 = 0)
         begin
             commit transaction

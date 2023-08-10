@@ -92,6 +92,11 @@ namespace Rock.Web.UI.Controls
         protected RockTextBox _tbIconCssClass;
 
         /// <summary>
+        /// The attribute color picker
+        /// </summary>
+        protected ColorPicker _attributeColorPicker;
+
+        /// <summary>
         /// Required control
         /// </summary>
         protected RockCheckBox _cbRequired;
@@ -521,13 +526,8 @@ namespace Rock.Web.UI.Controls
                 _lKey.Text = value;
             }
         }
-
-        /// <summary>
-        /// Gets or sets the icon CSS class.
-        /// </summary>
-        /// <value>
-        /// The icon CSS class.
-        /// </value>
+        
+        /// <inheritdoc cref="Rock.Model.Attribute.IconCssClass"/>
         public string IconCssClass
         {
             get
@@ -539,6 +539,21 @@ namespace Rock.Web.UI.Controls
             {
                 EnsureChildControls();
                 _tbIconCssClass.Text = value;
+            }
+        }
+
+        /// <inheritdoc cref="Rock.Model.Attribute.AttributeColor"/>
+        public string AttributeColor
+        {
+            get
+            {
+                EnsureChildControls();
+                return _attributeColorPicker.Text;
+            }
+            set
+            {
+                EnsureChildControls();
+                _attributeColorPicker.Text = value;
             }
         }
 
@@ -1008,28 +1023,6 @@ namespace Rock.Web.UI.Controls
         }
 
         /// <summary>
-        /// Gets or sets the field type id.
-        /// </summary>
-        /// <value>
-        /// The field type id.
-        /// </value>
-        [RockObsolete( "1.8" )]
-        [Obsolete( "Use AttributeFieldTypeId or SetAttributeFieldType instead", true )]
-        public int? FieldTypeId
-        {
-            get
-            {
-                return this.AttributeFieldTypeId;
-            }
-
-            set
-            {
-                var dummyQualifiers = FieldTypeCache.Get( value ?? 1 ).Field.ConfigurationKeys().ToDictionary( k => k, v => new ConfigurationValue() );
-                SetAttributeFieldType( value ?? 1, dummyQualifiers );
-            }
-        }
-
-        /// <summary>
         /// Gets the FieldTypeId of the Attribute
         /// </summary>
         /// <value>
@@ -1041,27 +1034,6 @@ namespace Rock.Web.UI.Controls
             {
                 EnsureChildControls();
                 return _ddlFieldType.SelectedValueAsInt() ?? FieldTypeCache.Get( Rock.SystemGuid.FieldType.TEXT.AsGuid() )?.Id ?? 1;
-            }
-        }
-
-        /// <summary>
-        /// Gets or sets the qualifiers.
-        /// </summary>
-        /// <value>
-        /// The qualifiers.
-        /// </value>
-        [RockObsolete( "1.8" )]
-        [Obsolete( "Use AttributeQualifiers or SetAttributeFieldType instead", true )]
-        public Dictionary<string, ConfigurationValue> Qualifiers
-        {
-            get
-            {
-                return this.AttributeQualifiers;
-            }
-
-            set
-            {
-                SetAttributeFieldType( this.AttributeFieldTypeId, value );
             }
         }
 
@@ -1458,6 +1430,12 @@ namespace Rock.Web.UI.Controls
             _tbIconCssClass.Label = "Icon CSS Class";
             pnlAdvancedTopRowCol1.Controls.Add( _tbIconCssClass );
 
+            _attributeColorPicker = new ColorPicker();
+            _attributeColorPicker.ID = "_attributeColorPicker";
+            _attributeColorPicker.Label = "Attribute Color";
+            _attributeColorPicker.Help = "The color used to visually distinguish this attribute.";
+            pnlAdvancedTopRowCol1.Controls.Add( _attributeColorPicker );
+
             _cbEnableHistory = new RockCheckBox();
             _cbEnableHistory.ID = "_cbEnableHistory";
             _cbEnableHistory.Label = "Enable History";
@@ -1588,6 +1566,7 @@ namespace Rock.Web.UI.Controls
             _tbKey.ValidationGroup = validationGroup;
             _cvKey.ValidationGroup = validationGroup;
             _tbIconCssClass.ValidationGroup = validationGroup;
+            _attributeColorPicker.ValidationGroup = validationGroup;
             _cbRequired.ValidationGroup = validationGroup;
             _cbShowInGrid.ValidationGroup = validationGroup;
             _cbShowOnBulk.ValidationGroup = validationGroup;
@@ -1841,6 +1820,7 @@ namespace Rock.Web.UI.Controls
                 this.Name = attribute.Name;
                 this.Key = attribute.Key;
                 this.IconCssClass = attribute.IconCssClass;
+                this.AttributeColor = attribute.AttributeColor;
                 this.CategoryIds = attribute.Categories.Select( c => c.Id ).ToList();
                 this.Description = attribute.Description;
                 this.Required = attribute.IsRequired;
@@ -1892,10 +1872,37 @@ namespace Rock.Web.UI.Controls
                 ObjectPropertyNames = new List<string>();
                 foreach ( var propInfo in objectType.GetProperties() )
                 {
-                    ObjectPropertyNames.Add( propInfo.Name );
+                    // Check to make sure that the property is allowed (some exceptions are allowed)
+                    if ( !IsObjectPropertyAllowedAsAttributeKey( propInfo.Name, this.AttributeId ) )
+                    {
+                        ObjectPropertyNames.Add( propInfo.Name );
+                    }
                 }
             }
 
+        }
+
+        /// <summary>
+        /// As a default object properties are not allowed as attribute keys. There are some exceptions:
+        /// 
+        /// 1. Campus on Workflows - The need for this came when we added the 'CampusId' property to the Workflow model.
+        ///    This caused existing workflows with an attribute key of 'Campus' to not be able to save. They ran fine but could not be edited.
+        ///    The virtual navigation property blocks the use as an attribute key. This limitation was added back in the 'Legacy Lava' days but
+        ///    is technically not needed any longer. As a solution we will allow the Campus attribute key on existing workflow attributes but 
+        ///    will not allow them for new attributes.
+        /// </summary>
+        /// <param name="propertyName">Name of the property.</param>
+        /// <param name="attributeId">The entity identifier.</param>
+        /// <returns></returns>
+        private bool IsObjectPropertyAllowedAsAttributeKey( string propertyName, int? attributeId )
+        {
+            var workflowEntityTypeId = EntityTypeCache.Get( SystemGuid.EntityType.WORKFLOW ).Id;
+            if ( propertyName == "Campus" && this.AttributeEntityTypeId == workflowEntityTypeId  && attributeId.HasValue && attributeId != 0 )
+            {
+                return true;
+            }
+
+            return false;
         }
 
         /// <summary>
@@ -1912,6 +1919,7 @@ namespace Rock.Web.UI.Controls
                 attribute.Name = this.Name;
                 attribute.Key = this.Key;
                 attribute.IconCssClass = this.IconCssClass;
+                attribute.AttributeColor = this.AttributeColor;
                 attribute.Description = this.Description;
                 attribute.FieldTypeId = this.AttributeFieldTypeId;
                 attribute.IsMultiValue = false;

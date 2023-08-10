@@ -1,0 +1,12 @@
+{
+  "extends": "../Framework/tsconfig.json",
+  "compilerOptions": {
+    "rootDir": "../",
+    "outDir": "./",
+    "noEmit": false,
+    "module": "CommonJS",
+    "baseUrl": ".."
+  },
+  "include": ["**/*.ts"],
+  "exclude": ["**/*.ignored.ts"]
+}

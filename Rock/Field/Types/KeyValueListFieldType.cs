@@ -20,6 +20,9 @@ using System.Linq;
 using System.Web;
 using System.Web.UI;
 
+using Rock.Attribute;
+using Rock.Data;
+using Rock.ViewModel.NonEntities;
 using Rock.Web.Cache;
 using Rock.Web.UI.Controls;
 
@@ -29,8 +32,12 @@ namespace Rock.Field.Types
     /// Field used to save and display a key/value list
     /// </summary>
     [Serializable]
+    [RockPlatformSupport( Utility.RockPlatform.WebForms, Utility.RockPlatform.Obsidian )]
+    [IconSvg( @"<svg xmlns=""http://www.w3.org/2000/svg"" viewBox=""0 0 16 16""><path d=""M13.25,1.88H2.75A1.74,1.74,0,0,0,1,3.62v8.76a1.74,1.74,0,0,0,1.75,1.74h10.5A1.74,1.74,0,0,0,15,12.38V3.62A1.74,1.74,0,0,0,13.25,1.88Zm.44,1.74v2H6V3.19h7.22A.44.44,0,0,1,13.69,3.62ZM6,6.91h7.66V9.09H6ZM4.72,9.09H2.31V6.91H4.72Zm-2-5.9h2v2.4H2.31v-2A.44.44,0,0,1,2.75,3.19Zm-.44,9.19v-2H4.72v2.4h-2A.44.44,0,0,1,2.31,12.38Zm10.94.43H6v-2.4h7.66v2A.44.44,0,0,1,13.25,12.81Z""/></svg>" )]
     public class KeyValueListFieldType : ValueListFieldType
     {
+        private const string VALUES_KEY = "values";
+        private const string DEFINED_TYPES_PROPERTY_KEY = "definedTypes";
 
         #region Configuration
 
@@ -44,6 +51,93 @@ namespace Rock.Field.Types
             configKeys.Insert(0, "keyprompt" );
             configKeys.Insert( 0, "displayvaluefirst" );
             return configKeys;
+        }
+
+        /// <inheritdoc/>
+        public override Dictionary<string, string> GetPublicEditConfigurationProperties( Dictionary<string, string> privateConfigurationValues )
+        {
+            var configurationProperties = base.GetPublicEditConfigurationProperties( privateConfigurationValues );
+
+            // Get a list of all DefinedTypes that can be selected.
+            var definedTypes = DefinedTypeCache.All()
+                .OrderBy( t => t.Name )
+                .Select( t => new ListItemViewModel
+                {
+                    Value = t.Guid.ToString(),
+                    Text = t.Name
+                } )
+                .ToList();
+
+            configurationProperties[DEFINED_TYPES_PROPERTY_KEY] = definedTypes.ToCamelCaseJson( false, true );
+
+            return configurationProperties;
+        }
+
+        /// <inheritdoc/>
+        public override Dictionary<string, string> GetPublicConfigurationValues( Dictionary<string, string> privateConfigurationValues, ConfigurationValueUsage usage, string privateValue )
+        {
+            var publicConfigurationValues = base.GetPublicConfigurationValues( privateConfigurationValues, usage, privateValue );
+
+            var options = GetCustomValues( privateConfigurationValues.ToDictionary( k => k.Key, k => new ConfigurationValue( k.Value ) ) )
+                .Select( kvp => new
+                {
+                    value = kvp.Key,
+                    text = kvp.Value
+                } )
+                .ToCamelCaseJson( false, true );
+
+            publicConfigurationValues[VALUES_KEY] = options;
+
+            if ( usage != ConfigurationValueUsage.Configure )
+            {
+                publicConfigurationValues.Remove( "definedtype" );
+                publicConfigurationValues.Remove( "customvalues" );
+            }
+
+            if ( publicConfigurationValues.ContainsKey( "definedtype" ) )
+            {
+                var definedTypeId = publicConfigurationValues["definedtype"].AsIntegerOrNull();
+
+                if ( definedTypeId.HasValue )
+                {
+                    publicConfigurationValues["definedtype"] = DefinedTypeCache.Get( definedTypeId.Value )?.Guid.ToString() ?? "";
+                }
+                else
+                {
+                    publicConfigurationValues["definedtype"] = "";
+                }
+            }
+
+            return publicConfigurationValues;
+        }
+
+        /// <inheritdoc/>
+        public override Dictionary<string, string> GetPrivateConfigurationValues( Dictionary<string, string> publicConfigurationValues )
+        {
+            var privateConfigurationValues = base.GetPrivateConfigurationValues( publicConfigurationValues );
+
+            // Don't allow them to provide the actual value items.
+            if ( privateConfigurationValues.ContainsKey( VALUES_KEY ) )
+            {
+                privateConfigurationValues.Remove( VALUES_KEY );
+            }
+
+            // Convert the defined type value from Guid to Id.
+            if ( privateConfigurationValues.ContainsKey( "definedtype" ) )
+            {
+                var definedTypeGuid = privateConfigurationValues["definedtype"].AsGuidOrNull();
+
+                if ( definedTypeGuid.HasValue )
+                {
+                    privateConfigurationValues["definedtype"] = DefinedTypeCache.Get( definedTypeGuid.Value )?.Id.ToString() ?? "";
+                }
+                else
+                {
+                    privateConfigurationValues["definedtype"] = "";
+                }
+            }
+
+            return privateConfigurationValues;
         }
 
         /// <summary>
@@ -152,21 +246,39 @@ namespace Rock.Field.Types
             }
         }
 
+        /// <summary>
+        /// Gets the custom values that have been defined. These reflect either the
+        /// defined type values or the custom options entered into the custom values
+        /// text box.
+        /// </summary>
+        /// <param name="configurationValues"></param>
+        /// <returns></returns>
+        private Dictionary<string, string> GetCustomValues( Dictionary<string, ConfigurationValue> configurationValues )
+        {
+            var definedTypeId = configurationValues.GetConfigurationValueAsString( "definedtype" ).AsIntegerOrNull();
+
+            if ( definedTypeId.HasValue )
+            {
+                var definedType = DefinedTypeCache.Get( definedTypeId.Value );
+
+                if ( definedType != null )
+                {
+                    return definedType.DefinedValues
+                        .ToDictionary( v => v.Id.ToString(), v => v.Value );
+                }
+            }
+
+            return Helper.GetConfiguredValues( configurationValues, "customvalues" );
+        }
+
         #endregion
 
         #region Formatting
 
-        /// <summary>
-        /// Returns the field's current value(s)
-        /// </summary>
-        /// <param name="parentControl">The parent control.</param>
-        /// <param name="value">Information about the value</param>
-        /// <param name="configurationValues"></param>
-        /// <param name="condensed">Flag indicating if the value should be condensed (i.e. for use in a grid column)</param>
-        /// <returns></returns>
-        public override string FormatValue( Control parentControl, string value, Dictionary<string, ConfigurationValue> configurationValues, bool condensed )
+        /// <inheritdoc/>
+        public override string GetTextValue( string value, Dictionary<string, string> configurationValues )
         {
-            bool isDefinedType = configurationValues != null && configurationValues.ContainsKey( "definedtype" ) && configurationValues["definedtype"].Value.AsIntegerOrNull().HasValue;
+            bool isDefinedType = configurationValues != null && configurationValues.ContainsKey( "definedtype" ) && configurationValues["definedtype"].AsIntegerOrNull().HasValue;
 
             var values = new List<string>();
             string[] nameValues = value?.Split( new char[] { '|' }, StringSplitOptions.RemoveEmptyEntries ) ?? new string[0];
@@ -174,7 +286,7 @@ namespace Rock.Field.Types
             foreach ( string nameValue in nameValues )
             {
                 string[] nameAndValue = nameValue.Split( new char[] { '^' } );
-                
+
                 // url decode array items just in case they were UrlEncoded (in the KeyValueList controls)
                 nameAndValue = nameAndValue.Select( s => HttpUtility.UrlDecode( s ) ).ToArray();
 
@@ -188,6 +300,15 @@ namespace Rock.Field.Types
                             nameAndValue[1] = definedValue.Value;
                         }
                     }
+                    else
+                    {
+                        var customValues = GetCustomValues( configurationValues.ToDictionary( k => k.Key, k => new ConfigurationValue( k.Value ) ) );
+                        if ( customValues.ContainsKey( nameAndValue[1] ) )
+                        {
+                            nameAndValue[1] = customValues[nameAndValue[1]];
+                        }
+                    }
+
                     values.Add( string.Format( "{0}: {1}", nameAndValue[0], nameAndValue[1] ) );
                 }
                 else
@@ -199,9 +320,63 @@ namespace Rock.Field.Types
             return values.AsDelimited( ", " );
         }
 
+        /// <summary>
+        /// Returns the field's current value(s)
+        /// </summary>
+        /// <param name="parentControl">The parent control.</param>
+        /// <param name="value">Information about the value</param>
+        /// <param name="configurationValues"></param>
+        /// <param name="condensed">Flag indicating if the value should be condensed (i.e. for use in a grid column)</param>
+        /// <returns></returns>
+        public override string FormatValue( Control parentControl, string value, Dictionary<string, ConfigurationValue> configurationValues, bool condensed )
+        {
+            return GetTextValue( value, configurationValues.ToDictionary( k => k.Key, k => k.Value.Value ) );
+        }
+
         #endregion
 
         #region Edit Control
+
+        /// <inheritdoc/>
+        public override string GetPublicValue( string privateValue, Dictionary<string, string> privateConfigurationValues )
+        {
+            var nameValues = privateValue?.Split( new char[] { '|' }, StringSplitOptions.RemoveEmptyEntries ) ?? new string[0];
+
+            return nameValues
+                .Select( nv => nv.Split( new char[] { '^' } ) )
+                .Where( nv => nv.Length == 2 )
+                .Select( nv => new PublicValue
+                {
+                    Key = HttpUtility.UrlDecode( nv[0] ),
+                    Value = HttpUtility.UrlDecode( nv[1] )
+                } )
+                .ToCamelCaseJson( false, true );
+        }
+
+        /// <inheritdoc/>
+        public override string GetPrivateEditValue( string publicValue, Dictionary<string, string> privateConfigurationValues )
+        {
+            var values = publicValue.FromJsonOrNull<List<PublicValue>>();
+
+            if ( values == null )
+            {
+                return string.Empty;
+            }
+
+            var customValues = GetCustomValues( privateConfigurationValues.ToDictionary( k => k.Key, k => new ConfigurationValue( k.Value ) ) );
+
+            // If there are any custom values, then ensure that all values we
+            // got from the public device are valid. If not, ignore them.
+            if ( customValues.Any() )
+            {
+                values = values
+                    .Where( v => customValues.ContainsKey( v.Value ) )
+                    .ToList();
+            }
+
+            return values.Select( v => $"{HttpUtility.UrlEncode( v.Key )}^{HttpUtility.UrlEncode( v.Value )}" )
+                .JoinStrings( "|" );
+        }
 
         /// <summary>
         /// Edits the control.
@@ -346,11 +521,33 @@ namespace Rock.Field.Types
                 else
                 {
                     values.Add( new KeyValuePair<string, object>( nameAndValue[0], null ) );
-                } 
+                }
             }
 
             return values;
         }
-      
+
+        /// <summary>
+        /// Represents a single element value (presented as a row when editing)
+        /// formatted in a way the public devices will understand.
+        /// </summary>
+        private class PublicValue
+        {
+            /// <summary>
+            /// Gets or sets the key.
+            /// </summary>
+            /// <value>
+            /// The key.
+            /// </value>
+            public string Key { get; set; }
+
+            /// <summary>
+            /// Gets or sets the value.
+            /// </summary>
+            /// <value>
+            /// The value.
+            /// </value>
+            public string Value { get; set; }
+        }
     }
 }

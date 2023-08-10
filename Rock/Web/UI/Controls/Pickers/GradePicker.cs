@@ -51,7 +51,7 @@ namespace Rock.Web.UI.Controls
             var schoolGrades = DefinedTypeCache.Get( Rock.SystemGuid.DefinedType.SCHOOL_GRADES.AsGuid() );
             if ( schoolGrades != null )
             {
-                foreach ( var schoolGrade in schoolGrades.DefinedValues.OrderByDescending( a => a.Value.AsInteger() ) )
+                foreach ( var schoolGrade in schoolGrades.DefinedValues.Where( a => a.IsActive ).OrderByDescending( a => a.Value.AsInteger() ) )
                 {
                     ListItem listItem = new ListItem();
                     if ( UseAbbreviation )
@@ -145,11 +145,11 @@ namespace Rock.Web.UI.Controls
         /// <returns></returns>
         public string GetJavascriptForYearPicker( YearPicker ypGraduationYear )
         {
-            DateTime currentGraduationDate = RockDateTime.CurrentGraduationDate;
+            DateTime currentGraduationDate = Rock.Model.PersonService.GetCurrentGraduationDate();
             DateTime gradeTransitionDate = new DateTime( RockDateTime.Now.Year, currentGraduationDate.Month, currentGraduationDate.Day );
 
             // add a year if the next graduation mm/dd won't happen until next year
-            int gradeOffsetRefactor = ( RockDateTime.Now < gradeTransitionDate ) ? 0 : 1;
+            int gradeOffsetRefactor = ( RockDateTime.Today < gradeTransitionDate ) ? 0 : 1;
 
             string gradeSelectionScript = $@"
     $('#{this.ClientID}').on('change', function(){{

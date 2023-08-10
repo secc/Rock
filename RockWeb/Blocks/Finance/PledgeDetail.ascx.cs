@@ -37,7 +37,7 @@ namespace RockWeb.Blocks.Finance
     [Category( "Finance" )]
     [Description( "Allows the details of a given pledge to be edited." )]
     [GroupTypeField( "Select Group Type", "Optional Group Type that if selected will display a list of groups that pledge can be associated to for selected user", false, "", "", 1 )]
-    public partial class PledgeDetail : RockBlock, IDetailBlock
+    public partial class PledgeDetail : RockBlock
     {
         #region Keys
 
@@ -47,8 +47,7 @@ namespace RockWeb.Blocks.Finance
         private static class PageParameterKey
         {
             public const string PledgeId = "PledgeId";
-
-            public const string PersonGuid = "PersonGuid";
+            public const string PersonActionIdentifier = "rckid";
         }
 
         #endregion Keys
@@ -182,21 +181,18 @@ namespace RockWeb.Blocks.Finance
                 var isNewPledge = pledge.Id == 0;
 
                 hfPledgeId.Value = pledge.Id.ToString();
+
                 if ( pledge.PersonAlias != null )
                 {
                     ppPerson.SetValue( pledge.PersonAlias.Person );
                 }
                 else
                 {
-                    Person person = null;
-                    var personGuid = PageParameter( PageParameterKey.PersonGuid ).AsGuidOrNull();
-                    if ( personGuid.HasValue )
-                    {
-                        person = new PersonService( rockContext ).Get( personGuid.Value );
-                    }
-
+                    var personActionId = PageParameter( PageParameterKey.PersonActionIdentifier );
+                    var person = new PersonService( rockContext ).GetByPersonActionIdentifier( personActionId, "pledge" );
                     ppPerson.SetValue( person );
                 }
+
                 ppPerson.Enabled = !isReadOnly;
 
                 GroupType groupType = null;

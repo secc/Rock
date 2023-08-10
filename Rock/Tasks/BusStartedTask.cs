@@ -15,6 +15,9 @@
 // </copyright>
 //
 
+using System;
+using System.Threading.Tasks;
+
 using Rock.Bus;
 using Rock.Bus.Consumer;
 using Rock.Bus.Message;
@@ -23,9 +26,14 @@ using Rock.Bus.Queue;
 namespace Rock.Tasks
 {
     /// <summary>
-    /// A bus started task message.
-    /// For carrying arguments needed to execute a task.
+    /// A message for carrying arguments needed to execute a task. This should be a small simple POCO class.
+    /// For larger tasks, use <see cref="Rock.Transactions.ITransaction"></see> instead.
     /// </summary>
+    /// <remarks>
+    /// IMPORTANT: The serialized size of a BusStartedTaskMessage needs to less than 64KB.
+    /// See https://stackoverflow.com/questions/66664488/what-is-the-maximum-size-in-a-masstransit-message which says
+    /// "From a guidance perspective, messages over 64k can really slow down broker performance, messages over 256k are a definite no for many systems."
+    /// </remarks>
     public abstract class BusStartedTaskMessage : ICommandMessage<StartTaskQueue>
     {
         /// <summary>
@@ -42,18 +50,37 @@ namespace Rock.Tasks
     /// </summary>
     public static class BusStartedTaskMessageExtensions
     {
-        /// <summary>
-        /// Sends the messages to the bus.
-        /// </summary>
+        /// <inheritdoc cref="RockMessageBus.SendAsync{TQueue, TMessage}(TMessage)"/>
         public static void Send( this BusStartedTaskMessage message )
         {
             _ = RockMessageBus.SendAsync( message, message.GetType() );
         }
+
+        /// <summary>
+        /// Sends the command message when the specified task completes successfully. See also <seealso cref="RockMessageBus.SendAsync{TQueue, TMessage}(TMessage)" />
+        /// </summary>
+        /// <param name="message">The message.</param>
+        /// <param name="completionTask">The task to wait for before sending the message</param>
+        public static void SendWhen( this BusStartedTaskMessage message, Task<bool> completionTask)
+        {
+            Task.Run( async () =>
+            {
+                // Wait for specified task to complete, then send the message if the task completed successfully
+                var completedSuccessfully = await completionTask;
+                if ( completedSuccessfully )
+                {
+                    message.Send();
+                }
+            } );
+        }
     }
 
     /// <summary>
-    /// Bus Started Task
+    /// Bus Started Task for the <see cref="BusStartedTaskMessage" />
     /// </summary>
+    /// <remarks>
+    /// <inheritdoc cref="BusStartedTaskMessage"/>
+    /// </remarks>
     public abstract class BusStartedTask<TMessage> : RockConsumer<StartTaskQueue, TMessage>
         where TMessage : BusStartedTaskMessage
     {

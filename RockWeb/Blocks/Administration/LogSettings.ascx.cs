@@ -69,6 +69,7 @@ namespace RockWeb.Blocks.Administration
         #region Control Events
         protected void btnLoggingSave_Click( object sender, EventArgs e )
         {
+            Page.Validate();
             if ( !Page.IsValid || !IsUserAuthorized( Authorization.EDIT ) )
             {
                 return;
@@ -93,8 +94,6 @@ namespace RockWeb.Blocks.Administration
             nbLoggingMessage.NotificationBoxType = NotificationBoxType.Success;
             nbLoggingMessage.Title = string.Empty;
             nbLoggingMessage.Text = "Setting saved successfully.";
-
-
         }
 
         protected void btnDeleteLog_Click( object sender, EventArgs e )

@@ -21,7 +21,7 @@ using System.Linq;
 using System.Text.RegularExpressions;
 using System.Web;
 using System.Web.Routing;
-
+using System.Web.Security.AntiXss;
 using Rock.Model;
 using Rock.Web.Cache;
 using Rock.Web.UI;
@@ -33,7 +33,6 @@ namespace Rock.Web
     /// </summary>
     public class PageReference
     {
-
         #region Properties
 
         /// <summary>
@@ -326,7 +325,7 @@ namespace Rock.Web
                 RouteId = GetRouteIdFromPageAndParms() ?? 0;
             }
 
-            // load route URL 
+            // load route URL
             if ( RouteId != 0 )
             {
                 url = BuildRouteURL( parms );
@@ -353,6 +352,25 @@ namespace Rock.Web
             url = ( HttpContext.Current.Request.ApplicationPath == "/" ) ? "/" + url : HttpContext.Current.Request.ApplicationPath + "/" + url;
 
             return url;
+        }
+
+        /// <summary>
+        /// Builds and HTML encodes the URL.
+        /// </summary>
+        /// <returns></returns>
+        public string BuildUrlEncoded()
+        {
+            return BuildUrlEncoded( false );
+        }
+
+        /// <summary>
+        /// Builds and HTML encodes the URL.
+        /// </summary>
+        /// <param name="removeMagicToken">if set to <c>true</c> [remove magic token].</param>
+        /// <returns></returns>
+        public string BuildUrlEncoded( bool removeMagicToken )
+        {
+            return AntiXssEncoder.HtmlEncode( BuildUrl( removeMagicToken ), false );
         }
 
         #endregion
@@ -409,7 +427,7 @@ namespace Rock.Web
         /// </summary>
         /// <param name="parms">The parms.</param>
         /// <returns></returns>
-        private string BuildRouteURL( Dictionary<string, string> parms )
+        public string BuildRouteURL( Dictionary<string, string> parms )
         {
             string routeUrl = string.Empty;
 
@@ -612,6 +630,7 @@ namespace Rock.Web
                                             rockBlock.SetBlock( page, block );
                                             rockBlock.GetBreadCrumbs( parentPageReference ).ForEach( c => parentPageReference.BreadCrumbs.Add( c ) );
                                         }
+
                                         control = null;
                                     }
                                     catch ( Exception ex )
@@ -619,7 +638,6 @@ namespace Rock.Web
                                         ExceptionLogService.LogException( ex, HttpContext.Current, currentPage.Id, currentPage.Layout.SiteId );
                                     }
                                 }
-
                             }
 
                             parentPageReference.BreadCrumbs.ForEach( c => c.Active = false );

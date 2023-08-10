@@ -146,13 +146,13 @@ namespace Rock.Logging
             else
             {
                 LogLevel = rockSettings.LogLevel;
-                NumberOfLogFiles = rockSettings.NumberOfLogFiles;
+                NumberOfLogFiles = Math.Max( rockSettings.NumberOfLogFiles, 1 );
                 MaxFileSize = rockSettings.MaxFileSize;
                 DomainsToLog = rockSettings.DomainsToLog;
             }
 
             LogPath = System.IO.Path.Combine( AppDomain.CurrentDomain.BaseDirectory, "App_Data\\Logs\\Rock.log" );
-            LastUpdated = DateTime.Now;
+            LastUpdated = RockDateTime.Now;
         }
 
         private void UpdateConfigIfRequired()

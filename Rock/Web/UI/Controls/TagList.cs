@@ -219,6 +219,9 @@ namespace Rock.Web.UI.Controls
                 writer.AddAttribute( "class", "tag-wrap" );
                 writer.RenderBeginTag( HtmlTextWriterTag.Div );
 
+                // Hide the source textbox until it's processed by the JS
+                this.Style[HtmlTextWriterStyle.Display] = "none";
+
                 string cssTemp = this.CssClass;
                 this.CssClass = string.Empty;
                 base.RenderControl( writer );
@@ -289,7 +292,7 @@ Rock.controls.tagList.initialize({{
 
                     var isPersonal = currentPersonId.HasValue && item.OwnerPersonAlias?.PersonId == currentPersonId.Value;
                     var tagCssClass = isPersonal ? "personal" : string.Empty;
-                    var serializedTag = SerializeTag( item.Name, tagCssClass, item.IconCssClass, item.BackgroundColor );
+                    var serializedTag = SerializeTag( item.Name, tagCssClass, item.IconCssClass, item.BackgroundColorHex );
                     serializedTags.Add( serializedTag );
                 }
             }

@@ -322,6 +322,8 @@ namespace RockWeb.Blocks.Administration
             nbLastContribution.Text = _reactivateSettings.LastContributionPeriod.ToStringSafe();
             cbAttendanceInServiceGroup.Checked = _reactivateSettings.IsAttendanceInServiceGroupEnabled;
             nbAttendanceInServiceGroup.Text = _reactivateSettings.AttendanceInServiceGroupPeriod.ToStringSafe();
+            cbRegisteredInAnyEvent.Checked = _reactivateSettings.IsRegisteredInAnyEventEnabled;
+            nbRegisteredInAnyEvent.Text = _reactivateSettings.RegisteredInAnyEventPeriod.ToStringSafe();
             cbAttendanceInGroupType.Checked = _reactivateSettings.IsAttendanceInGroupTypeEnabled;
             nbAttendanceInGroupType.Text = _reactivateSettings.AttendanceInGroupTypeDays.ToStringSafe();
             rlbAttendanceInGroupType.SetValues( _reactivateSettings.AttendanceInGroupType ?? new List<int>() );
@@ -378,6 +380,8 @@ namespace RockWeb.Blocks.Administration
             cbNoAttendanceInGroupType.Checked = _inactivateSettings.IsNoAttendanceInGroupTypeEnabled;
             nbNoAttendanceInGroupType.Text = _inactivateSettings.NoAttendanceInGroupTypeDays.ToStringSafe();
             rlbNoAttendanceInGroupType.SetValues( _inactivateSettings.AttendanceInGroupType ?? new List<int>() );
+            cbNoRegistrationInAnyEvent.Checked = _inactivateSettings.IsNotRegisteredInAnyEventEnabled;
+            nbNoRegistrationInAnyEvent.Text = _inactivateSettings.NotRegisteredInAnyEventDays.ToStringSafe();
             cbNoSiteLogin.Checked = _inactivateSettings.IsNoSiteLoginEnabled;
             nbNoSiteLogin.Text = _inactivateSettings.NoSiteLoginPeriod.ToStringSafe();
             cbNoPrayerRequest.Checked = _inactivateSettings.IsNoPrayerRequestEnabled;
@@ -421,6 +425,7 @@ namespace RockWeb.Blocks.Administration
             pnlCampusUpdate.Enabled = _campusSettings.IsEnabled;
             cbMostFamilyAttendance.Checked = _campusSettings.IsMostFamilyAttendanceEnabled;
             nbMostFamilyAttendance.Text = _campusSettings.MostFamilyAttendancePeriod.ToStringSafe();
+            nbTimesToTriggerCampusChange.Text = _campusSettings.TimesToTriggerCampusChange.ToStringSafe();
             cbMostFamilyGiving.Checked = _campusSettings.IsMostFamilyGivingEnabled;
             nbMostFamilyGiving.Text = _campusSettings.MostFamilyGivingPeriod.ToStringSafe();
             ddlAttendanceOrGiving.SetValue( _campusSettings.MostAttendanceOrGiving.ConvertToInt() );
@@ -509,6 +514,9 @@ namespace RockWeb.Blocks.Administration
             _reactivateSettings.IsAttendanceInServiceGroupEnabled = cbAttendanceInServiceGroup.Checked;
             _reactivateSettings.AttendanceInServiceGroupPeriod = nbAttendanceInServiceGroup.Text.AsInteger();
 
+            _reactivateSettings.IsRegisteredInAnyEventEnabled = cbRegisteredInAnyEvent.Checked;
+            _reactivateSettings.RegisteredInAnyEventPeriod = nbRegisteredInAnyEvent.Text.AsInteger();
+
             _reactivateSettings.IsAttendanceInGroupTypeEnabled = cbAttendanceInGroupType.Checked;
             _reactivateSettings.AttendanceInGroupType = rlbAttendanceInGroupType.SelectedValues.AsIntegerList();
             _reactivateSettings.AttendanceInGroupTypeDays = nbAttendanceInGroupType.Text.AsInteger();
@@ -555,6 +563,9 @@ namespace RockWeb.Blocks.Administration
             _inactivateSettings.AttendanceInGroupType = rlbNoAttendanceInGroupType.SelectedValues.AsIntegerList();
             _inactivateSettings.NoAttendanceInGroupTypeDays = nbNoAttendanceInGroupType.Text.AsInteger();
 
+            _inactivateSettings.IsNotRegisteredInAnyEventEnabled = cbNoRegistrationInAnyEvent.Checked;
+            _inactivateSettings.NotRegisteredInAnyEventDays = nbNoRegistrationInAnyEvent.Text.AsInteger();
+
             _inactivateSettings.IsNoSiteLoginEnabled = cbNoSiteLogin.Checked;
             _inactivateSettings.NoSiteLoginPeriod = nbNoSiteLogin.Text.AsInteger();
 
@@ -593,6 +604,7 @@ namespace RockWeb.Blocks.Administration
 
             _campusSettings.IsMostFamilyAttendanceEnabled = cbMostFamilyAttendance.Checked;
             _campusSettings.MostFamilyAttendancePeriod = nbMostFamilyAttendance.Text.AsInteger();
+            _campusSettings.TimesToTriggerCampusChange = nbTimesToTriggerCampusChange.Text.AsInteger();
 
             _campusSettings.IsMostFamilyGivingEnabled = cbMostFamilyGiving.Checked;
             _campusSettings.MostFamilyGivingPeriod = nbMostFamilyGiving.Text.AsInteger();
@@ -613,6 +625,8 @@ namespace RockWeb.Blocks.Administration
                         BasedOn = a.CampusCriteria
                     } )
                     .ToList();
+
+            _campusSettings.ExcludeSchedules = spExcludeSchedules.SelectedIds.ToList();
 
             // Adult Children
             _adultChildrenSettings.IsEnabled = cbAdultChildren.Checked;

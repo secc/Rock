@@ -16,11 +16,13 @@
 //
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Linq.Expressions;
 using System.Text;
 using System.Web.UI;
 using System.Web.UI.WebControls;
 
+using Rock.Attribute;
 using Rock.Model;
 using Rock.Reporting;
 using Rock.Web.UI.Controls;
@@ -31,6 +33,8 @@ namespace Rock.Field.Types
     /// Field used to save and display a rating
     /// </summary>
     [Serializable]
+    [RockPlatformSupport( Utility.RockPlatform.WebForms | Utility.RockPlatform.Obsidian )]
+    [IconSvg( @"<svg xmlns=""http://www.w3.org/2000/svg"" viewBox=""0 0 16 16""><g><path d=""M14.52,6.06H9.89L8.45,1.64a.47.47,0,0,0-.9,0L6.11,6.06H1.48a.47.47,0,0,0-.28.86L5,9.65,3.52,14.06a.48.48,0,0,0,.45.63.46.46,0,0,0,.28-.1L8,11.84l3.75,2.73a.39.39,0,0,0,.28.12.48.48,0,0,0,.45-.63L11.05,9.65,14.8,6.92A.47.47,0,0,0,14.52,6.06ZM10.31,8.63l-.73.54,1,3L8,10.31v-6l1,3h3.15Z""/></g></svg>" )]
     public class RatingFieldType : FieldType
     {
         #region Formatting
@@ -53,6 +57,26 @@ namespace Rock.Field.Types
             }
 
             return sb.ToString();
+        }
+
+        /// <inheritdoc/>
+        public override string GetPublicValue( string privateValue, Dictionary<string, string> privateConfigurationValues )
+        {
+            var ratingValue = new RatingPublicValue
+            {
+                Value = privateValue.AsInteger(),
+                MaxValue = GetMaxRating( privateConfigurationValues )
+            };
+
+            return ratingValue.ToCamelCaseJson( false, true );
+        }
+
+        /// <inheritdoc/>
+        public override string GetPrivateEditValue( string publicValue, Dictionary<string, string> privateConfigurationValues )
+        {
+            var ratingValue = publicValue.FromJsonOrNull<RatingPublicValue>();
+
+            return ratingValue?.Value.ToString() ?? string.Empty;
         }
 
         #endregion
@@ -126,9 +150,19 @@ namespace Rock.Field.Types
         /// <returns></returns>
         private int GetMaxRating( Dictionary<string, ConfigurationValue> configurationValues )
         {
+            return GetMaxRating( configurationValues.ToDictionary( k => k.Key, k => k.Value.Value ) );
+        }
+
+        /// <summary>
+        /// Gets the maximum rating.
+        /// </summary>
+        /// <param name="configurationValues">The configuration values.</param>
+        /// <returns></returns>
+        private int GetMaxRating( Dictionary<string, string> configurationValues )
+        {
             if ( configurationValues != null && configurationValues.ContainsKey( "max" ) )
             {
-                int max = configurationValues["max"].Value.AsInteger();
+                int max = configurationValues["max"].AsInteger();
                 if ( max > 0)
                 {
                     return max;
@@ -217,7 +251,7 @@ namespace Rock.Field.Types
         public override System.Web.UI.Control EditControl( Dictionary<string, ConfigurationValue> configurationValues, string id )
         {
             int max = GetMaxRating(configurationValues);
-            return new RockRating { ID = id, Max = max }; 
+            return new RockRating { ID = id, Max = max };
         }
 
 
@@ -377,5 +411,11 @@ namespace Rock.Field.Types
 
         #endregion
 
+        private class RatingPublicValue
+        {
+            public int Value { get; set; }
+
+            public int MaxValue { get; set; }
+        }
     }
 }

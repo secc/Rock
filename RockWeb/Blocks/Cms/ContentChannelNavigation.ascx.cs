@@ -192,7 +192,7 @@ namespace RockWeb.Blocks.Cms
 
                     if ( selectedChannelGuid.HasValue )
                     {
-                        SelectedChannelId = ContentChannelCache.Get( selectedChannelGuid.Value ).Id;
+                        SelectedChannelId = ContentChannelCache.Get( selectedChannelGuid.Value )?.Id;
                     }
                 }
 
@@ -203,7 +203,18 @@ namespace RockWeb.Blocks.Cms
 
                 if ( ddlCategory.Visible )
                 {
-                    ddlCategory.SetValue( GetUserPreference( CATEGORY_FILTER_SETTING ).AsIntegerOrNull() );
+                    var categoryGuid = PageParameter( "CategoryGuid" ).AsGuidOrNull();
+                    if ( categoryGuid.HasValue )
+                    {
+                        var categoryId = CategoryCache.Get( categoryGuid.Value )?.Id;
+
+                        SetUserPreference( CATEGORY_FILTER_SETTING, categoryId.ToString() );
+                        ddlCategory.SetValue( categoryId );
+                    }
+                    else
+                    {
+                        ddlCategory.SetValue( GetUserPreference( CATEGORY_FILTER_SETTING ).AsIntegerOrNull() );
+                    }
                 }
 
                 GetData();
@@ -255,7 +266,17 @@ namespace RockWeb.Blocks.Cms
         protected void ddlCategory_OnSelectedIndexChanged( object sender, EventArgs e )
         {
             SetUserPreference( CATEGORY_FILTER_SETTING, ddlCategory.SelectedValue );
-            GetData();
+            var categoryGuid = CategoryCache.Get( ddlCategory.SelectedValue.AsInteger() )?.Guid;
+
+            var queryString = new Dictionary<string, string>();
+
+            if ( categoryGuid.HasValue )
+            {
+                queryString.Add( "CategoryGuid", categoryGuid.ToString() );
+            }
+
+            // Navigate to page with route parameters set so new Url is generated in browser 
+            NavigateToCurrentPage( queryString );
         }
 
         /// <summary>
@@ -281,14 +302,25 @@ namespace RockWeb.Blocks.Cms
 
             SelectedChannelId = selectedChannelValue.AsIntegerOrNull();
 
-            GetData();
+            var selectedChannelGuid = ContentChannelCache.Get( SelectedChannelId.Value ).Guid;
+            var queryString = new Dictionary<string, string> { { "ContentChannelGuid", selectedChannelGuid.ToString() } };
 
-            ScriptManager.RegisterStartupScript(
-                Page,
-                GetType(),
-                "ScrollToGrid",
-                "scrollToGrid();",
-                true );
+            // Get CategoryGuid from Route
+            var categoryGuid = PageParameter( "CategoryGuid" ).AsGuidOrNull();
+            if ( !categoryGuid.HasValue )
+            {
+                var categoryId = ddlCategory.SelectedValueAsId();
+                categoryGuid = CategoryCache.Get( categoryId.GetValueOrDefault() )?.Guid;
+            }
+
+            // if user has selected a category or one was provided as a query param add it to the new route params
+            if ( categoryGuid.HasValue )
+            {
+                queryString.Add( "CategoryGuid", categoryGuid.ToString() );
+            }
+
+            // Navigate to page with route parameters set so new Url is generated in browser 
+            NavigateToCurrentPage( queryString );
         }
 
         /// <summary>
@@ -561,7 +593,22 @@ namespace RockWeb.Blocks.Cms
 
             if ( GetAttributeValue( AttributeKey.ShowCategoryFilter ).AsBoolean() )
             {
-                var categoryId = ddlCategory.SelectedValueAsId();
+                int? categoryId = null;
+                var categoryGuid = PageParameter( "CategoryGuid" ).AsGuidOrNull();
+                var selectedChannelGuid = PageParameter( "ContentChannelGuid" ).AsGuidOrNull();
+
+                if ( selectedChannelGuid.HasValue )
+                {
+                    categoryId = CategoryCache.Get( categoryGuid.GetValueOrDefault() )?.Id;
+                }
+                else
+                {
+                    categoryId = ddlCategory.SelectedValueAsId();
+                }
+
+                SetUserPreference( CATEGORY_FILTER_SETTING, categoryId.ToString() );
+                ddlCategory.SetValue( categoryId );
+
                 var parentCategoryGuid = GetAttributeValue( AttributeKey.ParentCategory ).AsGuidOrNull();
                 if ( ddlCategory.Visible && categoryId.HasValue )
                 {
@@ -712,6 +759,7 @@ namespace RockWeb.Blocks.Cms
                     i.ExpireDateTime,
                     i.Priority,
                     Status = DisplayStatus( i.Status ),
+                    DateStatus = DisplayDateStatus( i.StartDateTime ),
                     Tags = itemTags.GetValueOrNull( i.Guid ),
                     Occurrences = i.EventItemOccurrences.Any(),
                     CreatedByPersonName = i.CreatedByPersonAlias != null ? String.Format( "<a href={0}>{1}</a>", ResolveRockUrl( string.Format( "~/Person/{0}", i.CreatedByPersonAlias.PersonId ) ), i.CreatedByPersonName ) : String.Empty
@@ -815,6 +863,11 @@ namespace RockWeb.Blocks.Cms
             {
                 return items;
             }
+        }
+
+        protected string DisplayDateStatus( DateTime aDate )
+        {
+            return ( aDate > RockDateTime.Now ) ? "<i class='fa fa-clock'></i>" : string.Empty;
         }
 
         protected void BindAttributes( ContentChannel channel )
@@ -931,6 +984,12 @@ namespace RockWeb.Blocks.Cms
                     startDateTimeField.HeaderText = channel.ContentChannelType.DateRangeType == ContentChannelDateType.DateRange ? "Start" : "Date";
                     startDateTimeField.SortExpression = "StartDateTime";
                     gContentChannelItems.Columns.Add( startDateTimeField );
+
+                    var dateStatusField = new BoundField();
+                    gContentChannelItems.Columns.Add( dateStatusField );
+                    dateStatusField.DataField = "DateStatus";
+                    dateStatusField.HeaderText = "";
+                    dateStatusField.HtmlEncode = false;
 
                     expireDateTimeField.DataField = "ExpireDateTime";
                     expireDateTimeField.HeaderText = "Expire";

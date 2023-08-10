@@ -18,7 +18,6 @@
       border-top: 0;
       border-right: 7px solid transparent;
       border-bottom: 7px solid @dropdown-border;
-      border-bottom-color: rgba(0,0,0,.2);
       border-left: 7px solid transparent;
     }
     &::after {
@@ -63,7 +62,7 @@
         padding: 0;
         text-align: center;
         border: 0;
-        border-radius: 4px;
+        border-radius: @datepicker-border-radius;
       }
     }
   }
@@ -83,7 +82,7 @@
     &.day:hover,
     &.focused {
       cursor: pointer;
-      background: @gray-lighter;
+      background: @datepicker-hover-bg;
     }
     &.disabled,
     &.disabled:hover {
@@ -92,58 +91,55 @@
       background: none;
     }
     &.highlighted {
-      @highlighted-bg: @state-info-bg;
-      color: #000;
-      background: @highlighted-bg;
+      color: @datepicker-highlighted-color;
+      background: @datepicker-highlighted-bg;
       border-radius: 0;
 
       &.focused {
-        background: darken(@highlighted-bg, 10%);
+        background: darken(@datepicker-highlighted-bg, 10%);
       }
 
       &.disabled,
       &.disabled:active {
         color: @btn-link-disabled-color;
-        background: @highlighted-bg;
+        background: @datepicker-highlighted-bg;
       }
     }
 
     &.today {
-      @today-bg: lighten(orange, 30%);
-      color: #000;
-      background-color: @today-bg;
+      color: @datepicker-today-color;
+      background-color: @datepicker-today-bg;
 
       &:hover,
       &:focus {
-        background: darken(@today-bg, 17%);
+        background: darken(@datepicker-today-bg, 17%);
       }
 
       &.focused {
-        background: darken(@today-bg, 10%);
+        background: darken(@datepicker-today-bg, 10%);
       }
 
       &.disabled,
       &.disabled:active {
         color: @btn-link-disabled-color;
-        background: @today-bg;
+        background: @datepicker-today-bg;
       }
     }
 
     &.range {
-      @range-bg: @gray-lighter;
-      color: #000;
-      background: @range-bg;
+      color: @datepicker-range-color;
+      background: @datepicker-range-bg;
       border-radius: 0;
 
       &.focused,
       &:hover {
-        background: darken(@range-bg, 10%);
+        background: darken(@datepicker-range-bg, 10%);
       }
 
       &.disabled,
       &.disabled:active {
         color: @btn-link-disabled-color;
-        background: @range-bg;
+        background: @datepicker-range-bg;
       }
     }
 
@@ -158,53 +154,51 @@
     }
 
     &.range.highlighted {
-      @range-highlighted-bg: mix(@state-info-bg, @gray-lighter, 50%);
       color: #0000;
-      background: @range-highlighted-bg;
+      background: @datepicker-range-highlighted-bg;
 
       &.focused {
-        background: darken(@range-highlighted-bg, 10%);
+        background: darken(@datepicker-range-highlighted-bg, 10%);
       }
 
       &.disabled,
       &.disabled:active {
         color: @btn-link-disabled-color;
-        background: @range-highlighted-bg;
+        background: @datepicker-range-highlighted-bg;
       }
     }
 
     &.range.today {
-      @range-today-bg: mix(orange, @gray-lighter, 50%);
       color: #000;
-      background: @range-today-bg;
+      background: @datepicker-range-today-bg;
 
       &:hover {
-        background: darken(@range-today-bg, 10%);
+        background: darken(@datepicker-range-today-bg, 10%);
       }
 
       &.disabled,
       &.disabled:active {
         color: @btn-link-disabled-color;
-        background: @range-today-bg;
+        background: @datepicker-range-today-bg;
       }
     }
 
     &.selected,
     &.selected.highlighted {
-      color: #fff;
-      text-shadow: 0 -1px 0 rgba(0,0,0,.25);
-      background: @gray-light;
+      color: @datepicker-selected-color;
+      text-shadow: @datepicker-selected-text-shadow;
+      background: @datepicker-selected-bg;
 
       &:hover {
-        background: darken(@gray-light, 10%);
+        background: darken(@datepicker-selected-bg, 10%);
       }
     }
 
     &.active,
     &.active.highlighted {
-      color: @btn-primary-color;
-      text-shadow: 0 -1px 0 rgba(0,0,0,.25);
-      background: darken(@btn-primary-bg, 10%);
+      color: @datepicker-active-color;
+      text-shadow: @datepicker-active-text-shadow;
+      background: @datepicker-active-bg;
 
       &:hover,
       &:focus {
@@ -223,7 +217,7 @@
       border-radius: 4px;
       &:hover,
       &.focused {
-        background: @gray-lighter;
+        background: @datepicker-hover-bg;
       }
       &.disabled,
       &.disabled:hover {
@@ -256,7 +250,7 @@
   tfoot tr th {
     cursor: pointer;
     &:hover {
-      background: @gray-lighter;
+      background: @datepicker-hover-bg;
     }
   }
 

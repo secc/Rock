@@ -4,12 +4,12 @@
     <ContentTemplate>
 
         <asp:Panel ID="pnlDetails" CssClass="panel panel-block" runat="server">
-           
+
             <asp:HiddenField ID="hfAccountId" runat="server" />
 
             <div class="panel-heading">
                 <h1 class="panel-title"><i class="fa fa-building-o"></i> <asp:Literal ID="lActionTitle" runat="server" /></h1>
-                
+
                 <div class="panel-labels">
                     <Rock:HighlightLabel ID="hlInactive" runat="server" LabelType="Danger" Text="Inactive" />
                 </div>
@@ -30,6 +30,7 @@
                             <asp:Literal ID="lLeftDetails" runat="server" />
                         </div>
                         <div class="col-md-6">
+                            <asp:Literal ID="lRightDetails" runat="server" />
                             <asp:PlaceHolder ID="phAttributesView" runat="server" />
                         </div>
                     </div>
@@ -73,24 +74,35 @@
                     </div>
 
                     <div class="row">
-                        <div class="col-md-6"> 
+                        <div class="col-md-6">
                             <Rock:AccountPicker ID="apParentAccount" runat="server" Label="Parent Account" />
                             <Rock:DefinedValuePicker ID="dvpAccountType" runat="server" Label="Account Type" />
                             <Rock:DataTextBox ID="tbPublicName" runat="server"
                                 SourceTypeName="Rock.Model.FinancialAccount, Rock" PropertyName="PublicName" />
                             <Rock:CampusPicker ID="cpCampus" runat="server" Label="Campus" />
                             <Rock:DataTextBox ID="tbUrl" runat="server"
-                                SourceTypeName="Rock.Model.FinancialAccount, Rock" PropertyName="Url" />
+                                SourceTypeName="Rock.Model.FinancialAccount, Rock" PropertyName="Url" Label="URL" />
                         </div>
-                        <div class="col-md-6">                
+                        <div class="col-md-6">
                             <Rock:DataTextBox ID="tbGLCode" runat="server"
                                 SourceTypeName="Rock.Model.FinancialAccount, Rock" PropertyName="GlCode" Label="GL Code" />
                             <Rock:DatePicker ID="dtpStartDate" runat="server" SourceTypeName="Rock.Model.FinancialAccount, Rock" PropertyName="StartDate" Label="Start Date" />
                             <Rock:DatePicker ID="dtpEndDate" runat="server" SourceTypeName="Rock.Model.FinancialAccount, Rock" PropertyName="EndDate" Label="End Date" />
-                            <Rock:RockCheckBox ID="cbIsTaxDeductible" runat="server" Label="Tax Deductible" />           
+                            <Rock:RockCheckBox ID="cbIsTaxDeductible" runat="server" Label="Tax Deductible" />
                         </div>
                     </div>
-                    
+
+                    <asp:Panel ID="pnlAccountParticipants" runat="server">
+                        <label>Account Participants</label>
+                        <Rock:Grid ID="gAccountParticipants" runat="server" DisplayType="Light" RowItemText="Account Participant" ShowHeader="true" ShowConfirmDeleteDialog="false" AllowSorting="false">
+                            <Columns>
+                                <asp:BoundField DataField="PersonFullName" HeaderText="Person" />
+                                <asp:BoundField DataField="PurposeKeyDescription" HeaderText="Purpose" />
+                                <Rock:DeleteField OnClick="gAccountParticipants_DeleteClick" />
+                            </Columns>
+                        </Rock:Grid>
+                    </asp:Panel>
+
                     <div class="row">
                         <div class="col-md-6">
                             <div class="attributes">
@@ -109,6 +121,15 @@
             </div>
 
         </asp:Panel>
+
+        <Rock:ModalDialog ID="mdAddAccountParticipant" runat="server" Title="Add Participant" OnSaveClick="mdAddAccountParticipant_SaveClick" ValidationGroup="vgAddAccountParticipant">
+            <Content>
+                <asp:ValidationSummary ID="valAddAccountParticipant" runat="server" HeaderText="Please correct the following:" CssClass="alert alert-validation" ValidationGroup="vgAddAccountParticipant" />
+
+                <Rock:PersonPicker ID="ppAccountParticipantPerson" runat="server" Label="Person"  Required="true" ValidationGroup="vgAddAccountParticipant"/>
+                <Rock:RockDropDownList ID="ddlAccountParticipantPurposeKey" runat="server" Label="Purpose" Required="true" ValidationGroup="vgAddAccountParticipant" />
+            </Content>
+        </Rock:ModalDialog>
 
     </ContentTemplate>
 </asp:UpdatePanel>

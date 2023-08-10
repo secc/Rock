@@ -6,8 +6,21 @@
 
 @enable-global-custom-controls: false;
 
-@black:                             #000000;
-@white:                             #ffffff;
+@black: #000000;
+@white: #ffffff;
+
+@gray-50:  #fcfcfc;
+@gray-100: #f5f5f5;
+@gray-200: #eeeeee;
+@gray-300: #dfe0e1;
+@gray-400: #bcbcbd;
+@gray-500: #9e9ea0;
+@gray-600: #737475;
+@gray-700: #606162;
+@gray-800: #444445;
+@gray-900: #2d2e31;
+
+@font-size-lg: 18px;
 
 // Theme Colors *open* { These default theme colors are provided to prevent compiling errors. Any custom themes should override these. }
 @theme-1:                           #428bca; // bootstrap primary blue
@@ -47,6 +60,9 @@
 @brand-instagram:                   #F00075;
 @brand-snapchat:                    #FFFC00;
 @brand-googleplus:                  #ed4e23;
+
+@brand-email:                       #209904;
+@brand-calendar:                    #f00;
 
 /*
     The accent colors are deprecated and should not be used in new theme development. They will be
@@ -95,7 +111,9 @@
 
 //// Admin Bar
 @adminbar-bg:                       @theme-2;
+@adminbar-border:                   @theme-2;
 @adminbar-text-color:               @theme-2-text;
+@configbar-font-size:               18px;
 
 // Global Styles *open*
 @photo-border:                      @theme-3; // Standard border color for photos.
@@ -138,8 +156,10 @@
 @custom-checkbox-indicator-icon-checked: url("data:image/svg+xml;charset=utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 8 8'%3E%3Cpath fill='%23ffffff' d='M6.564.75l-3.59 3.612-1.538-1.55L0 4.26 2.974 7.25 8 2.193z'/%3E%3C/svg%3E");
 @custom-radio-indicator-icon-checked: url("data:image/svg+xml;charset=utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='-4 -4 8 8'%3E%3Ccircle r='3' fill='%23ffffff'/%3E%3C/svg%3E");
 
+@custom-switch-indicator-offset:          @custom-control-indicator-offset + 2px;
 @custom-switch-indicator-padding:         2px;
 @custom-switch-width:                     (@custom-control-indicator-size * 1.4);
+@custom-switch-height:                    (@custom-switch-indicator-size + (@custom-switch-indicator-padding *2));
 @custom-control-switch-border-width:      1px;
 @custom-switch-indicator-border-radius:   (@custom-control-indicator-size / 2);
 @custom-switch-indicator-size:            (@custom-control-indicator-size  - (@custom-control-indicator-border-width * 4));
@@ -155,10 +175,6 @@
 //// Picker
 @picker-action-bg:                  #e3ded7; // The background color of the actions bar at the bottom of the picker dropdown.
 @picker-action-border:              darken(@picker-action-bg, 10%);
-
-//// Date Picker
-@datepicker-highlight-bg:           @theme-7; // Background color for highlighting dates and selector elements of the datepicker.
-@datepicker-highlight-color:        @theme-7-text; // Text color for highlighting dates and selector elements of the datepicker.
 
 //// HTML Editor
 @html-editor-toolbar-height:        43px; // Height of the Summernote toolbar. Used to prevent page repaint.
@@ -177,6 +193,7 @@
 //--
 @panel-heading-bg:                  @theme-6; // The background color of the panel's header.
 @panel-heading-text-color:          @theme-6-text; // The heading's text color.
+@panel-heading-icon-color:          #6a6a6a;
 @panel-heading-border:              darken(@panel-heading-bg, 30%); // The headings border color.
 //--
 @panel-following-offset-width:      40px;
@@ -185,11 +202,27 @@
 @panel-following-padding:           10px 0 0;
 //--
 @panel-options-margin:              -10px -15px -10px 10px;
+@panel-options-button-padding:      9px 12px 10px;
+@panel-following-active-color:    #fff;
+@panel-following-active-bg:         @panel-top-border-color; // The background color of the following square when it's active at the top of panels that support the following feature (e.g. Group Details block).
 //--
 @panel-footer-color:                @panel-text; // The color text of the panel's footer.
 
 @panel-section-heading-bg:          @well-bg;
 @panel-section-body-bg:             @well-bg;
+@panel-section-border:              @well-border;
+
+@panel-widget-text:                 @panel-heading-text-color;
+@panel-widget-border:               @panel-border;
+@panel-widget-heading-bg:           @panel-heading-bg;
+@panel-widget-heading-border:       @panel-heading-border;
+
+@panel-follow-offset-width:         40px;
+@panel-follow-status-width:         35px;
+
+@panel-drawer-bg:                   @well-bg;
+@panel-badges-bg:                   @panel-drawer-bg;
+@label-tree-bg:                     @white;
 
 // Cards
 
@@ -214,6 +247,18 @@
 
 @card-group-margin:                 (@grid-gutter-width / 2);
 @card-deck-margin:                  @card-group-margin;
+
+
+@card-sm-spacer-y:            .75rem;
+@card-sm-spacer-x:            .75rem;
+
+@card-schedule-height:              ((@line-height-computed * 3) + (12 * 2));
+@card-schedule-confirmation-width:  180px;
+@card-schedule-border-radius:       @border-radius-large;
+@card-schedule-title-size:          floor((@font-size-base * 1.15));
+@card-schedule-margin:              16px;
+@card-schedule-pending-bg:          @well-bg;
+
 
 
 // Grid
@@ -247,6 +292,8 @@
 //// Section Headers
 @grid-section-bg:                   @theme-4; // Some grids like the person merge grid have section headers to group like rows. This styles the background of these rows.
 @grid-section-color:                @theme-4-text; // Some grids like the person merge grid have section headers to group like rows. This styles the text of these rows.
+@grid-section-font-size:            18px;
+@grid-section-font-weight:          @font-weight-bold;
 
 //// Pager Section
 @grid-pager-bg:                     @panel-heading-bg;
@@ -284,7 +331,9 @@
 
 //// Badge Bar
 @persondetails-badge-bg:                  @theme-5;
+@persondetails-badge-color-light:         @ui-4;
 @persondetails-badge-color:               @theme-5-text;
+@persondetails-badge-color-emphasis:      @ui-5;
 @badge-grid-width:                        86px;
 
 //// Family Bar
@@ -310,6 +359,7 @@
 // Modals
 @modal-header-bg:                   @theme-2;
 @modal-header-text-color:           @theme-2-text;
+@modal-header-small-top-offset:     12px;
 @modal-body-bg:                     @body-bg;
 @modal-body-text-color:             @text-color;
 @modal-footer-bg:                   @theme-4;
@@ -325,6 +375,7 @@
 //--
 @nav-pills-container-bg:            transparent; // the background color for the well-pillwrap class used on the security dialog, communication mediums and template details.
 @nav-pills-container-border:        transparent; // The border color of the well-pillwrap classed used on the security dialog, communication mediums and template details.
+@nav-pills-link-margin:             12px;
 
 // List As Blocks { Used on many administration pages and pages like 'My Workflows', 'Connections' and 'Calendar'. }
 @listasblocks-bg:                         @theme-6;
@@ -359,10 +410,14 @@
 @smartsearch-input-selection-text-color:  #fff;
 @smartsearch-text-color:                  @header-text-color;
 
+
+// Forms
 @control-label-weight:              @font-weight-bold;
 @input-focus-rgba:                  fade(@input-border-focus, 60%);
 @input-focus-box-shadow:            ~"0 0 0 3px @{input-focus-rgba}";
 @input-focus-transition:            ~"border-color .15s ease-in-out, box-shadow .15s ease-in-out";
+@control-label-offset:              @line-height-computed + 5px;
+@control-label-offset-checkbox:     @line-height-computed + 10px;
 
 @form-section-margin-bottom:        64px;
 
@@ -376,6 +431,9 @@
 
 //** Small `.form-control` height
 @input-height-xs:                   (floor(@font-size-small * @line-height-small) + (@padding-xs-vertical * 2) + 2);
+
+@description-term-margin-top:             16px;
+@description-term-margin-bottom:          2px;
 
 // Wizard Styles { Used on pages like 'Calendar' and 'Event Registration' to help guide the user through a complex series of screens. }
 @wizard-bg:                               @gray-lighter;
@@ -393,6 +451,39 @@
 @wizard-item-label-color:                 lighten(@wizard-item-label-active-color, 25%);
 @wizard-item-icon-color:                  @wizard-item-icon-active-color;
 @wizard-item-icon-bg:                     lighten(@wizard-item-icon-active-bg, 25%);
+
+// Calendar Styles {  }
+@calendar-color:                          @text-color;
+@calendar-border:                         @panel-default-border;
+
+@calendar-selected-color:                 @label-color;
+@calendar-selected-bg:                    @label-info-bg;
+
+@calendar-today-color:                    @alert-info-text;
+@calendar-today-bg:                       @alert-info-bg;
+
+// Datepicker Styles
+@datepicker-hover-bg:                     @gray-lighter;
+
+@datepicker-today-color:                  @black;
+@datepicker-today-bg:                     lighten(orange, 30%);
+@datepicker-highlighted-color:              @black; // Text color for highlighting dates and selector elements of the datepicker.
+@datepicker-highlighted-bg:               @state-info-bg;
+
+@datepicker-active-color:                 @btn-primary-color;
+@datepicker-active-bg:                    darken(@btn-primary-bg, 10%);
+@datepicker-active-text-shadow:           0 -1px 0 rgba(0,0,0,.25);
+
+@datepicker-selected-color:               @white;
+@datepicker-selected-bg:                  @gray-light;
+@datepicker-selected-text-shadow:         @datepicker-active-text-shadow;
+
+@datepicker-range-color:                  @black;
+@datepicker-range-bg:                     @gray-lighter;
+@datepicker-range-highlighted-bg:         mix(@state-info-bg, @gray-lighter, 50%);
+@datepicker-range-today-bg:               mix(orange, @gray-lighter, 50%);
+
+@datepicker-border-radius:                4px;
 
 // Tree Viewer
 @tree-rollover-bg:                  lighten(@theme-7, 20%); // Background color of the rollover for items in the treeview.
@@ -426,6 +517,8 @@
 @alert-validation-text:             @text-color;
 
 // Custom Labels { The bootstrap labels use the brand colors. }
+@label-link-color:                  #ffffff;
+
 @label-campus-bg:                   #83758f; // Used for identifying campuses.
 @label-campus-color:                #fff;
 @label-type-bg:                     @theme-8; // Used for showing the 'type' of an idea. For instance on the group viewer this highlights the group's type.
@@ -444,6 +537,24 @@
 @badge-success-color:               #ffffff;
 @badge-info-color:                  #ffffff;
 @badge-critical-color:              #ffffff;
+
+@badge-rock-default-color:          #4f89bd;
+@badge-disabled-color:              #939393;
+
+@badge-baptism-color:               #23a5c5;
+@badge-era-loss-color:              #ee7624;
+
+@badge-disc-primary-color:          @badge-rock-default-color;
+@badge-disc-disabled-color:         @badge-disabled-color;
+@badge-disc-requested-color:        #e3ded7;
+
+@badge-attending-weeks-color:       #e5d24d;
+@badge-attending-new-color:         #d25555;
+@badge-attending-months-color:      #69ad5e;
+@badge-attending-years-color:       #56789e;
+
+@badge-lastvisitonsite-color:       @badge-rock-default-color;
+@badge-personaldevice-color:        @badge-rock-default-color;
 
 // Below Not in Rock Theme
 

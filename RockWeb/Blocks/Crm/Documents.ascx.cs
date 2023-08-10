@@ -45,7 +45,7 @@ namespace RockWeb.Blocks.Crm
         Order = 0,
         Key = AttributeKeys.HeadingTitle )]
 
-    [TextField( "Heading Icon Css Class",
+    [TextField( "Heading Icon CSS Class",
         Description = "The Icon CSS Class for use in the heading.",
         IsRequired = false,
         Order = 1,
@@ -110,10 +110,9 @@ namespace RockWeb.Blocks.Crm
 
             // Configure security button
             var securityColumn = gFileList.ColumnsOfType<SecurityField>().FirstOrDefault();
-            if ( this.ContextEntity() != null )
-            {
-                securityColumn.EntityTypeId = this.ContextEntity().TypeId;
-            }
+
+            // Set the security on the document and not the entity the document is for.
+            securityColumn.EntityTypeId = EntityTypeCache.GetId( Rock.SystemGuid.EntityType.DOCUMENT ).Value;
         }
 
         protected override void OnLoad( EventArgs e )
@@ -259,7 +258,7 @@ namespace RockWeb.Blocks.Crm
         /// </summary>
         private void PopulateEditDocumentTypeDropDownList( bool isNew = false )
         {
-            var filteredDocumentTypes = GetFilteredDocumentTypes( true );
+            var filteredDocumentTypes = GetFilteredDocumentTypes( false );
 
             /*
                SK 20120-10-10
@@ -505,7 +504,7 @@ namespace RockWeb.Blocks.Crm
             byte[] bytes = document.BinaryFile.ContentStream.ReadBytesToEnd();
 
             Response.ContentType = "application/octet-stream";
-            Response.AddHeader( "content-disposition", "attachment; filename=" + document.BinaryFile.FileName );
+            Response.AddHeader( "content-disposition", "attachment; filename=" + document.BinaryFile.FileName.ReplaceSpecialCharacters( "_" ) );
             Response.BufferOutput = true;
             Response.BinaryWrite( bytes );
             Response.Flush();
@@ -563,15 +562,21 @@ namespace RockWeb.Blocks.Crm
 
         protected void ddlAddEditDocumentType_SelectedIndexChanged( object sender, EventArgs e )
         {
-            // Get the selected DocumentType from cache and update the BinaryFileTypeGuid in the FileUploader
-            var documentTypeCache = DocumentTypeCache.Get( ddlAddEditDocumentType.SelectedValueAsInt() ?? 0 );
-            fuUploader.BinaryFileTypeGuid = new BinaryFileTypeService( new RockContext() ).GetGuid( documentTypeCache.BinaryFileTypeId ).Value;
 
             if ( tbDocumentName.Text.IsNotNullOrWhiteSpace() || ddlAddEditDocumentType.SelectedIndex == 0 )
             {
                 // If there is already a name or nothing is selected then do do anything.
+                fuUploader.Visible = false;
+                nbSelectDocumentType.Visible = true;
                 return;
             }
+
+            // Get the selected DocumentType from cache and update the BinaryFileTypeGuid in the FileUploader
+            var documentTypeCache = DocumentTypeCache.Get( ddlAddEditDocumentType.SelectedValueAsInt() ?? 0 );
+            fuUploader.BinaryFileTypeGuid = new BinaryFileTypeService( new RockContext() ).GetGuid( documentTypeCache.BinaryFileTypeId ).Value;
+
+            fuUploader.Visible = true;
+            nbSelectDocumentType.Visible = false;
 
             string template = documentTypeCache.DefaultDocumentNameTemplate;
             if ( template.IsNotNullOrWhiteSpace() )

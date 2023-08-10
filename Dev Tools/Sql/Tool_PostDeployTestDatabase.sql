@@ -1,3 +1,16 @@
+-- =====================================================================================================
+-- Author:        Rock
+-- Create Date: 
+-- Modified Date: 01-03-2021
+-- Description:   A post depoloy utility script for testing that set certain functionality for test mode.
+--
+-- Change History:
+--                 01-03-2021 COREYH - Add this script description. 
+--                                     Also added the script requirements.
+-- Requirements:
+--                 The [RockUser] login must exist in the SQL database.
+-- ======================================================================================================
+
 -- CREATE FUNCTION FOR REMOVING NON-ALPHA CHARACTERS
 IF  EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[ufnUtility_RemoveNonAlphaCharacters]') AND type = 'FN')
 DROP FUNCTION [dbo].[ufnUtility_RemoveNonAlphaCharacters]
@@ -79,3 +92,11 @@ UPDATE [AttributeValue] SET [Value] = 'False' WHERE [AttributeId] = @MailAttribu
 DECLARE @SMTPEntityTypeGuid varchar(50) = ( SELECT LOWER(CAST([Guid] as varchar(50))) FROM [EntityType] WHERE [Id] = @SMTPEntityTypeId )
 SET @MailAttributeId = ( SELECT TOP 1 [Id] FROM [Attribute] WHERE [EntityTypeId] = @MailEntityTypeId AND [Key] = 'TransportContainer' )
 UPDATE [AttributeValue] SET [Value] = @SMTPEntityTypeGuid WHERE [AttributeId] = @MailAttributeId
+
+-- Add localhost domain to internal site so routes work
+IF NOT EXISTS (SELECT [Id] FROM [SiteDomain] WHERE SiteId = 1 AND Domain = 'localhost' )
+BEGIN
+	DECLARE @domainOrder INT = (SELECT Max([Order]) + 1 FROM [SiteDomain] WHERE SiteId = 1)
+	INSERT INTO [dbo].[SiteDomain](IsSystem, SiteId, Domain, [Guid], [Order])
+	VALUES(0, 1, 'localhost', NEWID(), @domainOrder)
+END

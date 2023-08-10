@@ -63,7 +63,7 @@
 
                     <div class="row">
                         <div class="col-md-6">
-                            <Rock:DataTextBox ID="tbIconCssClass" runat="server" SourceTypeName="Rock.Model.ConnectionType, Rock" PropertyName="IconCssClass" ValidateRequestMode="Disabled"/>
+                            <Rock:DataTextBox ID="tbIconCssClass" runat="server" SourceTypeName="Rock.Model.ConnectionType, Rock" PropertyName="IconCssClass" Label="Icon CSS Class" ValidateRequestMode="Disabled"/>
                             <Rock:NumberBox ID="nbDaysUntilRequestIdle" runat="server" SourceTypeName="Rock.Model.ConnectionType, Rock" PropertyName="DaysUntilRequestIdle" Label="Days Until Request Considered Idle" ValidateRequestMode="Disabled" NumberType="Integer" MinimumValue="0"/>
                             <Rock:PagePicker ID="ppConnectionRequestDetail" runat="server" Label="Connection Request Detail Page" Required="false" PromptForPageRoute="true" Help="Choose a page that should be used for viewing connection requests of this type. This is useful if you have different detail pages with different settings. A default page will be used if this is left blank." />
                         </div>
@@ -236,6 +236,45 @@
                     <div class="col-md-6">
                         <Rock:RockCheckBox ID="cbAutoInactivateState" runat="server" Label="Auto-Inactivate State" ValidationGroup="ConnectionStatus" Help="Selecting this status will change the state to Inactive." />
                     </div>
+                </div>
+                <div>
+                    <h4 class="margin-t-md">Status Automations</h4>
+                    <span class="text-muted">Below are a list of automations that can run on the requests with the specific status. These can be used to change the status based on the criteria you provide. These rules will be considered after each save of the request and on the configured schedule of the 'Connection Request Automation' job.</span>
+                    <hr class="margin-t-sm" >
+                    <Rock:NotificationBox ID="nbMessage" NotificationBoxType="Info" runat="server" Text="Please save the new Status before adding any Status Automations." Visible="false" />
+                    <Rock:RockControlWrapper ID="rcwStatusAutomationsView" runat="server">
+                        <div class="grid">
+                            <Rock:Grid ID="gStatusAutomations" runat="server" AllowPaging="false" DisplayType="Light" ShowHeader="true" RowItemText="Status Automation">
+                                <Columns>
+                                    <Rock:RockBoundField DataField="AutomationName" HeaderText="Automation Name" />
+                                    <Rock:RockBoundField DataField="DataViewName" HeaderText="Data View" />
+                                    <Rock:EnumField DataField="GroupRequirementsFilter" HeaderText="Group Requirements Filter" />
+                                    <Rock:RockBoundField DataField="DestinationStatusName" HeaderText="Move To" />
+                                    <Rock:EditField OnClick="gStatusAutomations_Edit" />
+                                    <Rock:DeleteField OnClick="gStatusAutomations_Delete" />
+                                </Columns>
+                            </Rock:Grid>
+                        </div>
+                    </Rock:RockControlWrapper>
+                     <Rock:RockControlWrapper ID="rcwStatusAutomationsEdit" runat="server">
+                         <Rock:NotificationBox ID="nbStatusWarning" runat="server" NotificationBoxType="Warning" Title="Warning" Visible="false" />
+                         <asp:HiddenField ID="hfConnectionStatusAutomationGuid" runat="server" />
+                         <Rock:DataTextBox ID="tbAutomationName" SourceTypeName="Rock.Model.ConnectionStatusAutomation, Rock" PropertyName="AutomationName" Label="Automation Name" runat="server" ValidationGroup="vgConnectionStatusAutomation" />
+                         <div class="row">
+                             <div class="col-md-6">
+                                 <Rock:DataViewsPicker ID="dvpDataView" runat="server" Label="Data View" Help="The data view that should be used to filter requests by. This data view should be on the connection requests." SelectionMode="Single" ValidationGroup="vgConnectionStatusAutomation"/>
+                             </div>
+                             <div class="col-md-6">
+                                 <Rock:RockRadioButtonList ID="rblGroupRequirementsFilter" runat="server" Help="Determines if group requirements should be checked. These requirements would come from the selected placement group." RepeatDirection="Horizontal" Label="Group Requirements Filter" ValidationGroup="vgConnectionStatusAutomation"/>
+                             </div>
+                         </div>
+                         <Rock:RockDropDownList ID="ddlMoveTo" runat="server" Label="Move To" Required="true" ValidationGroup="vgConnectionStatusAutomation" DataTextField="Name" DataValueField="Guid" />
+                         <div class="actions">
+                             <asp:LinkButton ID="lbSaveAutomation" runat="server" AccessKey="s" ToolTip="Alt+s" Text="Save Automation" CssClass="btn btn-xs btn-default" OnClick="lbSaveAutomation_Click"  ValidationGroup="vgConnectionStatusAutomation" />
+                             <asp:LinkButton ID="lbCancelAutomation" runat="server" AccessKey="c" ToolTip="Alt+c" Text="Cancel" CssClass="btn btn-xs btn-link" CausesValidation="false" OnClick="lbCancelAutomation_Click" />
+                         </div>
+                    </Rock:RockControlWrapper>
+
                 </div>
             </Content>
         </Rock:ModalDialog>

@@ -14,10 +14,21 @@
 // limitations under the License.
 // </copyright>
 //
+using System;
 using Rock.Model;
 
 namespace Rock.Transactions
 {
+    /*
+    05-02-2022 MDP
+    We changed this back to use Rock.Transactions.RegisterControllersTransaction instead.
+    This is because RestControllerService.RegisterControllers has a dependancy on having
+    all the Routes configured. The Bus message approach (Rock.Tasks.RegisterRestControllers)
+    would sometimes result in RegisterControllers happening before Routes would be configured,
+    which would cause RestController and RestAction records to get deleted.
+
+     */
+
     /// <summary>
     /// Registers controllers
     /// </summary>

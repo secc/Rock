@@ -13,10 +13,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 // </copyright>
-//
-
 using System;
-using System.Collections.Generic;
+using System.Collections.Concurrent;
 using System.Reflection;
 
 using Rock.Bus;
@@ -24,6 +22,7 @@ using Rock.Bus.Consumer;
 using Rock.Bus.Message;
 using Rock.Bus.Queue;
 using Rock.Logging;
+using Rock.Model;
 
 namespace Rock.Web.Cache
 {
@@ -33,22 +32,15 @@ namespace Rock.Web.Cache
     public sealed class RockCacheConsumer : RockConsumer<CacheEventQueue, CacheWasUpdatedMessage>
     {
         /// <summary>
-        /// The apply method
-        /// </summary>
-        private readonly MethodInfo _applyMethod;
-
-        /// <summary>
         /// The cache types
         /// </summary>
-        private readonly Dictionary<string, Type> _cacheTypes;
+        private static readonly ConcurrentDictionary<string, MethodInfo> _cacheTypeMethodInfoLookup = new ConcurrentDictionary<string, MethodInfo>();
 
         /// <summary>
         /// Initializes a new instance of the <see cref="RockCacheConsumer"/> class.
         /// </summary>
         public RockCacheConsumer()
         {
-            _applyMethod = GetType().GetMethod( nameof( ApplyCacheMessage ), BindingFlags.NonPublic | BindingFlags.Instance );
-            _cacheTypes = new Dictionary<string, Type>();
         }
 
         /// <summary>
@@ -57,21 +49,29 @@ namespace Rock.Web.Cache
         /// <param name="message">The message.</param>
         public override void Consume( CacheWasUpdatedMessage message )
         {
-            if ( !RockMessageBus.IsRockStarted )
+            /* 06-07-2022 MP
+
+            In the case of consuming a CacheWasUpdatedMessage, we don't need to check RockMessageBus.IsRockStarted. The Cache Update
+            logic doesn't have a dependency on having Rock fully started.
+
+            Also, we really need to consume these messages regardless of IsRockStarted to prevent the cache from getting stale.
+
+            If we later discover that this isn't OK, we'll revisit this decision and make any updates to make it OK again.
+            */
+
+            RockLogger.Log.Debug( RockLogDomains.Bus, $"Consumed Cache Update message from {message.SenderNodeName} node. {message.ToDebugString()}." );
+            var applyCacheMessageMethodInfo = FindApplyCacheMessageMethodInfo( message.CacheTypeName );
+
+            if ( applyCacheMessageMethodInfo == null )
             {
+                var logMessage = $"Unable to resolve cache type when consuming cache update message. {message.ToDebugString()}.";
+                RockLogger.Log.Debug( RockLogDomains.Bus, logMessage );
+                ExceptionLogService.LogException( new BusException( logMessage ) );
+
                 return;
             }
 
-            RockLogger.Log.Debug( RockLogDomains.Bus, $"Consumed Cache Update message. Key: {message.Key}, Region: {message.Region}, CacheTypeName: {message.CacheTypeName}." );
-
-            var type = FindCacheType( message.CacheTypeName );
-
-            if ( type == null )
-            {
-                return;
-            }
-
-            _applyMethod.MakeGenericMethod( type ).Invoke( this, new[] { message } );
+            applyCacheMessageMethodInfo.Invoke( this, new[] { message } );
         }
 
         /// <summary>
@@ -79,21 +79,29 @@ namespace Rock.Web.Cache
         /// </summary>
         /// <param name="cacheTypeName">Name of the cache type.</param>
         /// <returns></returns>
-        private Type FindCacheType( string cacheTypeName )
+        private MethodInfo FindApplyCacheMessageMethodInfo( string cacheTypeName )
         {
-            if ( _cacheTypes.ContainsKey( cacheTypeName ) )
+            MethodInfo applyCacheMessageMethodInfo;
+            if ( _cacheTypeMethodInfoLookup.ContainsKey( cacheTypeName ) )
             {
-                return _cacheTypes[cacheTypeName];
+                if ( _cacheTypeMethodInfoLookup.TryGetValue( cacheTypeName, out applyCacheMessageMethodInfo ) )
+                {
+                    if ( applyCacheMessageMethodInfo != null )
+                    {
+                        return applyCacheMessageMethodInfo;
+                    }
+                }
             }
 
             var cacheType = Type.GetType( cacheTypeName );
+            applyCacheMessageMethodInfo = GetType().GetMethod( nameof( ApplyCacheMessage ), BindingFlags.NonPublic | BindingFlags.Instance ).MakeGenericMethod( cacheType );
 
-            if ( cacheType != null )
+            if ( applyCacheMessageMethodInfo != null )
             {
-                _cacheTypes[cacheTypeName] = cacheType;
+                _cacheTypeMethodInfoLookup.TryAdd( cacheTypeName, applyCacheMessageMethodInfo );
             }
 
-            return cacheType;
+            return applyCacheMessageMethodInfo;
         }
 
         /// <summary>

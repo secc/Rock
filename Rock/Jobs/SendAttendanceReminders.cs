@@ -40,28 +40,50 @@ namespace Rock.Jobs
     [DisplayName( "Send Attendance Reminders" )]
     [Description( "Sends a reminder to group leaders about entering attendance for their group meeting." )]
 
-    [GroupTypeField( "Group Type", "The Group type to send attendance reminders for.", true, Rock.SystemGuid.GroupType.GROUPTYPE_SMALL_GROUP, "", 0, AttributeKey.GroupType )]
-
     #region Job Attributes
+
+    [GroupTypeField( "Group Type",
+        Description = "The Group type to send attendance reminders for.",
+        IsRequired = true,
+        DefaultValue = Rock.SystemGuid.GroupType.GROUPTYPE_SMALL_GROUP,
+        Order = 0,
+        Key = AttributeKey.GroupType )]
+
     [SystemCommunicationField( "System Communication",
-        "The system communication to use when sending reminder.",
-        true,
-        Rock.SystemGuid.SystemCommunication.GROUP_ATTENDANCE_REMINDER,
-        "",
-        1,
-        AttributeKey.SystemEmail )] // NOTE: This key is different than the label!
+        Description = "The system communication to use when sending reminder.",
+        Key = AttributeKey.SystemEmail,
+        IsRequired = true,
+        DefaultSystemCommunicationGuid = Rock.SystemGuid.SystemCommunication.GROUP_ATTENDANCE_REMINDER,
+        Order = 1 )]
 
-    [TextField( "Send Reminders", "Comma delimited list of days after a group meets to send an additional reminder. For example, a value of '2,4' would result in an additional reminder getting sent two and four days after group meets if attendance was not entered.", false, "", "", 2, AttributeKey.SendReminders )]
+    [TextField( "Send Reminders",
+        Description = "Comma delimited list of days after a group meets to send an additional reminder. For example, a value of '2,4' would result in an additional reminder getting sent two and four days after group meets if attendance was not entered.",
+        Key = AttributeKey.SendReminders,
+        IsRequired = false,
+        Order = 2 )]
 
-    [CustomDropdownListField(
-        "Send Using",
-        "Specifies how the reminder will be sent.",
-        "1^Email,2^SMS,0^Recipient Preference",
+    [CustomDropdownListField( "Send Using",
+        Description = "Specifies how the reminder will be sent.",
         Key = AttributeKey.SendUsingConfiguration,
+        ListSource = "1^Email,2^SMS,0^Recipient Preference",
         IsRequired = true,
         DefaultValue = "1",
         Order = 3 )]
-    #endregion
+
+    [CampusesField( name:"Campuses",
+        description: "When set will filter groups by the campuses selected. This requires that groups have a campus set to work.",
+        required: false,
+        includeInactive: false,
+        order: 4,
+        key: AttributeKey.Campuses )]
+
+    [GroupField( "Parent Group",
+        Description = "When set only groups under this parent (at any level in the hierarchy) will be considered.",
+        Key = AttributeKey.ParentGroup,
+        IsRequired = false,
+        Order = 4 )]
+
+    #endregion Job Attributes
 
     [DisallowConcurrentExecution]
     public class SendAttendanceReminder : IJob
@@ -92,6 +114,16 @@ namespace Rock.Jobs
             /// The method to use when determining how the notice should be sent.
             /// </summary>
             public const string SendUsingConfiguration = "SendUsingConfiguration";
+
+            /// <summary>
+            /// The campuses the groups should belong to.
+            /// </summary>
+            public const string Campuses = "Campuses";
+
+            /// <summary>
+            /// The parent group of the group.
+            /// </summary>
+            public const string ParentGroup = "ParentGroup";
         }
 
         #endregion Attribute Keys
@@ -111,16 +143,17 @@ namespace Rock.Jobs
             var dataMap = context.JobDetail.JobDataMap;
             var groupType = GroupTypeCache.Get( dataMap.GetString( AttributeKey.GroupType ).AsGuid() );
             var isGroupTypeValid = groupType.TakesAttendance && groupType.SendAttendanceReminder;
-
+            var results = new StringBuilder();
+            
             context.Result = "0 attendance reminders sent.";
 
             if ( !isGroupTypeValid )
             {
-                var errorMessages = new List<string>
-                {
-                    $"Group Type {groupType.Name} isn't setup to take attendance or send attendance reminders."
-                };
-                HandleErrorMessages( context, errorMessages );
+                var warning = $"Group Type {groupType.Name} isn't setup to take attendance or send attendance reminders.";
+                results.Append( FormatWarningMessage( warning ) );
+                RockLogger.Log.Warning( RockLogDomains.Jobs, warning );
+                context.Result = results.ToString();
+                throw new RockJobWarningException( warning );
             }
 
             var systemEmailGuid = dataMap.GetString( AttributeKey.SystemEmail ).AsGuid();
@@ -132,37 +165,27 @@ namespace Rock.Jobs
             if ( jobPreferredCommunicationType == CommunicationType.SMS && !isSmsEnabled )
             {
                 // If sms selected but not usable default to email.
-                var errorMessages = new List<string>
-                {
-                    $"The job is setup to send via SMS but either SMS isn't enabled or no SMS message was found in system communication {systemCommunication.Title}."
-                };
-                HandleErrorMessages( context, errorMessages );
+                var errorMessage = $"The job is setup to send via SMS but either SMS isn't enabled or no SMS message was found in system communication {systemCommunication.Title}.";
+                HandleErrorMessage( context, errorMessage );
             }
 
-            var results = new StringBuilder();
             if ( jobPreferredCommunicationType != CommunicationType.Email && string.IsNullOrWhiteSpace( systemCommunication.SMSMessage ) )
             {
                 var warning = $"No SMS message found in system communication {systemCommunication.Title}. All attendance reminders were sent via email.";
-                results.AppendLine( warning );
+                results.Append( FormatWarningMessage( warning ) );
                 RockLogger.Log.Warning( RockLogDomains.Jobs, warning );
                 jobPreferredCommunicationType = CommunicationType.Email;
             }
 
             var occurrences = GetOccurenceDates( groupType, dataMap, rockContext );
-
-            // Get the groups that have occurrences
             var groupIds = occurrences.Where( o => o.Value.Any() ).Select( o => o.Key ).ToList();
-
-            // Get the leaders of those groups
             var leaders = GetGroupLeaders( groupIds, rockContext );
-
             var attendanceRemindersResults = SendAttendanceReminders( leaders, occurrences, systemCommunication, jobPreferredCommunicationType, isSmsEnabled );
 
             results.AppendLine( $"{attendanceRemindersResults.MessagesSent} attendance reminders sent." );
-
             results.Append( FormatWarningMessages( attendanceRemindersResults.Warnings ) );
-
             context.Result = results.ToString();
+
             HandleErrorMessages( context, attendanceRemindersResults.Errors );
         }
 
@@ -178,8 +201,10 @@ namespace Rock.Jobs
             var dates = GetSearchDates( dataMap );
             var startDate = dates.Min();
             var endDate = dates.Max().AddDays( 1 );
+            var campuses = dataMap.GetString( AttributeKey.Campuses ).SplitDelimitedValues().AsGuidList();
+            var parentGroup = dataMap.GetString( AttributeKey.ParentGroup ).AsGuidOrNull();
 
-            var occurrences = GetAllOccurenceDates( groupType, dates, startDate, endDate, rockContext );
+            var occurrences = GetAllOccurenceDates( groupType, dates, startDate, endDate, campuses, parentGroup, rockContext );
 
             // Remove any occurrences during group type exclusion date ranges
             RemoveExclusionDates( groupType, occurrences );
@@ -235,8 +260,10 @@ namespace Rock.Jobs
         /// <param name="startDate">The start date.</param>
         /// <param name="endDate">The end date.</param>
         /// <param name="rockContext">The rock context.</param>
+        /// <param name="campuses">The campuses to filter by</param>
+        /// <param name="parentGroupGuid">The parent group of the group</param>
         /// <returns></returns>
-        private static Dictionary<int, List<DateTime>> GetAllOccurenceDates( GroupTypeCache groupType, List<DateTime> dates, DateTime startDate, DateTime endDate, RockContext rockContext )
+        private static Dictionary<int, List<DateTime>> GetAllOccurenceDates( GroupTypeCache groupType, List<DateTime> dates, DateTime startDate, DateTime endDate, List<Guid> campuses, Guid? parentGroupGuid, RockContext rockContext )
         {
             var groupService = new GroupService( rockContext );
 
@@ -248,6 +275,18 @@ namespace Rock.Jobs
                 .IsActive()
                 .HasSchedule()
                 .HasActiveLeader();
+
+            if ( campuses.Count > 0 )
+            {
+                groupsToRemind = groupsToRemind.Where( g => g.CampusId.HasValue && campuses.Contains( g.Campus.Guid ) );
+            }
+
+            if ( parentGroupGuid.HasValue )
+            {
+                var parentGroup = groupService.Get( parentGroupGuid.Value );
+                var descendantIds = groupService.GetAllDescendentGroupIds( parentGroup.Id, false ).ToList();
+                groupsToRemind = groupsToRemind.Where( g => descendantIds.Contains( g.Id ) );
+            }
 
             foreach ( var group in groupsToRemind )
             {
@@ -413,13 +452,30 @@ namespace Rock.Jobs
             return result;
         }
 
+        private StringBuilder FormatWarningMessage( string warning )
+        {
+            var errorMessages = new List<string> { warning };
+            return FormatMessages( errorMessages, "Warning" );
+        }
+
         private StringBuilder FormatWarningMessages( List<string> warnings )
         {
             return FormatMessages( warnings, "Warning" );
         }
 
+        private void HandleErrorMessage( IJobExecutionContext context, string errorMessage )
+        {
+            if ( errorMessage.IsNullOrWhiteSpace() )
+            {
+                return;
+            }
+
+            var errorMessages = new List<string> { errorMessage };
+            HandleErrorMessages( context, errorMessages );
+        }
+
         /// <summary>
-        /// Handles the error messages.
+        /// Handles the error messages. Throws an exception if there are any items in the errorMessages parameter
         /// </summary>
         /// <param name="context">The context.</param>
         /// <param name="errorMessages">The error messages.</param>
@@ -428,13 +484,10 @@ namespace Rock.Jobs
             if ( errorMessages.Any() )
             {
                 StringBuilder sb = new StringBuilder( context.Result.ToString() );
-
                 sb.Append( FormatMessages( errorMessages, "Error" ) );
 
                 var resultMessage = sb.ToString();
-
                 context.Result = resultMessage;
-
                 var exception = new Exception( resultMessage );
 
                 HttpContext context2 = HttpContext.Current;
@@ -449,9 +502,7 @@ namespace Rock.Jobs
             if ( messages.Any() )
             {
                 var pluralizedLabel = label.PluralizeIf( messages.Count > 1 );
-
                 sb.AppendLine( $"{messages.Count} {pluralizedLabel}:" );
-
                 messages.ForEach( w => { sb.AppendLine( w ); } );
             }
             return sb;

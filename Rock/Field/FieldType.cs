@@ -22,6 +22,7 @@ using System.Web.UI;
 using System.Web.UI.HtmlControls;
 using System.Web.UI.WebControls;
 
+using Rock.Attribute;
 using Rock.Data;
 using Rock.Model;
 using Rock.Reporting;
@@ -57,6 +58,23 @@ namespace Rock.Field
             return new List<string>();
         }
 
+        /// <inheritdoc/>
+        [RockInternal]
+        public virtual Dictionary<string, string> GetPublicConfigurationValues( Dictionary<string, string> privateConfigurationValues, ConfigurationValueUsage usage, string value )
+        {
+            // Create a new dictionary to protect against the passed dictionary
+            // being changed after we are called.
+            return new Dictionary<string, string>( privateConfigurationValues );
+        }
+
+        /// <inheritdoc/>
+        public virtual Dictionary<string, string> GetPrivateConfigurationValues( Dictionary<string, string> publicConfigurationValues )
+        {
+            // Create a new dictionary to protect against the passed dictionary
+            // being changed after we are called.
+            return new Dictionary<string, string>( publicConfigurationValues );
+        }
+
         /// <summary>
         /// Creates the HTML controls required to configure this type of field
         /// </summary>
@@ -85,6 +103,12 @@ namespace Rock.Field
         {
         }
 
+        /// <inheritdoc/>
+        public virtual Dictionary<string, string> GetPublicEditConfigurationProperties( Dictionary<string, string> privateConfigurationValues )
+        {
+            return new Dictionary<string, string>();
+        }
+
         #endregion
 
         #region Formatting
@@ -95,6 +119,34 @@ namespace Rock.Field
         public virtual HorizontalAlign AlignValue
         {
             get { return HorizontalAlign.Left; }
+        }
+
+        /// <inheritdoc/>
+        [RockInternal]
+        public virtual string GetTextValue( string privateValue, Dictionary<string, string> privateConfigurationValues )
+        {
+            return privateValue;
+        }
+
+        /// <inheritdoc/>
+        [RockInternal]
+        public virtual string GetHtmlValue( string privateValue, Dictionary<string, string> privateConfigurationValues )
+        {
+            return GetTextValue( privateValue, privateConfigurationValues );
+        }
+
+        /// <inheritdoc/>
+        [RockInternal]
+        public virtual string GetCondensedTextValue( string privateValue, Dictionary<string, string> privateConfigurationValues )
+        {
+            return GetTextValue( privateValue, privateConfigurationValues ).Truncate( 100 );
+        }
+
+        /// <inheritdoc/>
+        [RockInternal]
+        public virtual string GetCondensedHtmlValue( string privateValue, Dictionary<string, string> privateConfigurationValues )
+        {
+            return GetCondensedTextValue( privateValue, privateConfigurationValues );
         }
 
         /// <summary>
@@ -172,6 +224,18 @@ namespace Rock.Field
         }
 
         /// <summary>
+        /// Returns the value using the most appropriate datatype
+        /// </summary>
+        /// <param name="value">The value.</param>
+        /// <param name="configurationValues">The configuration values.</param>
+        /// <returns></returns>
+        public virtual object ValueAsFieldType( string value, Dictionary<string, ConfigurationValue> configurationValues )
+        {
+            // by default, get the field type's value
+            return value;
+        }
+
+        /// <summary>
         /// Returns the value that should be used for sorting, using the most appropriate datatype
         /// </summary>
         /// <param name="parentControl">The parent control.</param>
@@ -206,6 +270,27 @@ namespace Rock.Field
         /// <c>true</c> if this instance has default control; otherwise, <c>false</c>.
         /// </value>
         public virtual bool HasDefaultControl => true;
+
+        /// <inheritdoc/>
+        [RockInternal]
+        public virtual string GetPublicValue( string privateValue, Dictionary<string, string> privateConfigurationValues )
+        {
+            return privateValue;
+        }
+
+        /// <inheritdoc/>
+        [RockInternal]
+        public virtual string GetPublicEditValue( string privateValue, Dictionary<string, string> privateConfigurationValues )
+        {
+            return GetPublicValue( privateValue, privateConfigurationValues );
+        }
+
+        /// <inheritdoc/>
+        [RockInternal]
+        public virtual string GetPrivateEditValue( string publicValue, Dictionary<string, string> privateConfigurationValues )
+        {
+            return publicValue;
+        }
 
         /// <summary>
         /// Creates the control(s) necessary for prompting user for a new value
@@ -347,6 +432,51 @@ namespace Rock.Field
 
         #region Filter Control
 
+        /// <inheritdoc/>
+        public virtual ComparisonValue GetPublicFilterValue( string privateValue, Dictionary<string, string> privateConfigurationValues )
+        {
+            var values = privateValue.FromJsonOrNull<List<string>>();
+
+            if ( values == null || values.Count == 0 )
+            {
+                return new ComparisonValue
+                {
+                    Value = string.Empty
+                };
+            }
+            else if ( values.Count == 1 )
+            {
+                return new ComparisonValue
+                {
+                    Value = GetPublicEditValue( values[0], privateConfigurationValues )
+                };
+            }
+            else
+            {
+                return new ComparisonValue
+                {
+                    ComparisonType = values[0].ConvertToEnumOrNull<ComparisonType>(),
+                    Value = GetPublicEditValue( values[1], privateConfigurationValues )
+                };
+            }
+        }
+
+        /// <inheritdoc/>
+        public virtual string GetPrivateFilterValue( ComparisonValue publicValue, Dictionary<string, string> privateConfigurationValues )
+        {
+            var values = new List<string>();
+
+            if ( publicValue.ComparisonType.HasValue )
+            {
+                values.Add( publicValue.ComparisonType.ConvertToInt().ToString() );
+            }
+
+            values.Add( publicValue.Value != null ? GetPrivateEditValue( publicValue.Value, privateConfigurationValues ) : string.Empty );
+
+            return values.ToJson();
+        }
+
+
         /// <summary>
         /// Creates the control needed to filter (query) values using this field type.
         /// </summary>
@@ -377,17 +507,17 @@ namespace Rock.Field
                 if ( !compareControl.Visible )
                 {
                     col1Class = string.Empty;
-                    col2Class = "col-md-12";
+                    col2Class = "col-xs-12 col-md-12";
                 }
                 else if ( compareControl is Label )
                 {
-                    col1Class = "col-md-2";
-                    col2Class = "col-md-10";
+                    col1Class = "col-xs-12 col-md-2";
+                    col2Class = "col-xs-12 col-md-10";
                 }
                 else
                 {
-                    col1Class = "col-md-4";
-                    col2Class = "col-md-8";
+                    col1Class = "col-xs-12 col-md-4";
+                    col2Class = "col-xs-12 col-md-8";
                 }
 
                 col1.AddCssClass( col1Class );
@@ -974,6 +1104,46 @@ namespace Rock.Field
         /// Occurs when [qualifier updated].
         /// </summary>
         public event EventHandler QualifierUpdated;
+
+        #endregion
+
+        #region Utility Methods
+
+        /// <summary>
+        /// Utility method to convert a string of delimited unique identifiers
+        /// into their integer identifier equivalents.
+        /// </summary>
+        /// <param name="guidValues">The string that contains the delimited unique identifiers.</param>
+        /// <param name="converter">The function to handle the conversion, <c>null</c> return values are removed.</param>
+        /// <returns>A delimited string of integer identifiers.</returns>
+        internal static string ConvertDelimitedGuidsToIds( string guidValues, Func<Guid, int?> converter )
+        {
+            return guidValues
+                .SplitDelimitedValues()
+                .AsGuidList()
+                .Select( v => converter( v ) )
+                .Where( v => v.HasValue )
+                .Select( v => v.Value.ToString() )
+                .JoinStrings( "," );
+        }
+
+        /// <summary>
+        /// Utility method to convert a string of delimited integer identifiers
+        /// into their unique identifier equivalents.
+        /// </summary>
+        /// <param name="idValues">The string that contains the delimited integer identifiers.</param>
+        /// <param name="converter">The function to handle the conversion, <c>null</c> return values are removed.</param>
+        /// <returns>A delimited string of unique identifiers.</returns>
+        internal static string ConvertDelimitedIdsToGuids( string idValues, Func<int, Guid?> converter )
+        {
+            return idValues
+                .SplitDelimitedValues()
+                .AsIntegerList()
+                .Select( v => converter( v ) )
+                .Where( v => v.HasValue )
+                .Select( v => v.Value.ToString() )
+                .JoinStrings( "," );
+        }
 
         #endregion
     }

@@ -647,8 +647,12 @@ Thank you for logging in, however, we need to confirm the email associated with 
 
             if ( !string.IsNullOrWhiteSpace( returnUrl ) )
             {
-                string redirectUrl = ExtensionMethods.ScrubEncodedStringForXSSObjects(returnUrl);
-                redirectUrl =  Server.UrlDecode( redirectUrl );
+                // Decode the return URL and remove the scheme from any provided values
+                var decodedUrl = returnUrl.GetFullyUrlDecodedValue().Replace( "https://", string.Empty ).Replace( "http://", string.Empty );
+
+                // Check the decoded schemeless Url for XSS characters and use "/" as the return URL if found, otherwise use the decoded return URL
+                var redirectUrl = decodedUrl.ScrubEncodedStringForXSSObjects() != "%2f" ? Server.UrlDecode( returnUrl ) : "/";
+
                 Response.Redirect( redirectUrl, false );
                 Context.ApplicationInstance.CompleteRequest();
             }

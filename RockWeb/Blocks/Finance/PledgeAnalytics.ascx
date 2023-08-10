@@ -43,7 +43,7 @@
                                 <asp:ValidationSummary ID="vsSummary" runat="server" HeaderText="Please correct the following:" CssClass="alert alert-validation" />
                                 <div class="col-md-12">
                                     <div class="panel-actions text-right">
-                                        <asp:LinkButton ID="btnApply" runat="server" OnClick="btnApply_Click" CssClass="btn btn-primary" ToolTip="Update the chart"><i class="fa fa-refresh"></i> Update</asp:LinkButton>
+                                        <asp:LinkButton ID="btnApply" runat="server" OnClick="btnApply_Click" CssClass="btn btn-primary pull-right" ToolTip="Update the chart"><i class="fa fa-refresh"></i> Update</asp:LinkButton>
                                     </div>
                                 </div>
                             </div>
@@ -56,9 +56,10 @@
                             <asp:Panel ID="pnlResults" runat="server" Visible="false">
 
                                 <Rock:Grid ID="gList" runat="server" AllowSorting="true" PersonIdField="Id" OnRowSelected="gList_RowSelected"
-                                    ExportSource="ColumnOutput" ExportFilename="PledgeAnalytics">
+                                    ExportFilename="PledgeAnalytics">
                                     <Columns>
                                         <Rock:SelectField />
+                                         <Rock:RockBoundField DataField="Id" HeaderText="Person ID" Visible="false" />
                                         <Rock:RockTemplateField HeaderText="Person" SortExpression="LastName,NickName">
                                             <ItemTemplate><%# FormatName( Eval("LastName"), Eval("NickName") ) %></ItemTemplate>
                                         </Rock:RockTemplateField>

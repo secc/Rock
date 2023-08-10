@@ -73,6 +73,24 @@ namespace Rock.Web.UI.Controls
         }
 
         /// <summary>
+        /// Gets or sets a value indicating whether this instance is editable.
+        /// </summary>
+        /// <value>
+        ///   <c>true</c> if this instance is editable; otherwise, <c>false</c>.
+        /// </value>
+        public bool IsEditable
+        {
+            get
+            {
+                return ViewState["IsEditable"].ToString().AsBoolean( true );
+            }
+            set
+            {
+                ViewState["IsEditable"] = value;
+            }
+        }
+
+        /// <summary>
         /// Gets or sets the validation group.
         /// </summary>
         /// <value>
@@ -130,14 +148,14 @@ namespace Rock.Web.UI.Controls
 
             string script = @"
 // action animation
-$('.workflow-action > header').on('click', function () {
+$('.workflow-action.editable > header').on('click', function () {
+    $(this).parent('.workflow-action').toggleClass('collapsed');
     $(this).siblings('.panel-body').slideToggle();
 
     $expanded = $(this).children('input.filter-expanded');
     $expanded.val($expanded.val() == 'True' ? 'False' : 'True');
 
-    $('i.workflow-action-state', this).toggleClass('fa-chevron-down');
-    $('i.workflow-action-state', this).toggleClass('fa-chevron-up');
+    $('i.workflow-action-state', this).toggleClass('fa-chevron-down fa-chevron-up');
 });
 
 // fix so that the Remove button will fire its event, but not the parent event
@@ -246,7 +264,11 @@ $('.workflow-action > .panel-body').on('validation-error', function() {
             result.IsActivityCompletedOnSuccess = _cbIsActivityCompletedOnSuccess.Checked;
 
             var entityType = EntityTypeCache.Get( result.EntityTypeId );
-            if ( entityType != null && entityType.Name == typeof( Rock.Workflow.Action.UserEntryForm ).FullName )
+            if ( entityType != null && entityType.Name == typeof( Rock.Workflow.Action.FormBuilder ).FullName )
+            {
+                // Do nothing to the existing WorkflowForm property.
+            }
+            else if ( entityType != null && entityType.Name == typeof( Rock.Workflow.Action.UserEntryForm ).FullName )
             {
                 result.WorkflowForm = _formEditor.GetForm();
                 if ( result.WorkflowForm == null )
@@ -324,7 +346,11 @@ $('.workflow-action > .panel-body').on('validation-error', function() {
             _cbIsActivityCompletedOnSuccess.Checked = value.IsActivityCompletedOnSuccess;
 
             var entityType = EntityTypeCache.Get( value.EntityTypeId );
-            if ( entityType != null && entityType.Name == typeof( Rock.Workflow.Action.UserEntryForm ).FullName )
+            if ( entityType != null && entityType.Name == typeof( Rock.Workflow.Action.FormBuilder ).FullName )
+            {
+                // Do nothing to the WorkflowForm property.
+            }
+            else if ( entityType != null && entityType.Name == typeof( Rock.Workflow.Action.UserEntryForm ).FullName )
             {
                 if ( value.WorkflowForm == null )
                 {
@@ -391,7 +417,7 @@ $('.workflow-action > .panel-body').on('validation-error', function() {
             _ddlCriteriaComparisonType.ID = this.ID + "_ddlCriteriaComparisonType";
             _ddlCriteriaComparisonType.EnableViewState = false;
             _ddlCriteriaComparisonType.CssClass = "js-action-criteria-comparison";
-            _ddlCriteriaComparisonType.BindToEnum<ComparisonType>();
+            _ddlCriteriaComparisonType.BindToEnum<ComparisonType>( ignoreTypes: new ComparisonType[1] { ComparisonType.Between } );
             _ddlCriteriaComparisonType.Label = "&nbsp;";
 
             _tbddlCriteriaValue = new RockTextOrDropDownList();
@@ -420,10 +446,12 @@ $('.workflow-action > .panel-body').on('validation-error', function() {
             _rlEntityTypeOverview.Label = "Action Type Overview";
 
             _cbIsActionCompletedOnSuccess = new RockCheckBox { Text = "Action is Completed on Success" };
+            _cbIsActionCompletedOnSuccess.DisplayInline = true;
             Controls.Add( _cbIsActionCompletedOnSuccess );
             _cbIsActionCompletedOnSuccess.ID = this.ID + "_cbIsActionCompletedOnSuccess";
 
             _cbIsActivityCompletedOnSuccess = new RockCheckBox { Text = "Activity is Completed on Success" };
+            _cbIsActivityCompletedOnSuccess.DisplayInline = true;
             Controls.Add( _cbIsActivityCompletedOnSuccess );
             _cbIsActivityCompletedOnSuccess.ID = this.ID + "_cbIsActivityCompletedOnSuccess";
 
@@ -457,44 +485,48 @@ $('.workflow-action > .panel-body').on('validation-error', function() {
         /// <param name="writer">An <see cref="T:System.Web.UI.HtmlTextWriter" /> that represents the output stream to render HTML content on the client.</param>
         public override void RenderControl( HtmlTextWriter writer )
         {
-            writer.AddAttribute( HtmlTextWriterAttribute.Class, "panel panel-widget workflow-action" );
+            writer.AddAttribute( HtmlTextWriterAttribute.Class, GenerateActionCssClass() );
             writer.AddAttribute( "data-key", _hfActionTypeGuid.Value );
             writer.RenderBeginTag( "article" );
 
-            writer.AddAttribute( HtmlTextWriterAttribute.Class, "clearfix clickable panel-heading" );
+            writer.AddAttribute( HtmlTextWriterAttribute.Class, IsEditable ? "panel-heading clickable clearfix" : "panel-heading clearfix" );
             writer.RenderBeginTag( "header" );
 
             // Hidden Field to track expansion
             _hfExpanded.RenderControl( writer );
 
-            writer.AddAttribute( HtmlTextWriterAttribute.Class, "pull-left workflow-action-name" );
+            writer.AddAttribute( HtmlTextWriterAttribute.Class, "workflow-action-name pull-left" );
             writer.RenderBeginTag( HtmlTextWriterTag.Div );
             _lblActionTypeName.Text = _tbActionTypeName.Text;
             _lblActionTypeName.RenderControl( writer );
             writer.RenderEndTag();
 
-            writer.AddAttribute( HtmlTextWriterAttribute.Class, "pull-right" );
-            writer.RenderBeginTag( HtmlTextWriterTag.Div );
-
-            string criteriaExistsClass = _ddlCriteriaAttribute.SelectedValueAsGuid().HasValue ? " criteria-exists" : string.Empty;
-            writer.WriteLine( string.Format( "<a class='btn btn-xs btn-link js-workflow-action-criteria{0}'><i class='fa fa-filter'></i></a>", criteriaExistsClass ) );
-            writer.WriteLine( "<a class='btn btn-xs btn-link workflow-action-reorder'><i class='fa fa-bars'></i></a>" );
-            writer.WriteLine( string.Format( "<a class='btn btn-xs btn-link'><i class='workflow-action-state fa {0}'></i></a>",
-                Expanded ? "fa fa-chevron-up" : "fa fa-chevron-down" ) );
-
-            if ( IsDeleteEnabled )
+            // Hide edit controls if the action doesn't support editing
+            if ( IsEditable )
             {
-                _lbDeleteActionType.Visible = true;
+                writer.AddAttribute( HtmlTextWriterAttribute.Class, "pull-right" );
+                writer.RenderBeginTag( HtmlTextWriterTag.Div );
 
-                _lbDeleteActionType.RenderControl( writer );
-            }
-            else
-            {
-                _lbDeleteActionType.Visible = false;
-            }
+                string criteriaExistsClass = _ddlCriteriaAttribute.SelectedValueAsGuid().HasValue ? " criteria-exists" : string.Empty;
+                writer.WriteLine( string.Format( "<a class='btn btn-xs btn-link js-workflow-action-criteria{0}'><i class='fa fa-filter'></i></a>", criteriaExistsClass ) );
+                writer.WriteLine( "<a class='btn btn-xs btn-link workflow-action-reorder'><i class='fa fa-bars'></i></a>" );
+                writer.WriteLine( string.Format( "<a class='btn btn-xs btn-link'><i class='workflow-action-state fa {0}'></i></a>",
+                    Expanded ? "fa fa-chevron-up" : "fa fa-chevron-down" ) );
 
-            // Add/ChevronUpDown/Delete div
-            writer.RenderEndTag();
+                if ( IsDeleteEnabled )
+                {
+                    _lbDeleteActionType.Visible = true;
+
+                    _lbDeleteActionType.RenderControl( writer );
+                }
+                else
+                {
+                    _lbDeleteActionType.Visible = false;
+                }
+
+                // Add/ChevronUpDown/Delete div
+                writer.RenderEndTag();
+            }
 
             // header div
             writer.RenderEndTag();
@@ -554,12 +586,15 @@ $('.workflow-action > .panel-body').on('validation-error', function() {
             _tbActionTypeName.RenderControl( writer );
             writer.RenderEndTag();
 
-            writer.AddAttribute( HtmlTextWriterAttribute.Class, "col-md-6" );
+            writer.AddAttribute( HtmlTextWriterAttribute.Class, "col-md-6 control-label-offset" );
+            writer.RenderBeginTag( HtmlTextWriterTag.Div );
+            writer.AddAttribute( HtmlTextWriterAttribute.Class, "form-group" );
             writer.RenderBeginTag( HtmlTextWriterTag.Div );
             _cbIsActionCompletedOnSuccess.ValidationGroup = ValidationGroup;
             _cbIsActionCompletedOnSuccess.RenderControl( writer );
             _cbIsActivityCompletedOnSuccess.ValidationGroup = ValidationGroup;
             _cbIsActivityCompletedOnSuccess.RenderControl( writer );
+            writer.RenderEndTag();
             writer.RenderEndTag();
 
             writer.RenderEndTag();  // row
@@ -644,5 +679,33 @@ $('.workflow-action > .panel-body').on('validation-error', function() {
         /// </summary>
         public event EventHandler ChangeActionTypeClick;
 
+        #region Private Methods
+        /// <summary>
+        /// Generates the action CSS class.
+        /// </summary>
+        /// <returns></returns>
+        private string GenerateActionCssClass()
+        {
+            // This should be faster than StringBuilder since it's only a max of 2 concatinations and
+            // the two would rarely even be called
+            var cssClass = "panel panel-widget workflow-action ";
+
+            if ( !this.Expanded )
+            {
+                cssClass += " collapsed";
+            }
+
+            if ( this.IsEditable )
+            {
+                cssClass += " editable";
+            }
+            else
+            {
+                cssClass += " not-editable";
+            }
+
+            return cssClass;
+        }
+        #endregion
     }
 }

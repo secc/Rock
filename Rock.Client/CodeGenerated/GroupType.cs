@@ -123,7 +123,7 @@ namespace Rock.Client
 
         /// <summary />
         public string GroupViewLavaTemplate { get; set; } = @"{% if Group.GroupType.GroupCapacityRule != 'None' and Group.GroupCapacity != '' %}
-		{% assign warningLevel = ''warning'' %}
+		{% assign warningLevel = 'warning' %}
 
 		{% if Group.GroupType.GroupCapacityRule == 'Hard' %}
 			{% assign warningLevel = 'danger' %}
@@ -136,9 +136,9 @@ namespace Rock.Client
 			<div class=""alert alert-{{ warningLevel }} margin-t-sm"">This group is over capacity by {{ overageAmount }} {{ 'individual' | PluralizeForQuantity:overageAmount }}.</div>
 		{% endif %}
 	{% endif %}
-	
-	
-	
+
+
+
 {% if Group.Description != '' -%}
     <p class='description'>{{ Group.Description }}</p>
 {% endif -%}
@@ -172,9 +172,10 @@ namespace Rock.Client
         </dl>
         <dl>
         {% for attribute in Group.AttributeValues %}
-        <dt>{{ attribute.AttributeName }}:</dt>
-
-<dd>{{ attribute.ValueFormatted }} </dd>
+            {% if attribute.ValueFormatted != '' %}
+                <dt>{{ attribute.AttributeName }}</dt>
+                <dd>{{ attribute.ValueFormatted }}</dd>
+            {% endif %}
         {% endfor %}
         </dl>
     </div>
@@ -218,7 +219,7 @@ namespace Rock.Client
 		        <h4> {{ groupLocation.GroupLocationTypeValue.Value }} </h4>
 		        {% endif %}
 		    <a href = '{{ GroupMapUrl }}'><img class='img-thumbnail' src='{{ mapLink }}'/></a>
-		    </div>	
+		    </div>
 		    {% endif %}
 		{% endfor %}
 		{% endif %}
@@ -296,6 +297,9 @@ namespace Rock.Client
 
         /// <summary />
         public int? InheritedGroupTypeId { get; set; }
+
+        /// <summary />
+        public bool IsCapacityRequired { get; set; }
 
         /// <summary />
         public bool IsIndexEnabled { get; set; }
@@ -444,6 +448,7 @@ namespace Rock.Client
             this.IconCssClass = source.IconCssClass;
             this.IgnorePersonInactivated = source.IgnorePersonInactivated;
             this.InheritedGroupTypeId = source.InheritedGroupTypeId;
+            this.IsCapacityRequired = source.IsCapacityRequired;
             this.IsIndexEnabled = source.IsIndexEnabled;
             this.IsSchedulingEnabled = source.IsSchedulingEnabled;
             this.IsSystem = source.IsSystem;

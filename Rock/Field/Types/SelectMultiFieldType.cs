@@ -22,6 +22,7 @@ using System.Linq.Expressions;
 using System.Web.UI;
 using System.Web.UI.WebControls;
 
+using Rock.Attribute;
 using Rock.Data;
 using Rock.Model;
 using Rock.Reporting;
@@ -33,6 +34,9 @@ namespace Rock.Field.Types
     /// Field Type used to display a list of options as checkboxes.  Value is saved as a comma-delimited list
     /// </summary>
     [Serializable]
+    [FieldTypeUsage( FieldTypeUsage.Common )]
+    [RockPlatformSupport( Utility.RockPlatform.WebForms, Utility.RockPlatform.Obsidian )]
+    [IconSvg( @"<svg xmlns=""http://www.w3.org/2000/svg"" viewBox=""0 0 16 16""><g><path d=""M13,1H3A2,2,0,0,0,1,3V13a2,2,0,0,0,2,2H13a2,2,0,0,0,2-2V3A2,2,0,0,0,13,1Zm.5,12a.5.5,0,0,1-.5.5H3a.5.5,0,0,1-.5-.5V3A.5.5,0,0,1,3,2.5H13a.5.5,0,0,1,.5.5Zm-3-7.53L7,8.94,5.5,7.47A.75.75,0,0,0,4.44,8.53l2,2a.87.87,0,0,0,.56.22.74.74,0,0,0,.53-.22l4-4a.75.75,0,0,0-1.06-1.06Z""/></g></svg>" )]
     public class SelectMultiFieldType : FieldType
     {
         #region Configuration
@@ -40,6 +44,9 @@ namespace Rock.Field.Types
         private const string VALUES_KEY = "values";
         private const string ENHANCED_SELECTION_KEY = "enhancedselection";
         private const string REPEAT_COLUMNS = "repeatColumns";
+        private const string REPEAT_DIRECTION = "repeatDirection";
+
+        private const string CUSTOM_VALUES_PUBLIC_KEY = "customValues";
 
         /// <summary>
         /// Returns a list of the configuration keys
@@ -51,7 +58,70 @@ namespace Rock.Field.Types
             configKeys.Add( VALUES_KEY );
             configKeys.Add( ENHANCED_SELECTION_KEY );
             configKeys.Add( REPEAT_COLUMNS );
+            configKeys.Add( REPEAT_DIRECTION );
             return configKeys;
+        }
+
+        /// <inheritdoc/>
+        public override Dictionary<string, string> GetPublicConfigurationValues( Dictionary<string, string> privateConfigurationValues, ConfigurationValueUsage usage, string privateValue )
+        {
+            var publicConfigurationValues = base.GetPublicConfigurationValues( privateConfigurationValues, usage, privateValue );
+
+            if ( publicConfigurationValues.ContainsKey( VALUES_KEY ) )
+            {
+                if ( usage == ConfigurationValueUsage.Configure )
+                {
+                    // customValues contains the actual raw string that comprises the values.
+                    // is used while editing the configuration values only.
+                    publicConfigurationValues[CUSTOM_VALUES_PUBLIC_KEY] = publicConfigurationValues[VALUES_KEY];
+                }
+
+                var options = Helper.GetConfiguredValues( privateConfigurationValues )
+                    .Select( kvp => new
+                    {
+                        value = kvp.Key,
+                        text = kvp.Value
+                    } );
+
+                if ( usage == ConfigurationValueUsage.View )
+                {
+                    var selectedValues = privateValue.Split( new char[] { ',' }, StringSplitOptions.RemoveEmptyEntries ).ToList();
+                    options = options.Where( o => selectedValues.Contains( o.value ) );
+                }
+
+                publicConfigurationValues[VALUES_KEY] = options.ToCamelCaseJson( false, true );
+            }
+            else
+            {
+                publicConfigurationValues[VALUES_KEY] = "[]";
+            }
+
+            return publicConfigurationValues;
+        }
+
+        /// <inheritdoc/>
+        public override Dictionary<string, string> GetPrivateConfigurationValues( Dictionary<string, string> publicConfigurationValues )
+        {
+            var privateConfigurationValues = base.GetPrivateConfigurationValues( publicConfigurationValues );
+
+            // Don't allow them to provide the actual value items.
+            if ( privateConfigurationValues.ContainsKey( VALUES_KEY ) )
+            {
+                privateConfigurationValues.Remove( VALUES_KEY );
+            }
+
+            // Convert the custom values string into the values to be stored.
+            if ( privateConfigurationValues.ContainsKey( CUSTOM_VALUES_PUBLIC_KEY ) )
+            {
+                privateConfigurationValues[VALUES_KEY] = privateConfigurationValues[CUSTOM_VALUES_PUBLIC_KEY];
+                privateConfigurationValues.Remove( CUSTOM_VALUES_PUBLIC_KEY );
+            }
+            else
+            {
+                privateConfigurationValues[VALUES_KEY] = "";
+            }
+
+            return privateConfigurationValues;
         }
 
         /// <summary>
@@ -82,11 +152,19 @@ namespace Rock.Field.Types
 
             var tbRepeatColumns = new NumberBox();
             tbRepeatColumns.Label = "Columns";
-            tbRepeatColumns.Help = "Select how many columns the list should use before going to the next row. If blank or 0 then 4 columns will be displayed. There is no upper limit enforced here however the block this is used in might add contraints due to available space.";
+            tbRepeatColumns.Help = "Select how many columns the list should use before going to the next row. If blank or 0 then 4 columns will be displayed. There is no upper limit enforced here however the block this is used in might add constraints due to available space.";
             tbRepeatColumns.MinimumValue = "0";
             tbRepeatColumns.AutoPostBack = true;
             tbRepeatColumns.TextChanged += OnQualifierUpdated;
             controls.Add( tbRepeatColumns );
+
+            var ddlRepeatDirection = new RockDropDownList();
+            ddlRepeatDirection.Label = "Repeat Direction";
+            ddlRepeatDirection.Help = "The direction that the list options will be displayed.";
+            ddlRepeatDirection.BindToEnum<RepeatDirection>();
+            ddlRepeatDirection.AutoPostBack = true;
+            ddlRepeatDirection.TextChanged += OnQualifierUpdated;
+            controls.Add( ddlRepeatDirection );
 
             return controls;
         }
@@ -107,19 +185,25 @@ namespace Rock.Field.Types
             configurationValues.Add( ENHANCED_SELECTION_KEY, new ConfigurationValue( "Enhance For Long Lists", description, string.Empty ) );
 
             description = "Select how many columns the list should use before going to the next row. If blank 4 is used.";
-            configurationValues.Add( REPEAT_COLUMNS, new ConfigurationValue("Repeat Columns", description, string.Empty ) );
+            configurationValues.Add( REPEAT_COLUMNS, new ConfigurationValue( "Repeat Columns", description, string.Empty ) );
 
-            if ( controls != null && controls.Count > 2 )
+            description = "The direction that the list options will be displayed.";
+            configurationValues.Add( REPEAT_DIRECTION, new ConfigurationValue( "Repeat Direction", description, string.Empty ) );
+
+            if ( controls != null && controls.Count > 3 )
             {
                 var tbValues = controls[0] as RockTextBox;
                 var cbEnhanced = controls[1] as RockCheckBox;
                 var tbRepeatColumns = controls[2] as NumberBox;
+                var ddlRepeatDirection = controls[3] as RockDropDownList;
 
                 tbRepeatColumns.Visible = !cbEnhanced.Checked;
+                ddlRepeatDirection.Visible = !cbEnhanced.Checked;
 
                 configurationValues[VALUES_KEY].Value = tbValues.Text;
                 configurationValues[ENHANCED_SELECTION_KEY].Value = cbEnhanced.Checked.ToString();
                 configurationValues[REPEAT_COLUMNS].Value = tbRepeatColumns.Visible ? tbRepeatColumns.Text : string.Empty;
+                configurationValues[REPEAT_DIRECTION].Value = ddlRepeatDirection.SelectedValue;
             }
 
             return configurationValues;
@@ -134,22 +218,42 @@ namespace Rock.Field.Types
         {
             base.SetConfigurationValues( controls, configurationValues );
 
-            if ( controls != null && controls.Count > 2 && configurationValues != null )
+            if ( controls != null && controls.Count > 3 && configurationValues != null )
             {
                 var tbValues = controls[0] as RockTextBox;
                 var cbEnhanced = controls[1] as RockCheckBox;
                 var tbRepeatColumns = controls[2] as NumberBox;
+                var ddlRepeatDirection = controls[3] as RockDropDownList;
 
                 tbValues.Text = configurationValues.ContainsKey( VALUES_KEY ) ? configurationValues[VALUES_KEY].Value : string.Empty;
                 cbEnhanced.Checked = configurationValues.ContainsKey( ENHANCED_SELECTION_KEY ) ? configurationValues[ENHANCED_SELECTION_KEY].Value.AsBoolean() : cbEnhanced.Checked;
                 tbRepeatColumns.Text = configurationValues.ContainsKey( REPEAT_COLUMNS ) ? configurationValues[REPEAT_COLUMNS].Value : string.Empty;
                 tbRepeatColumns.Visible = !cbEnhanced.Checked;
+                ddlRepeatDirection.SetValue( configurationValues.GetValueOrNull( REPEAT_DIRECTION ) );
+                ddlRepeatDirection.Visible = !cbEnhanced.Checked;
             }
         }
 
         #endregion
 
         #region Formatting
+
+        /// <inheritdoc/>
+        public override string GetTextValue( string privateValue, Dictionary<string, string> privateConfigurationValues )
+        {
+            if ( !string.IsNullOrWhiteSpace( privateValue ) && privateConfigurationValues.ContainsKey( VALUES_KEY ) )
+            {
+                var configuredValues = Helper.GetConfiguredValues( privateConfigurationValues );
+                var selectedValues = privateValue.Split( new char[] { ',' }, StringSplitOptions.RemoveEmptyEntries ).ToList();
+                return configuredValues
+                    .Where( v => selectedValues.Contains( v.Key ) )
+                    .Select( v => v.Value )
+                    .ToList()
+                    .AsDelimited( ", " );
+            }
+
+            return base.GetTextValue( privateValue, privateConfigurationValues );
+        }
 
         /// <summary>
         /// Returns the field's current value(s)
@@ -161,18 +265,9 @@ namespace Rock.Field.Types
         /// <returns></returns>
         public override string FormatValue( System.Web.UI.Control parentControl, string value, Dictionary<string, ConfigurationValue> configurationValues, bool condensed )
         {
-            if ( !string.IsNullOrWhiteSpace( value ) && configurationValues.ContainsKey( VALUES_KEY ) )
-            {
-                var configuredValues = Helper.GetConfiguredValues( configurationValues );
-                var selectedValues = value.Split( new char[] { ',' }, StringSplitOptions.RemoveEmptyEntries ).ToList();
-                return configuredValues
-                    .Where( v => selectedValues.Contains( v.Key ) )
-                    .Select( v => v.Value )
-                    .ToList()
-                    .AsDelimited( ", " );
-            }
+            var formattedValue = GetTextValue( value, configurationValues.ToDictionary( k => k.Key, k => k.Value.Value ) );
 
-            return base.FormatValue( parentControl, value, configurationValues, condensed );
+            return base.FormatValue( parentControl, formattedValue, configurationValues, condensed );
         }
 
         #endregion
@@ -196,20 +291,29 @@ namespace Rock.Field.Types
                 if ( configurationValues.ContainsKey( ENHANCED_SELECTION_KEY ) && configurationValues[ENHANCED_SELECTION_KEY].Value.AsBoolean() )
                 {
                     editControl = new RockListBox { ID = id };
-                    ( (RockListBox)editControl ).DisplayDropAsAbsolute = true;
+                    ( ( RockListBox ) editControl ).DisplayDropAsAbsolute = true;
                 }
                 else
                 {
                     editControl = new RockCheckBoxList { ID = id };
-                    ( (RockCheckBoxList)editControl ).RepeatDirection = RepeatDirection.Horizontal;
+                    var rockCheckBoxList = ( RockCheckBoxList ) editControl;
 
                     if ( configurationValues.ContainsKey( REPEAT_COLUMNS ) )
                     {
-                        ( ( RockCheckBoxList ) editControl ).RepeatColumns = configurationValues[REPEAT_COLUMNS].Value.AsInteger();
+                        rockCheckBoxList.RepeatColumns = configurationValues[REPEAT_COLUMNS].Value.AsInteger();
+                    }
+
+                    if ( configurationValues.ContainsKey( REPEAT_DIRECTION ) )
+                    {
+                        rockCheckBoxList.RepeatDirection = configurationValues[REPEAT_DIRECTION].Value.ConvertToEnumOrNull<RepeatDirection>() ?? RepeatDirection.Horizontal;
+                    }
+                    else
+                    {
+                        rockCheckBoxList.RepeatDirection = RepeatDirection.Horizontal;
                     }
                 }
 
-                foreach( var keyVal in Helper.GetConfiguredValues( configurationValues ))
+                foreach ( var keyVal in Helper.GetConfiguredValues( configurationValues ) )
                 {
                     editControl.Items.Add( new ListItem( keyVal.Value, keyVal.Key ) );
                 }
@@ -235,7 +339,7 @@ namespace Rock.Field.Types
 
             if ( control != null && control is ListControl )
             {
-                ListControl cbl = (ListControl)control;
+                ListControl cbl = ( ListControl ) control;
                 foreach ( ListItem li in cbl.Items )
                 {
                     if ( li.Selected )
@@ -265,7 +369,7 @@ namespace Rock.Field.Types
 
                 if ( control != null && control is ListControl )
                 {
-                    ListControl cbl = (ListControl)control;
+                    ListControl cbl = ( ListControl ) control;
                     foreach ( ListItem li in cbl.Items )
                     {
                         li.Selected = values.Contains( li.Value );
@@ -366,7 +470,7 @@ namespace Rock.Field.Types
             Expression comparison = null;
             if ( filterValues.Count > 1 )
             {
-                //// OR up the where clauses for each of the selected values 
+                //// OR up the where clauses for each of the selected values
                 // and make sure to wrap commas around things so we don't collide with partial matches
                 // so it'll do something like this:
                 //

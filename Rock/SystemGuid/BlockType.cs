@@ -128,6 +128,11 @@ namespace Rock.SystemGuid
         /// </summary>
         public const string CONVERT_BUSINESS = "115A7725-6760-4E86-8171-57F4A3CF6909";
 
+        /// <summary>
+        /// The financial account search block type
+        /// </summary>
+        public const string FINANCIAL_ACCOUNT_SEARCH = "867E32A8-786E-4090-BE2B-6BE780440D44";
+
         #endregion
 
         /// <summary>
@@ -280,26 +285,100 @@ namespace Rock.SystemGuid
         #region Mobile Block Types
 
         /// <summary>
-        /// The mobile Groups > <see cref="Rock.Blocks.Types.Mobile.Groups.GroupRegistration">Group Registration</see> block type.
+        /// The mobile Connection &gt; <see cref="Rock.Blocks.Types.Mobile.Connection.ConnectionTypeList">Connection Type List</see> block type.
+        /// </summary>
+        public const string MOBILE_CONNECTION_CONNECTION_TYPE_LIST = "31E1FCCF-C4B1-4D84-992C-DEACAF3697CF";
+
+        /// <summary>
+        /// The mobile Connection &gt; <see cref="Rock.Blocks.Types.Mobile.Connection.ConnectionOpportunityList">Connection Opportunity List</see> block type.
+        /// </summary>
+        public const string MOBILE_CONNECTION_CONNECTION_OPPORTUNITY_LIST = "0015A574-C10A-4530-897C-F7B7C3D9393E";
+
+        /// <summary>
+        /// The mobile Connection &gt; <see cref="Rock.Blocks.Types.Mobile.Connection.ConnectionRequestList">Connection Request List</see> block type.
+        /// </summary>
+        public const string MOBILE_CONNECTION_CONNECTION_REQUEST_LIST = "612E9E13-434F-4E47-958D-37E1C3EEF304";
+
+        /// <summary>
+        /// The mobile Connection &gt; <see cref="Rock.Blocks.Types.Mobile.Connection.ConnectionRequestDetail">Connection Request Detail</see> block type.
+        /// </summary>
+        public const string MOBILE_CONNECTION_CONNECTION_REQUEST_DETAIL = "EF537CC9-5E53-4832-A473-0D5EA439C296";
+
+        /// <summary>
+        /// The mobile Core &gt; <see cref="Rock.Blocks.Types.Mobile.Core.Search"/> block type.
+        /// </summary>
+        public const string MOBILE_CORE_SEARCH = "41174BEA-6567-430C-AAD4-A89A5CF70FB0";
+
+        /// <summary>
+        /// The mobile Groups &gt; <see cref="Rock.Blocks.Types.Mobile.Groups.GroupRegistration">Group Registration</see> block type.
         /// </summary>
         public const string MOBILE_GROUPS_GROUP_REGISTRATION = "8A42E4FA-9FE1-493C-B6D8-7A766D96E912";
 
         /// <summary>
-        /// The mobile Groups > <see cref="Rock.Blocks.Types.Mobile.Groups.GroupFinder">Group Finder</see> block type.
+        /// The mobile groups <see cref="Rock.Blocks.Types.Mobile.Groups.GroupSchedulePreference">Group Schedule Preference</see> block type.
+        /// </summary>
+        public const string MOBILE_GROUPS_GROUP_SCHEDULE_PREFERENCE = "F6D0A258-F97E-4561-B881-ACBF985F89DC";
+
+        /// <summary>
+        /// The mobile groups <see cref="Rock.Blocks.Types.Mobile.Groups.GroupScheduleSignUp">Group Schedule Sign Up</see> block type.
+        /// </summary>
+        public const string MOBILE_GROUPS_GROUP_SCHEDULE_SIGNUP = "CA27CB14-22FD-4DE6-9C3B-0EAA0AA84708";
+
+        /// <summary>
+        /// The mobile groups <see cref="Rock.Blocks.Types.Mobile.Groups.GroupSchedulePreference">Group Schedule Preference</see> block type.
+        /// </summary>
+        public const string MOBILE_GROUPS_GROUP_SCHEDULE_TOOLBOX = "E00F3C6D-D007-4408-8A41-AD2A6AB29D6E";
+
+        /// <summary>
+        /// The mobile groups <see cref="Rock.Blocks.Types.Mobile.Groups.GroupScheduleUnavailability">Group Schedule Unavailability</see> block type.
+        /// </summary>
+        public const string MOBILE_GROUPS_GROUP_SCHEDULE_UNAVAILABILITY = "AEFF246D-A514-4D46-801E-D717E1D1D209";
+
+        /// <summary>
+        /// The mobile Groups &gt; <see cref="Rock.Blocks.Types.Mobile.Groups.GroupFinder">Group Finder</see> block type.
         /// </summary>
         public const string MOBILE_GROUPS_GROUP_FINDER = "BAC6671E-4D6F-4428-A6FA-69B8BEADF55C";
 
         /// <summary>
-        /// The mobile Prayer > Prayer Card View block type.
+        /// The mobile Prayer &gt; Prayer Card View block type.
         /// </summary>
         public const string MOBILE_PRAYER_PRAYER_CARD_VIEW = "CA75C558-9345-47E7-99AF-D8191D31D00D";
 
         #endregion
+
+        #region Obsidian Block Types
+
+        /// <summary>
+        /// The obsidian event registration entry
+        /// </summary>
+        public const string OBSIDIAN_EVENT_REGISTRATION_ENTRY = "0252E237-0684-4426-9E5C-D454A13E152A";
+
+        /// <summary>
+        /// The obsidian event control gallery
+        /// </summary>
+        public const string OBSIDIAN_EXAMPLE_CONTROL_GALLERY = "3ED1B4B2-FD1C-4E4B-B4B9-2DE4E6EF8915";
+
+        /// <summary>
+        /// The obsidian event field type gallery
+        /// </summary>
+        public const string OBSIDIAN_EXAMPLE_FIELD_TYPE_GALLERY = "B9C209C2-ABB8-4B48-A68E-944572007B03";
+
+        #endregion Obsidian Block Types
+
+        #region Reporting Block Types
+
+        /// <summary>
+        /// The reporting dashboard liquid/lava dashboard widget.
+        /// </summary>
+        public const string REPORTING_LAVA_DASHBOARD_WIDGET = "AC19A4F3-2E88-487E-8E88-377C1C20DBD5";
+
+        #endregion Reporting Block Types
+
         /// <summary>
         /// The contribution statement lava (Legacy)
         /// </summary>
         [Obsolete( "Use ContributionStatementGenerator instead" )]
-        [RockObsolete( "12.4" )]
+        [RockObsolete( "1.12.4" )]
         public const string CONTRIBUTION_STATEMENT_LAVA_LEGACY = "AF986B72-ADD9-4E05-971F-1DE4EBED8667";
     }
 }

@@ -349,7 +349,9 @@ namespace Rock.Blocks.Types.Mobile.Groups
             }
 
             return group.Schedule
-                .GetScheduledStartTimes( DateTime.Now.AddDays( -NumberOfDaysBackToAllow ), DateTime.Now.AddDays( NumberOfDaysForwardToAllow ) );
+                .GetScheduledStartTimes( RockDateTime.Now.AddDays( -NumberOfDaysBackToAllow ), RockDateTime.Now.AddDays( NumberOfDaysForwardToAllow ) )
+                .Select( d => d.Date ) // Strip off time portion
+                .ToList();
         }
 
         /// <summary>

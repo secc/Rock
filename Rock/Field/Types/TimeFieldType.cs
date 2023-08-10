@@ -16,8 +16,10 @@
 //
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Web.UI;
 
+using Rock.Attribute;
 using Rock.Model;
 using Rock.Reporting;
 using Rock.Web.UI.Controls;
@@ -28,10 +30,24 @@ namespace Rock.Field.Types
     /// Field used to save and display a time value
     /// </summary>
     [Serializable]
+    [FieldTypeUsage( FieldTypeUsage.Common )]
+    [RockPlatformSupport( Utility.RockPlatform.WebForms, Utility.RockPlatform.Obsidian )]
+    [IconSvg( @"<svg xmlns=""http://www.w3.org/2000/svg"" viewBox=""0 0 16 16""><g><path d=""M8,1a7,7,0,1,0,7,7A7,7,0,0,0,8,1ZM8,13.69A5.69,5.69,0,1,1,13.69,8,5.69,5.69,0,0,1,8,13.69Zm2.79-4.84L8.66,7.62V4.28a.66.66,0,0,0-1.32,0V8a.68.68,0,0,0,.33.57L10.13,10a.9.9,0,0,0,.33.09A.65.65,0,0,0,11,9.75.67.67,0,0,0,10.79,8.85Z""/></g></svg>" )]
     public class TimeFieldType : FieldType
     {
 
         #region Formatting
+
+        /// <inheritdoc/>
+        public override string GetTextValue( string value, Dictionary<string, string> configurationValues )
+        {
+            if ( !TimeSpan.TryParse( value, out var timeValue ) )
+            {
+                return string.Empty;
+            }
+
+            return timeValue.ToTimeString();
+        }
 
         /// <summary>
         /// Formats time display
@@ -43,15 +59,9 @@ namespace Rock.Field.Types
         /// <returns></returns>
         public override string FormatValue( System.Web.UI.Control parentControl, string value, Dictionary<string, ConfigurationValue> configurationValues, bool condensed )
         {
-            string formattedValue = string.Empty;
-
-            var timeValue = TimeSpan.MinValue;
-            if ( TimeSpan.TryParse( value, out timeValue ) )
-            {
-                formattedValue = timeValue.ToTimeString();
-            }
-
-            return base.FormatValue( parentControl, formattedValue, null, condensed );
+            return !condensed
+                ? GetTextValue( value, configurationValues.ToDictionary( k => k.Key, k => k.Value.Value ) )
+                : GetCondensedTextValue( value, configurationValues.ToDictionary( k => k.Key, k => k.Value.Value ) );
         }
 
         /// <summary>
@@ -93,7 +103,7 @@ namespace Rock.Field.Types
         /// </returns>
         public override Control EditControl( Dictionary<string, ConfigurationValue> configurationValues, string id )
         {
-            var tp = new TimePicker { ID = id }; 
+            var tp = new TimePicker { ID = id };
             return tp;
         }
 

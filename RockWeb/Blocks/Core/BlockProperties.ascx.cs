@@ -31,6 +31,7 @@ using System.Web;
 using Rock.Web.UI.Controls;
 using System.Text;
 using Rock.Web;
+using Rock.Lava;
 
 namespace RockWeb.Blocks.Core
 {
@@ -259,11 +260,11 @@ namespace RockWeb.Blocks.Core
             SiteCache _site = null;
 
             // Get site info from Page -> Layout -> Site
-            if ( _block.Page.IsNotNull() )
+            if ( _block.Page != null )
             {
                 _site = SiteCache.Get( _block.Page.SiteId );
             }
-            else if ( _block.Layout.IsNotNull() )
+            else if ( _block.Layout != null )
             {
                 _site = SiteCache.Get( _block.Layout.SiteId );
             }
@@ -273,7 +274,7 @@ namespace RockWeb.Blocks.Core
             }
 
             // Change Pre/Post text labels if this is a mobile block
-            if ( _site.IsNotNull() &&  _site.SiteType == SiteType.Mobile )
+            if ( _site != null &&  _site.SiteType == SiteType.Mobile )
             {
                 cePostHtml.Label = "Post-XAML";
                 cePreHtml.Label = "Pre-XAML";
@@ -506,11 +507,21 @@ namespace RockWeb.Blocks.Core
                 rockContext.SaveChanges();
                 block.SaveAttributeValues( rockContext );
 
-                // If this is a page menu block then we need to also flush the LavaTemplateCache for the block ID
+                // If this is a PageMenu block then we need to also flush the lava template cache for the block here.
+                // Changes to the PageMenu block configuration will handle this in the PageMenu_BlockUpdated event handler,
+                // but here we address the situation where child pages are modified using the "CMS Configuration | Pages" menu option.
                 if ( block.BlockType.Guid == Rock.SystemGuid.BlockType.PAGE_MENU.AsGuid() )
                 {
                     var cacheKey = string.Format( "Rock:PageMenu:{0}", block.Id );
-                    LavaTemplateCache.Remove( cacheKey );
+
+                    if ( LavaService.RockLiquidIsEnabled )
+                    {
+#pragma warning disable CS0618 // Type or member is obsolete
+                        LavaTemplateCache.Remove( cacheKey );
+#pragma warning restore CS0618 // Type or member is obsolete
+                    }
+
+                    LavaService.RemoveTemplateCacheEntry( cacheKey );
                 }
 
                 StringBuilder scriptBuilder = new StringBuilder();

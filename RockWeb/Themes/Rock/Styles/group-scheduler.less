@@ -20,19 +20,44 @@
 
 @grid-height: 51px;
 
-.panel-body-parent {
-  height: ~"calc(100vh - 290px)";
-  min-height: 200px;
-  overflow: hidden;
+.sticky-left {
+  position: sticky;
+  left: 0;
+  z-index: 1;
 }
 
-.board-scroll {
-  width: 100%;
+.sticky-cell {
+  position: sticky;
+  left: 8px;
+  display: inline-block;
+}
+
+.schedule-status-board-header {
+  position: sticky;
+  inset-block-start: 0; /* "top" */
+  z-index: 1;
+
+  th {
+    background: @white;
+    border-bottom-color: transparent !important;
+    box-shadow: inset 0 -2px 0 @panel-default-border; // Emulate bottom-border for position sticky
+  }
+}
+
+.panel-body-parent {
+  position: relative;
   height: 100%;
-  padding: 8px 0;
-  overflow-x: auto;
-  overflow-y: scroll;
-  //background-color: @panel-heading-bg;
+  min-height: 500px;
+  min-height: ~"var(--block-min-height, calc(100vh - 290px))";
+  overflow: auto;
+
+  > .panel-body {
+    position: absolute;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    left: 0;
+  }
 }
 
 .group-scheduler {
@@ -41,14 +66,6 @@
     border-right: 1px solid @panel-default-border;
   }
 
-  .panel.panel-block {
-
-    position: relative;
-    display: flex;
-    flex-direction: column;
-    min-width: 0;
-    border: 1px solid @panel-default-border;
-  }
 
   .panel.panel-block > .panel-heading {
     display: inherit;
@@ -59,8 +76,7 @@
   }
 
   .panel.panel-groupscheduler > .panel-body {
-    padding-top: 0;
-    padding-bottom: 0;
+    padding: 0;
   }
 
   .panel-block > .panel-heading {
@@ -77,6 +93,30 @@
   .panel-block > .panel-heading > .pull-right {
     margin-left: auto;
     text-align: right;
+  }
+}
+
+.panel-groupscheduler {
+  .panel.panel-block {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    margin-bottom: 24px;
+    border: 1px solid @panel-default-border;
+  }
+}
+
+.board-scroll {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  padding: 8px 0;
+  overflow-x: auto;
+  overflow-y: scroll;
+  .panel.panel-block {
+    height: auto;
+    overflow: visible;
   }
 }
 
@@ -119,6 +159,7 @@
     }
 
     .resource-container {
+      min-height: 100%;
       padding: 12px;
     }
   }
@@ -141,8 +182,7 @@
 
   .flex {
     display: flex !important;
-    flex-direction: row !important;
-    flex-wrap: nowrap;
+    flex-flow: row nowrap !important;
     flex-shrink: 0;
     align-items: center;
     justify-content: space-between !important;
@@ -168,7 +208,7 @@
 
   .btn {
     height: 16px;
-    padding: 0;
+    padding: 0 4px 0 8px;
     line-height: 16px;
     color: #d8d8d8;
     border: 0;
@@ -316,7 +356,7 @@
       left: 0;
       display: block;
       width: 100%;
-      font-size: 14px;
+      font-size: @font-size-sm;
       color: rgba(0, 0, 0, .4);
       text-align: center;
       content: "No People Available";
@@ -391,7 +431,7 @@
   max-height: 32px;
   margin-top: 8px;
   overflow: hidden;
-  font-size: 12px;
+  font-size: @font-size-xs;
   line-height: 16px;
   text-overflow: ellipsis;
   -webkit-line-clamp: 2;
@@ -498,6 +538,10 @@
     padding: 0;
   }
 
+  .group-locations {
+    position: relative;
+  }
+
   .location-row {
     transition: max-height .3s;
   }
@@ -507,11 +551,16 @@
     overflow: hidden;
   }
 
-  td.location {
+  th.location {
+    position: sticky;
+    //left: 0;
+    inset-inline-start: 0; /* "left" */
+    background: @white;
     min-width: 100px;
-    font-size: 14px;
+    font-size: @font-size-sm;
     font-weight: @font-weight-semibold;
     text-align: right;
+    border-right: 1px solid @panel-default-border;
 
     > div {
       height: 100%;
@@ -624,12 +673,19 @@
   }
 }
 
-.panel-toolbar .picker .picker-select-none {
-  display: none !important;
+.panel-toolbar .picker {
+  .picker-select-none {
+    display: none !important;
+  }
+
+  .picker-label {
+    width: 250px;
+    max-width: none;
+  }
 }
 
 .overflow-scroll {
-  height: calc(100vh - 290px);
+  height: ~"calc(100vh - 290px)";
   min-height: 200px;
   overflow-x: auto;
   overflow-y: hidden;
@@ -685,6 +741,10 @@
   padding: 1px 16px 130px;
   overflow-x: hidden;
   overflow-y: scroll;
+
+  .tooltip-inner {
+    max-width: 200px;
+  }
 }
 
 .styled-scroll ::-webkit-scrollbar {

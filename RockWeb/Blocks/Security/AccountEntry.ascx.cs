@@ -51,7 +51,7 @@ namespace RockWeb.Blocks.Security
         "Username Field Label",
         Key = AttributeKey.UsernameFieldLabel,
         Description = "The label to use for the username field.  For example, this allows an organization to customize it to 'Username / Email' in cases where both are supported.",
-        IsRequired =false,
+        IsRequired = false,
         DefaultValue = "Username",
         Order = 1 )]
 
@@ -148,11 +148,11 @@ namespace RockWeb.Blocks.Security
     [DefinedValueField(
         "Connection Status",
         Key = AttributeKey.ConnectionStatus,
-        Description = "The connection status to use for new individuals (default = 'Web Prospect'.)",
+        Description = "The connection status to use for new individuals (default = 'Prospect'.)",
         DefinedTypeGuid = "2E6540EA-63F0-40FE-BE50-F2A84735E600",
         IsRequired = true,
         AllowMultiple = false,
-        DefaultValue = "368DD475-242C-49C4-A42C-7278BE690CC2",
+        DefaultValue = Rock.SystemGuid.DefinedValue.PERSON_CONNECTION_STATUS_PROSPECT,
         Order = 13 )]
 
     [DefinedValueField(
@@ -235,6 +235,21 @@ namespace RockWeb.Blocks.Security
         IsRequired = false,
         DefaultValue = "Campus",
         Order = 23 )]
+
+    [BooleanField( "Save Communication History",
+        Key = AttributeKey.CreateCommunicationRecord,
+        Description = "Should a record of communication from this block be saved to the recipient's profile?",
+        DefaultBooleanValue = false,
+        ControlType = Rock.Field.Types.BooleanFieldType.BooleanControlType.Checkbox,
+        Order = 24 )]
+
+    [BooleanField(
+        "Show Gender",
+        Key = AttributeKey.ShowGender,
+        Description = "Determines if the gender selection field should be shown.",
+        DefaultBooleanValue = true,
+        Order = 23 )]
+
     #endregion
 
     public partial class AccountEntry : Rock.Web.UI.RockBlock
@@ -265,6 +280,8 @@ namespace RockWeb.Blocks.Security
             public const string PhoneTypesRequired = "PhoneTypesRequired";
             public const string ShowCampusSelector = "ShowCampusSelector";
             public const string CampusSelectorLabel = "CampusSelectorLabel";
+            public const string CreateCommunicationRecord = "CreateCommunicationRecord";
+            public const string ShowGender = "ShowGender";
         }
 
         #region Fields
@@ -310,13 +327,14 @@ namespace RockWeb.Blocks.Security
             lSentLoginCaption.Text = GetAttributeValue( AttributeKey.SentLoginCaption );
             lConfirmCaption.Text = GetAttributeValue( AttributeKey.ConfirmCaption );
             cpCampus.Label = GetAttributeValue( AttributeKey.CampusSelectorLabel );
-
+            
             rPhoneNumbers.ItemDataBound += rPhoneNumbers_ItemDataBound;
 
             var regexString = ValidateUsernameAsEmail ? @"\w+([-+.]\w+)*@\w+([-.]\w+)*\.\w+([-.]\w+)*" : Rock.Web.Cache.GlobalAttributesCache.Get().GetValue( "core.ValidUsernameRegularExpression" );
-            var usernameValidCaption = ValidateUsernameAsEmail ? "" : Rock.Web.Cache.GlobalAttributesCache.Get().GetValue( "core.ValidUsernameCaption" );
+            var usernameValidCaption = ValidateUsernameAsEmail ? string.Empty : Rock.Web.Cache.GlobalAttributesCache.Get().GetValue( "core.ValidUsernameCaption" );
 
-            var script = string.Format( @" Sys.Application.add_load(function () {{
+            var script = string.Format(
+@" Sys.Application.add_load(function () {{
 var availabilityMessageRow = $('#availabilityMessageRow');
 var usernameUnavailable = $('#availabilityMessage');
 var usernameTextbox = $('#{0}');
@@ -338,16 +356,16 @@ usernameTextbox.blur(function () {{
                 type: 'GET',
                 contentType: 'application/json',
                 dataType: 'json',
-                url: Rock.settings.get('baseUrl') + 'api/userlogins/available/' + escape($(this).val()),
+                url: Rock.settings.get('baseUrl') + 'api/userlogins/available?username=' + encodeURIComponent($(this).val()),
                 success: function (getData, status, xhr) {{
 
                     if (getData) {{
-                        usernameUnavailable.html('That ' + usernameFieldLabel + ' is available.');
+                        usernameUnavailable.html('The selected ' + usernameFieldLabel.toLowerCase() + ' is available.');
                         usernameUnavailable.addClass('alert-success');
                         usernameUnavailable.removeClass('alert-warning');
                     }} else {{
                         availabilityMessageRow.show();
-                        usernameUnavailable.html('That ' + usernameFieldLabel + ' is already taken!');
+                        usernameUnavailable.html('The ' + usernameFieldLabel.toLowerCase() + ' you selected is already in use.');
                         usernameUnavailable.addClass('alert-warning');
                         usernameUnavailable.removeClass('alert-success');
                     }}
@@ -358,7 +376,7 @@ usernameTextbox.blur(function () {{
             }});
         }}
     }} else {{
-        usernameUnavailable.html(usernameFieldLabel + ' is required!');
+        usernameUnavailable.html(usernameFieldLabel + ' is required.');
         usernameUnavailable.addClass('alert-warning');
         usernameUnavailable.removeClass('alert-success');
     }}
@@ -367,11 +385,10 @@ usernameTextbox.blur(function () {{
     }});
 }});
 ",
-                tbUserName.ClientID, //0
-                regexString, //1
-                usernameValidCaption, //2
-                tbUserName.Label //3 
-                );
+                tbUserName.ClientID,     // 0
+                regexString,             // 1
+                usernameValidCaption,    // 2
+                tbUserName.Label );      // 3 
 
             ScriptManager.RegisterStartupScript( this, GetType(), "AccountEntry_" + this.ClientID, script, true );
         }
@@ -403,6 +420,9 @@ usernameTextbox.blur(function () {{
                 pnlPhoneNumbers.Visible = GetAttributeValue( AttributeKey.ShowPhoneNumbers ).AsBoolean();
                 acAddress.Required = GetAttributeValue( AttributeKey.AddressRequired ).AsBoolean();
 
+                // show/hide gender
+                ddlGender.Visible = GetAttributeValue( AttributeKey.ShowGender ).AsBoolean();
+
                 // show/hide campus selector
                 if ( CampusCache.All( false ).Count() > 1 )
                 {
@@ -412,7 +432,7 @@ usernameTextbox.blur(function () {{
                         cpCampus.Campuses = CampusCache.All( false );
                     }
                 }
-                
+
                 // set birthday picker required if minimum age > 0
                 if ( GetAttributeValue( AttributeKey.MinimumAge ).AsInteger() > 0 )
                 {
@@ -517,7 +537,17 @@ usernameTextbox.blur(function () {{
                     var match = System.Text.RegularExpressions.Regex.Match( tbUserName.Text, @"\w+([-+.]\w+)*@\w+([-.]\w+)*\.\w+([-.]\w+)*" );
                     if ( !match.Success )
                     {
-                        ShowErrorMessage( "User name must be a valid email address." );
+                        ShowErrorMessage( "Username must be a valid email address." );
+                        return;
+                    }
+                }
+                else
+                {
+                    var regexString = Rock.Web.Cache.GlobalAttributesCache.Get().GetValue( "core.ValidUsernameRegularExpression" );
+                    var match = System.Text.RegularExpressions.Regex.Match( tbUserName.Text, regexString );
+                    if ( !match.Success )
+                    {
+                        ShowErrorMessage( GetAttributeValue( AttributeKey.UsernameFieldLabel ) + " is not valid. " + Rock.Web.Cache.GlobalAttributesCache.Get().GetValue( "core.ValidUsernameCaption" ) );
                         return;
                     }
                 }
@@ -533,7 +563,7 @@ usernameTextbox.blur(function () {{
                     }
                     else
                     {
-                        ShowErrorMessage( "Username already exists" );
+                        ShowErrorMessage( "The " + GetAttributeValue( AttributeKey.UsernameFieldLabel ).ToLower() + " you selected is already in use." );
                     }
                 }
                 else
@@ -564,6 +594,20 @@ usernameTextbox.blur(function () {{
         /// <param name="e">The <see cref="EventArgs"/> instance containing the event data.</param>
         protected void btnDuplicatesNext_Click( object sender, EventArgs e )
         {
+            if ( tbRockFullName.Text.IsNotNullOrWhiteSpace() )
+            {
+                /* 03/22/2021 MDP
+
+                see https://app.asana.com/0/1121505495628584/1200018171012738/f on why this is done
+
+                */
+
+                nbRockFullName.Visible = true;
+                nbRockFullName.NotificationBoxType = NotificationBoxType.Validation;
+                nbRockFullName.Text = "Invalid Form Value";
+                return;
+            }
+
             int personId = Request.Form["DuplicatePerson"].AsInteger();
             if ( personId > 0 )
             {
@@ -681,6 +725,20 @@ usernameTextbox.blur(function () {{
         /// <param name="direction">The direction.</param>
         private void DisplayDuplicates( Direction direction )
         {
+            if ( tbRockFullName.Text.IsNotNullOrWhiteSpace() )
+            {
+                /* 03/22/2021 MDP
+
+                see https://app.asana.com/0/1121505495628584/1200018171012738/f on why this is done
+
+                */
+
+                nbRockFullName.Visible = true;
+                nbRockFullName.NotificationBoxType = NotificationBoxType.Validation;
+                nbRockFullName.Text = "Invalid Form Value";
+                return;
+            }
+
             bool displayed = false;
 
             if ( Convert.ToBoolean( GetAttributeValue( AttributeKey.Duplicates ) ) )
@@ -876,7 +934,7 @@ usernameTextbox.blur(function () {{
                 emailMessage.AddRecipient( new RockEmailMessageRecipient( person, mergeObjects ) );
                 emailMessage.AppRoot = ResolveRockUrl( "~/" );
                 emailMessage.ThemeRoot = ResolveRockUrl( "~~/" );
-                emailMessage.CreateCommunicationRecord = false;
+                emailMessage.CreateCommunicationRecord = GetAttributeValue( AttributeKey.CreateCommunicationRecord ).AsBoolean();
                 emailMessage.Send();
             }
             else
@@ -915,7 +973,7 @@ usernameTextbox.blur(function () {{
                 emailMessage.AddRecipient( new RockEmailMessageRecipient( person, mergeObjects ) );
                 emailMessage.AppRoot = ResolveRockUrl( "~/" );
                 emailMessage.ThemeRoot = ResolveRockUrl( "~~/" );
-                emailMessage.CreateCommunicationRecord = false;
+                emailMessage.CreateCommunicationRecord = GetAttributeValue( AttributeKey.CreateCommunicationRecord ).AsBoolean();
                 emailMessage.Send();
 
                 ShowPanel( 4 );
@@ -959,7 +1017,7 @@ usernameTextbox.blur(function () {{
                         emailMessage.AddRecipient( new RockEmailMessageRecipient( person, mergeObjects ) );
                         emailMessage.AppRoot = ResolveRockUrl( "~/" );
                         emailMessage.ThemeRoot = ResolveRockUrl( "~~/" );
-                        emailMessage.CreateCommunicationRecord = false;
+                        emailMessage.CreateCommunicationRecord = GetAttributeValue( AttributeKey.CreateCommunicationRecord ).AsBoolean();
                         emailMessage.Send();
                     }
                     catch ( SystemException ex )

@@ -18,55 +18,63 @@ namespace Rock.Tests.Integration.Attendance
     /// want to break other teams CI environments that are running these tests w/o a db.
     /// </summary>
     /// <seealso cref="System.IDisposable" />
+    [TestClass]
     public class AttendanceCodeTests
     {
-        private static List<string> noGood = new List<string> {
-            "4NL", "4SS", "5CK", "5HT", "5LT", "5NM", "5TD", "5XX", "666", "BCH", "CLT", "CNT", "D4M", "D5H", "DCK", "DMN", "DSH", "F4G", "FCK", "FGT", "G4Y", "GZZ", "H8R",
-            "JNK", "JZZ", "KKK", "KLT", "KNT", "L5D", "LCK", "LSD", "MFF", "MLF", "ND5", "NDS", "NDZ", "NGR", "P55", "PCP", "PHC", "PHK", "PHQ", "PM5", "PMS", "PN5", "PNS",
-            "PRC", "PRK", "PRN", "PRQ", "PSS", "RCK", "SCK", "S3X", "SHT", "SLT", "SNM", "STD", "SXX", "THC", "V4G", "WCK", "XTC", "XXX", "911" };
-
         /// <summary>
         /// Setup test which cleans the AttendanceCode table for these tests.
         /// </summary>
         public AttendanceCodeTests()
         {
-            // Someday when we can run these tests on all systems without the [Skip...
-            // we can uncomment these cleanup calls, and remove the Cleanup calls
-            // from each test below.
-            //Cleanup();
         }
 
         /// <summary>
-        /// Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.
+        /// Runs before any tests in this class are executed.
         /// </summary>
-        public void Dispose()
+        [ClassInitialize]
+        public static void ClassInitialize( TestContext testContext )
         {
-            // Someday when we can run these tests on all systems without the [Skip...
-            // we can uncomment these cleanup calls, and remove the Cleanup calls
-            // from each test below.
-            //Cleanup();
+            Cleanup();
+        }
+
+        [TestCleanup]
+        public void TestCleanup()
+        {
+            Cleanup();
         }
 
         /// <summary>
+        /// Runs once before any tests are run and then runs after each test in this class is executed.
         /// Deletes the test data added to the database for each tests.
         /// </summary>
-        private void Cleanup()
+        public static void Cleanup()
         {
             using ( var rockContext = new RockContext() )
             {
-                var service = new AttendanceCodeService( rockContext );
+                var acService = new AttendanceCodeService( rockContext );
+                var attendanceService = new AttendanceService( rockContext );
 
                 DateTime today = RockDateTime.Today;
                 DateTime tomorrow = today.AddDays( 1 );
-                var todaysCodes = service.Queryable()
+                var todaysCodes = acService.Queryable()
                         .Where( c => c.IssueDateTime >= today && c.IssueDateTime < tomorrow )
                         .ToList();
                 if ( todaysCodes.Any() )
                 {
-                    service.DeleteRange( todaysCodes );
+                    var ids = todaysCodes.Select( c => c.Id ).ToList();
+
+                    // get the corresponding attendance records and delete them first.
+                    var todayTestAttendance = attendanceService.Queryable().Where( a => ids.Contains( a.AttendanceCodeId.Value ) );
+                    if ( todayTestAttendance.Any() )
+                    {
+                        attendanceService.DeleteRange( todayTestAttendance );
+                    }
+
+                    acService.DeleteRange( todaysCodes );
                     rockContext.SaveChanges();
                 }
             }
+
             AttendanceCodeService.FlushTodaysCodes();
         }
 
@@ -92,11 +100,9 @@ namespace Rock.Tests.Integration.Attendance
 
         #region Alpha-numeric codes
 
-        [TestMethod] [Ignore( "Requires a db" )]
+        [TestMethod]
         public void AlphaNumericCodesShouldSkipBadCodes()
         {
-            Cleanup();
-
             var codeList = new List<string>();
             AttendanceCode code = null;
             for ( int i = 0; i < 6000; i++ )
@@ -105,7 +111,7 @@ namespace Rock.Tests.Integration.Attendance
                 codeList.Add( code.Code );
             }
 
-            bool hasMatchIsBad = codeList.Where( c => noGood.Any( ng => c.Contains( ng ) ) ).Any();
+            bool hasMatchIsBad = codeList.Where( c => AttendanceCodeService.NoGood.Any( ng => c.Contains( ng ) ) ).Any();
 
             Assert.That.False( hasMatchIsBad );
         }
@@ -114,11 +120,9 @@ namespace Rock.Tests.Integration.Attendance
 
         #region Numeric only codes
 
-        [TestMethod] [Ignore( "Requires a db" )]
-        public void CheckThreeChar002Code()
+        [TestMethod]
+        public void CheckThreeCharNumericNonRandom002Code()
         {
-            Cleanup();
-
             AttendanceCode code = null;
             for ( int i = 0; i < 2; i++ )
             {
@@ -128,11 +132,9 @@ namespace Rock.Tests.Integration.Attendance
             Assert.That.Equal( "002", code.Code );
         }
 
-        [TestMethod] [Ignore( "Requires a db" )]
+        [TestMethod]
         public void NumericCodesShouldSkip911And666()
         {
-            Cleanup();
-
             var codeList = new List<string>();
             AttendanceCode code = null;
             for ( int i = 0; i < 2000; i++ )
@@ -151,24 +153,23 @@ namespace Rock.Tests.Integration.Attendance
         /// timeout exception is acceptable to let the admin know there is a
         /// configuration problem.
         /// </summary>
-        [TestMethod] [Ignore( "Requires a db" )]
+        [TestMethod]
         public void NumericCodeWithLengthOf2ShouldNotGoBeyond99()
         {
-            Cleanup();
-
+            int maxTwoDigitCodes = 99; // 01-99
             try
             {
                 var codeList = new List<string>();
                 AttendanceCode code = null;
-                for ( int i = 0; i < 101; i++ )
+                for ( int i = 1; i <= maxTwoDigitCodes; i++ )
                 {
                     code = AttendanceCodeService.GetNew( 0, 0, 2, false );
                     codeList.Add( code.Code );
                 }
 
-                // should not be longer than 4 characters
+                // should not be longer than 2 characters
                 // This is a known bug in v7.4 and earlier, and possibly fixed via PR #3071
-                Assert.That.True( codeList.Last().Length == 4 );
+                Assert.That.True( codeList.OrderBy( x => x.Length ).Last().Length == 2 );
             }
             catch ( TimeoutException )
             {
@@ -181,14 +182,13 @@ namespace Rock.Tests.Integration.Attendance
         /// <summary>
         /// Numerics codes should not repeat.  This is/was a known bug in v7.4 and earlier
         /// </summary>
-        [TestMethod] [Ignore( "Requires a db" )]
+        [TestMethod]
         public void NumericCodesShouldNotRepeat()
         {
-            Cleanup();
-
+            int maxThreeDigitCodes = 997;
             var codeList = new List<string>();
             AttendanceCode code = null;
-            for ( int i = 0; i < 999; i++ )
+            for ( int i = 1; i < maxThreeDigitCodes; i++ )
             {
                 code = AttendanceCodeService.GetNew( 0, 0, 3, false );
                 codeList.Add( code.Code );
@@ -204,14 +204,13 @@ namespace Rock.Tests.Integration.Attendance
         /// <summary>
         /// Numerics codes should not repeat.  This is/was a known bug in v7.4 and earlier
         /// </summary>
-        [TestMethod] [Ignore( "Requires a db" )]
+        [TestMethod]
         public void RandomNumericCodesShouldNotRepeat()
         {
-            Cleanup();
-
+            int maxThreeDigitCodes = 997;
             var codeList = new List<string>();
             AttendanceCode code = null;
-            for ( int i = 0; i < 999; i++ )
+            for ( int i = 1; i < maxThreeDigitCodes; i++ )
             {
                 code = AttendanceCodeService.GetNew( 0, 0, 3, true );
                 codeList.Add( code.Code );
@@ -225,14 +224,12 @@ namespace Rock.Tests.Integration.Attendance
         }
 
         /// <summary>
-        /// Requestings the more codes than are possible should throw exception...
+        /// Requesting more codes than are possible should throw exception...
         /// because there's really nothing else we could do in that situation, right.
         /// </summary>
         [TestMethod] [Ignore( "Requires a db" )]
         public async void RequestingMoreCodesThanPossibleShouldThrowException()
         {
-            Cleanup();
-
             var codeList = new List<string>();
             AttendanceCode code = null;
 
@@ -295,11 +292,9 @@ namespace Rock.Tests.Integration.Attendance
             }
         }
 
-        [TestMethod] [Ignore( "Requires a db" )]
+        [TestMethod]
         public void Increment100SequentialNumericCodes()
         {
-            Cleanup();
-
             AttendanceCode code = null;
             for ( int i = 0; i < 100; i++ )
             {
@@ -313,20 +308,25 @@ namespace Rock.Tests.Integration.Attendance
 
         #region Alpha only codes
 
-        [TestMethod] [Ignore( "Requires a db" )]
-        public void AlphaOnlyCodesShouldSkipBadCodes()
+        /// <summary>
+        /// The number of unique three characters strings you can make from the 17 allowed
+        /// characters in the Check-in system's 17 <see cref="AttendanceCodeService._alphaCharacters"/>
+        /// characters is about 4,913.  But there are about 80 in the <see cref="AttendanceCodeService.NoGood"/>
+        /// list so we should be able to run this loop to about 4000-4800 without running out of options.
+        /// WARNING: The closer you get to the using the entire set, the slower this will take to complete.
+        /// </summary>
+        [TestMethod]
+        public void ThreeCharAlphaOnlyCodesShouldSkipBadCodes()
         {
-            Cleanup();
-
             var codeList = new List<string>();
             AttendanceCode code = null;
-            for ( int i = 0; i < 1000; i++ )
+            for ( int i = 0; i < 4000; i++ )
             {
                 code = AttendanceCodeService.GetNew( 0, 3, 0, true );
                 codeList.Add( code.Code );
             }
 
-            bool hasMatchIsBad = codeList.Where( c => noGood.Any( ng => c.Contains( ng ) ) ).Any();
+            bool hasMatchIsBad = codeList.Where( c => AttendanceCodeService.NoGood.Any( ng => c.Contains( ng ) ) ).Any();
 
             Assert.That.False( hasMatchIsBad );
         }
@@ -334,16 +334,14 @@ namespace Rock.Tests.Integration.Attendance
         /// <summary>
         /// Alpha codes should not repeat.
         /// </summary>
-        [TestMethod] [Ignore( "Requires a db" )]
-        public void AlphaOnlyCodesShouldNotRepeat()
+        [TestMethod]
+        public void ThreeCharAlphaOnlyCodesShouldNotRepeat()
         {
-            Cleanup();
-
             var codeList = new List<string>();
             AttendanceCode code = null;
 
-            // 4847 (17*17*17 minus ~50 badcodes) possible combinations of 17 letters
-            for ( int i = 0; i < 4860; i++ )
+            // 4800 (17*17*17 minus ~80 badcodes) possible combinations of 17 letters
+            for ( int i = 0; i < 4800; i++ )
             {
                 //System.Diagnostics.Debug.WriteIf( i > 4700, "code number " + i + " took... " );
                 code = AttendanceCodeService.GetNew( 0, 3, 0, false );
@@ -363,41 +361,127 @@ namespace Rock.Tests.Integration.Attendance
         #region Alpha-numeric + numeric only codes
 
         /// <summary>
-        /// NOTE: This appears to be a current bug in v8.0 and earlier.  It cazn only generate 100 codes
-        /// Two character alpha numeric codes (codeCharacters) has possible 24*24 (576) combinations
-        /// plus two character numeric codes has a possible 10*10 (100) for a total set of
-        /// 676 combinations.  Removing the noGood (~60) codes leaves us with a valid set of
-        /// 616 codes.
-        /// There should be no bad codes in this list either even though
-        /// individually each part has no bad codes.
+        /// A two character alpha numeric code (AttendanceCodeService.codeCharacters) has possible
+        /// 24*24 (576) combinations plus 1 character numeric code has a possible 9 additional suffixes
+        /// for a total set of 5184 combinations.  Removing the noGood (~80) codes leaves us with
+        /// a valid set of about 5100 codes.
+        /// 
+        /// Even when run with 2 alpha numeric and 1 numeric, this test should verify that codes
+        /// such as 666, 991 do not occur.
+        /// 
+        /// There should be no bad codes in the generated codeList -- even though
+        /// individually each part has no bad codes.  For example, "66" + "6" should
+        /// not appear since combined it would be "666".
         /// </summary>
-        [TestMethod] [Ignore( "Requires a db" )]
+        [TestMethod]
+        public void AlphaNumericWith1NumericCodeShouldGenerateAtLeast5100Codes()
+        {
+            int attemptCombination = 0;
+            var stopWatch = new System.Diagnostics.Stopwatch();
+            var stopWatchSingle = new System.Diagnostics.Stopwatch();
+
+            stopWatch.Start();
+            stopWatchSingle.Start();
+            var outputDebug = false;
+            try
+            {
+                var codeList = new List<string>();
+                AttendanceCode code = null;
+                for ( int i = 1; i < 5100; i++ )
+                {
+                    attemptCombination = i;
+                    if ( i > 4000 && i % 100 == 0 )
+                    {
+                        outputDebug = true;
+                        stopWatchSingle.Restart();
+                        System.Diagnostics.Debug.Write( "code number " + i + " took... " );
+                    }
+                    code = AttendanceCodeService.GetNew( 2, 0, 1, true );
+                    if ( outputDebug )
+                    {
+                        System.Diagnostics.Debug.WriteLine( stopWatchSingle.ElapsedMilliseconds + " ms" );
+                        outputDebug = false;
+                    }
+                    codeList.Add( code.Code );
+                }
+
+                var matches = codeList.Where( c => AttendanceCodeService.NoGood.Any( ng => c.Contains( ng ) ) );
+                bool hasMatchIsBad = matches.Any();
+
+                Assert.That.IsFalse( hasMatchIsBad, "bad codes were: " + string.Join( ", ", matches ) );
+
+                var duplicates = codeList.GroupBy( x => x )
+                        .Where( group => group.Count() > 1 )
+                        .Select( group => group.Key );
+
+                Assert.That.True( duplicates.Count() == 0 );
+            }
+            catch ( TimeoutException )
+            {
+                // If an infinite loop was detected, but we tried at least 5100 codes then
+                // we'll consider this a pass.
+                Assert.That.IsTrue( attemptCombination >= 5100 );
+            }
+            finally
+            {
+                stopWatch.Stop();
+                System.Diagnostics.Trace.Listeners.Add( new System.Diagnostics.TextWriterTraceListener( Console.Out ) );
+                System.Diagnostics.Trace.WriteLine( string.Format( "Test AlphaNumericWith1NumericCodeShouldGenerateAtLeast5100Codes took {0} ms.", stopWatch.ElapsedMilliseconds ) );
+            }
+        }
+
+
+        /// <summary>
+        /// Two character alpha numeric codes (AttendanceCodeService.codeCharacters) has possible
+        /// 24*24 (576) combinations plus two character numeric codes has a possible 10*10 (100)
+        /// for a total set of 676 combinations.  Removing the noGood (~60) codes leaves us with
+        /// a valid set of about 616 codes.
+        /// 
+        /// NOTE: This appears to be a possible bug in v8.0 and earlier. The AttendanceCodeService
+        /// service will only generate 100 codes when trying to combine the numeric parameter of "2" with
+        /// the other parameters.
+        ///
+        /// Even when run with 2 alpha numeric and 3 numeric, this test should verify that codes
+        /// such as X6662, 99119, 66600 do not occur.
+        /// 
+        /// There should be no bad codes in the generated codeList -- even though
+        /// individually each part has no bad codes.  For example, "A6" + "66" should
+        /// not appear since combined it would be "A666".
+        /// </summary>
+        [TestMethod]
         public void AlphaNumericWithNumericCodesShouldSkipBadCodes()
         {
-            Cleanup();
             int attemptCombination = 0;
+            var stopWatch = new System.Diagnostics.Stopwatch();
+            stopWatch.Start();
 
             try
             {
                 var codeList = new List<string>();
                 AttendanceCode code = null;
-                for ( int i = 0; i < 676; i++ )
+                for ( int i = 0; i < 596; i++ )
                 {
                     attemptCombination = i;
-                    code = AttendanceCodeService.GetNew( 2, 0, 2, true );
+                    code = AttendanceCodeService.GetNew( 2, 0, 3, true );
                     codeList.Add( code.Code );
                 }
 
-                bool hasMatchIsBad = codeList.Where( c => noGood.Any( ng => c.Contains( ng ) ) ).Any();
+                var matches = codeList.Where( c => AttendanceCodeService.NoGood.Any( ng => c.Contains( ng ) ) );
+                bool hasMatchIsBad = matches.Any();
 
-                Assert.That.False( hasMatchIsBad );
-
+                Assert.That.IsFalse( hasMatchIsBad, "bad codes were: " + string.Join( ", ", matches ) );
             }
-            catch( TimeoutException )
+            catch ( TimeoutException )
             {
-                // If an infinite loop was detected, but we tried at least 616 codes then
+                // If an infinite loop was detected, but we tried at least 596 codes then
                 // we'll consider this a pass.
-                Assert.That.True( attemptCombination >= 616 );
+                Assert.That.IsTrue( attemptCombination >= 596 );
+            }
+            finally
+            {
+                stopWatch.Stop();
+                System.Diagnostics.Trace.Listeners.Add( new System.Diagnostics.TextWriterTraceListener( Console.Out ) );
+                System.Diagnostics.Trace.WriteLine( string.Format( "Test AlphaOnlyWithNumericOnlyCodesShouldSkipBadCodes took {0} ms.", stopWatch.ElapsedMilliseconds ) );
             }
         }
 
@@ -405,11 +489,9 @@ namespace Rock.Tests.Integration.Attendance
 
         #region Alpha only + numeric only codes
 
-        [TestMethod] [Ignore( "Requires a db" )]
-        public void AlphaOnlyWithNumericOnlyCodesShouldSkipBadCodes()
+        [TestMethod]
+        public void ThreeCharAlphaWithFourCharNumericCodesShouldSkipBadCodes()
         {
-            Cleanup();
-
             var codeList = new List<string>();
             AttendanceCode code = null;
             for ( int i = 0; i < 6000; i++ )
@@ -418,11 +500,42 @@ namespace Rock.Tests.Integration.Attendance
                 codeList.Add( code.Code );
             }
 
-            bool hasMatchIsBad = codeList.Where( c => noGood.Any( ng => c.Contains( ng ) ) ).Any();
+            bool hasMatchIsBad = codeList.Where( c => AttendanceCodeService.NoGood.Any( ng => c.Contains( ng ) ) ).Any();
 
             Assert.That.False( hasMatchIsBad );
         }
-        
+
+
+        /// <summary>
+        /// This is the configuration that churches like Central Christian Church use for their
+        /// Children's check-in.
+        /// </summary>
+        [TestMethod]
+        public void TwoAlphaWithFourRandomNumericCodesShouldSkipBadCodes()
+        {
+            var stopWatch = new System.Diagnostics.Stopwatch();
+            stopWatch.Start();
+
+            int attemptCombination = 0;
+
+            var codeList = new List<string>();
+            AttendanceCode code = null;
+            for ( int i = 0; i < 2500; i++ )
+            {
+                attemptCombination = i;
+                code = AttendanceCodeService.GetNew( 0, 2, 4, true );
+                codeList.Add( code.Code );
+            }
+
+            var matches = codeList.Where( c => AttendanceCodeService.NoGood.Any( ng => c.Contains( ng ) ) );
+            bool hasMatchIsBad = matches.Any();
+            Assert.That.IsFalse( hasMatchIsBad, "bad codes were: " + string.Join( ", ", matches ) );
+
+            stopWatch.Stop();
+            System.Diagnostics.Trace.Listeners.Add( new System.Diagnostics.TextWriterTraceListener( Console.Out ) );
+            System.Diagnostics.Trace.WriteLine( string.Format( "Test AlphaOnlyWithNumericOnlyCodesShouldSkipBadCodes took {0} ms.", stopWatch.ElapsedMilliseconds ) );
+        }
+
         #endregion
 
     }

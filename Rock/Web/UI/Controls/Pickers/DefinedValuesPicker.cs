@@ -34,7 +34,6 @@ namespace Rock.Web.UI.Controls
             : base()
         {
             this.RepeatDirection = System.Web.UI.WebControls.RepeatDirection.Horizontal;
-            this.AddCssClass( "checkboxlist-group" );
         }
 
         /// <summary>
@@ -69,6 +68,28 @@ namespace Rock.Web.UI.Controls
         ///   <c>true</c> if [display descriptions]; otherwise, <c>false</c>.
         /// </value>
         public bool DisplayDescriptions { get; set; }
+
+        /// <summary>
+        /// Gets or sets the selectable values. If null or empty then the defined values will not be filtered by this property.
+        /// </summary>
+        /// <value>
+        /// The selectable values.
+        /// </value>
+        public int[] SelectableDefinedValuesId
+        {
+            get
+            {
+                return _selectableDefinedValuesId;
+            }
+
+            set
+            {
+                _selectableDefinedValuesId = value;
+                DefinedValuePicker.LoadDropDownItems( this, false );
+            }
+        }
+
+        private int[] _selectableDefinedValuesId;
 
         /// <summary>
         /// Gets or sets the selected defined value Ids
@@ -151,6 +172,5 @@ namespace Rock.Web.UI.Controls
                 DefinedValuePicker.LoadDropDownItems( this, false );
             }
         }
-
     }
 }

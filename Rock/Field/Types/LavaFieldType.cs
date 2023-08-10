@@ -17,6 +17,7 @@
 using System.Collections.Generic;
 using System.Web.UI;
 
+using Rock.Attribute;
 using Rock.Data;
 using Rock.Model;
 
@@ -25,6 +26,7 @@ namespace Rock.Field.Types
     /// <summary>
     /// Lava Field Type.  Stored as text
     /// </summary>
+    [RockPlatformSupport( Utility.RockPlatform.WebForms )]
     public class LavaFieldType : CodeEditorFieldType
     {
         #region Formatting
@@ -43,7 +45,7 @@ namespace Rock.Field.Types
         {
             string newValue = value;
 
-            if ( value.HasMergeFields() )
+            if ( value.IsLavaTemplate() )
             {
                 var mergeFields = Rock.Lava.LavaHelper.GetCommonMergeFields( null );
                 if ( entityTypeId.HasValue && entityId.HasValue )

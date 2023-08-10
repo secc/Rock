@@ -19,6 +19,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Text.RegularExpressions;
 using System.Web.UI;
+using System.Web.UI.HtmlControls;
 using System.Web.UI.WebControls;
 using Rock;
 using Rock.Data;
@@ -34,8 +35,6 @@ namespace RockWeb.Blocks.Cms
     [Description( "Manage files stored on a remote server or 3rd party cloud storage" )]
     public partial class AssetManager : RockBlock, IPickerBlock
     {
-        private const string CONTENT_FOLDER_ROOT = "~/Content";
-
         private const string NullSelectedId = "-1";
 
         #region IPicker Implementation
@@ -298,6 +297,7 @@ upnlFiles.ClientID // {2}
         {
             AssetStorageProvider assetStorageProvider = GetAssetStorageProvider();
             var component = assetStorageProvider.GetAssetStorageComponent();
+            var rootFolder = component.GetRootFolder( assetStorageProvider );
 
             foreach ( RepeaterItem file in rptFiles.Items )
             {
@@ -306,7 +306,7 @@ upnlFiles.ClientID // {2}
                 {
                     var keyControl = file.FindControl( "lbKey" ) as Label;
                     string key = keyControl.Text;
-                    if ( !key.StartsWith( CONTENT_FOLDER_ROOT ) )
+                    if ( !key.StartsWith( rootFolder ) )
                     {
                         throw new Exception( "Invalid File Path" );
                     }
@@ -470,6 +470,41 @@ upnlFiles.ClientID // {2}
             ListFiles();
         }
 
+
+        /// <summary>
+        /// Handles the ItemDataBound event of the rptFiles control.
+        /// </summary>
+        /// <param name="sender">The source of the event.</param>
+        /// <param name="e">The <see cref="RepeaterItemEventArgs"/> instance containing the event data.</param>
+        protected void rptFiles_ItemDataBound( object sender, RepeaterItemEventArgs e )
+        {
+            var asset = e.Item.DataItem as Asset;
+            if ( asset == null )
+            {
+                return;
+            }
+
+            Label nameLabel = (Label) e.Item.FindControl( "lbName" );
+
+            // Constrain the file name length to 100 characters to prevent it from messing with the UI
+            nameLabel.Text = asset.Name.LeftWithEllipsis( 100 );
+
+            if ( asset.HasError )
+            {
+                var row = ( HtmlControl ) e.Item.FindControl( "rptFileRow" );
+                row.Attributes.Add( "title", "Error loading file. See the Exception Log for details." );
+                row.AddCssClass( "asset-has-error" );
+
+                nameLabel.AddCssClass( "asset-has-error" );
+
+                Label lbLastModified = (Label) e.Item.FindControl( "lbLastModified" );
+                lbLastModified.AddCssClass( "asset-has-error" );
+
+                Label lbFileSize = (Label) e.Item.FindControl( "lbFileSize" );
+                lbFileSize.AddCssClass( "asset-has-error" );
+            }
+        }
+
         #endregion control events
 
         #region private methods
@@ -521,7 +556,7 @@ upnlFiles.ClientID // {2}
         /// <returns></returns>
         private bool IsValidName( string renameFolderName )
         {
-            Regex regularExpression = new Regex( "^([^*/><?\\|:,]).*$" );
+            Regex regularExpression = new Regex( @"^([^*/><?\\|:,]).*$" );
             return regularExpression.IsMatch( renameFolderName );
         }
 

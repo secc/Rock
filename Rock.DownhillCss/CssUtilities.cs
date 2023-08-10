@@ -160,6 +160,14 @@ namespace Rock.DownhillCss
             cssStyles = cssStyles.Replace( "?color-heading", settings.HeadingColor );
             cssStyles = cssStyles.Replace( "?color-background", settings.BackgroundColor );
 
+            foreach ( var extraCss in settings.AdditionalCssToParse )
+            {
+                var key = extraCss.Key;
+                var value = extraCss.Value;
+
+                cssStyles = cssStyles.Replace( key, value );
+            }
+
             // Note for future... Xamarin Forms doesn't like minified CSS (at least that that's created with the minified method below)
             return cssStyles;
         }
@@ -585,8 +593,8 @@ Resets
     background-color: transparent;
 }
 
-NavigationPage {
-    -rock-status-bar-text: dark;
+^Page {
+    -rock-status-bar-text: light;
 }
 
 ^contentpage {
@@ -881,6 +889,11 @@ icon {
     -----------------------------------------------------------
 */
 /* MobileInsertMark - Used by Mobile Shell to insert it's own standard control CSS */
+
+/* Cover Sheet Styling */
+.android.cover-sheet {
+    -xf-bar-background-color: ?color-bar-background;
+}
 
 /* Flyout Styling */
 
@@ -1666,9 +1679,285 @@ formfield .required-indicator {
 }
 
 
+/*** Connection Type List block ***/
+.connection-type-list-layout .connection-type {
+    border-color: #e7e7e7;
+    border-radius: ?radius-base;
+    padding: 12;
+    margin: 0, 0, 0, 12;
+}
+
+.connection-type-list-layout .connection-type-icon {
+    font-size: 36;
+    margin: 0, 0, 10, 0;
+}
+
+.connection-type-list-layout .connection-type-name {
+    font-style: bold;
+}
+
+
+
+
+/*** Connection Opportunity List block ***/
+.connection-opportunity-list-layout .connection-opportunities {
+    margin: 0, 12, 0, 0;
+}
+
+.connection-opportunity-list-layout .connection-opportunity {
+    border-color: #e7e7e7;
+    border-radius: ?radius-base;
+    padding: 12;
+    margin: 0, 0, 0, 12;
+}
+
+.connection-opportunity-list-layout .connection-opportunity-icon {
+    font-size: 36;
+    margin: 0, 0, 10, 0;
+}
+
+.connection-opportunity-list-layout .connection-opportunity-name {
+    font-style: bold;
+}
+
+.connection-opportunity-list-layout .filter-button {
+    padding: 4 12;
+    background-color: #f5f5f5;
+    color: #767676;
+    border-color: #b9b9b9;
+    border-width: 1;
+    border-radius: 4;
+}
+
+.connection-opportunity-list-layout .filter-button.active {
+    background-color: #007acc;
+    color: #fff;
+}
+
+
+/*** Connection Request List block ***/
+.connection-request-list-layout .connection-requests {
+    margin: 0, 12, 0, 0;
+}
+
+.connection-request-list-layout .connection-request {
+    border-color: #e7e7e7;
+    border-radius: ?radius-base;
+    padding: 12;
+    margin: 0, 0, 0, 12;
+}
+
+.connection-request-list-layout .connection-request-image {
+    width: 35;
+    margin: 0, 0, 10, 0;
+}
+
+.connection-request-list-layout .connection-request-name {
+    font-style: bold;
+}
+
+.connection-request-list-layout .connection-request-date {
+    font-size: ?shell-font-scale(12);
+}
+
+.connection-request-list-layout .filter-button {
+    padding: 4 12;
+    background-color: #f5f5f5;
+    color: #767676;
+    border-color: #b9b9b9;
+    border-width: 1;
+    border-radius: 4;
+}
+
+.connection-request-list-layout .filter-button.active {
+    background-color: #007acc;
+    color: #fff;
+}
+
+/*** Connection Request Detail Block ***/
+.connection-request-detail-content {
+    -xf-spacing: 0;
+}
+
+.connection-request-detail-content .status-pill-layout {
+    margin: 0, 0, 0, 20;
+}
+
+.connection-request-detail-content .status-pill-layout ^tag {
+    margin: 0, 0, 6, 0;
+}
+
+.connection-request-detail-content .person-photo {
+    width: 80;
+    height: 80;
+    margin: 0, 0, 12, 0;
+}
+
+.connection-request-detail-content .person-name {
+    font-style: bold;
+    font-size: 22;
+}
+
+.connection-request-detail-content .person-detail {
+    margin: 0, 0, 0, 20;
+}
+
+.connection-request-detail-content .person-contact-buttons {
+    margin: 0, 8, 0, 0;
+}
+
+.connection-request-detail-content .contact-button {
+    border-radius: 6;
+    width: 50;
+    background-color: #e3e3e3;
+    padding: 4;
+}
+
+.connection-request-detail-content .contact-button-icon {
+    font-size: 14;
+}
+
+.connection-request-detail-content .contact-button-text {
+    font-size: 11;
+}
+
+.connection-request-detail-content .request-details {
+    margin: 0, 0, 0, 0;
+}
+
+.connection-request-detail-content .request-attributes {
+}
+
+.connection-request-detail-content .workflow-actions {
+    margin: 0, 0, 0, 4;
+}
+
+.connection-request-detail-content .workflow-action-button {
+    font-size: 12;
+    color: ?color-text;
+    padding: 12, 0, 12, 0;
+    margin: 0, 0, 8, 8;
+    height: 24;
+    border-width: 1;
+    border-radius: 12;
+    border-color: #999999;
+    background-color: transparent;
+}
+
+.connection-request-detail-content .group-requirements {
+    margin: 0, 0, 0, 0;
+}
+
+.connection-request-detail-content .group-manual-requirement {
+    margin: 0, 0, 0, 8;
+}
+
+.connection-request-detail-content .request-activities > ^Divider {
+    margin: 0, 12, 0, 0;
+}
+
+.connection-request-detail-content .request-activities > .title {
+    margin: 0, 6, 0, 6;
+}
+
+.connection-request-detail-content .request-activity {
+    border-color: #e7e7e7;
+    border-radius: ?radius-base;
+    padding: 12;
+    margin: 0, 0, 0, 12;
+}
+
+.connection-request-detail-content .request-activity.related-activity {
+    background-color: #e0e0e0;
+    opacity: 0.7;
+}
+
+.connection-request-detail-content .activity-image {
+    width: 35;
+}
+
+.connection-request-detail-content .activity-connector-name {
+    font-style: bold;
+}
+
+.connection-request-detail-content .activity-date {
+    font-size: ?shell-font-scale(12);
+}
+
+
 /*** Group Member Edit block ***/
 .group-member-edit-layout .save-button {
     margin: 0, 24, 0, 0;
+}
+
+
+/*** Search block ***/
+.search-layout .search-field .search-button {
+    margin: 0, 4, 0, 12;
+    padding: 24, 0, 24, 0;
+}
+
+.search-layout .search-results {
+    margin: 0, 12, 0, 0;
+}
+
+.search-layout .search-result-content {
+    padding: 0, 8, 0, 8;
+}
+
+.search-layout .search-result-image {
+    width: 35;
+    margin: 0, 0, 10, 0;
+}
+
+.search-layout .search-result-name {
+    font-style: bold;
+}
+
+.search-layout .search-result-text {
+    font-size: ?shell-font-scale(14);
+}
+
+.search-layout .search-result-detail-arrow {
+    color: #a5a5a5;
+    font-size: ?shell-font-scale(20);
+    margin: 10, 0, 0, 0;
+}
+
+.search-layout .show-more-button {
+    margin: 0, 12, 0, 0;
+}
+
+/*** Group Schedule Toolbox Block ***/
+
+.schedule-toolbox-container .detail-title
+{
+    font-size: ?shell-font-scale(18);
+    font-style: bold;
+}
+
+.schedule-toolbox-confirmations-container .confirmed-text {
+    color: green;
+}
+
+.schedule-toolbox-confirmations-container .declined-text {
+    color: red;
+}
+
+.schedule-preference-container .preferences-container {
+    padding: 16;
+}
+
+.schedule-preference-container .assignments-container {
+    padding: 16;
+}
+
+.schedule-signup .field-container {
+    padding: 16;
+}
+
+.schedule-signup .signups-container {
+    padding: 12;
 }
 ";
         #endregion

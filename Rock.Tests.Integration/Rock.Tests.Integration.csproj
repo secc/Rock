@@ -9,7 +9,7 @@
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>Rock.Tests.Integration</RootNamespace>
     <AssemblyName>Rock.Tests.Integration</AssemblyName>
-    <TargetFrameworkVersion>v4.5.2</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v4.7.2</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <ProjectTypeGuids>{3AC096D0-A1C2-E12C-1390-A8335801FDAB};{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
     <VisualStudioVersion Condition="'$(VisualStudioVersion)' == ''">15.0</VisualStudioVersion>
@@ -42,7 +42,7 @@
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="AWSSDK.Core, Version=3.3.0.0, Culture=neutral, PublicKeyToken=885c28607f98e604, processorArchitecture=MSIL">
-      <HintPath>..\packages\AWSSDK.Core.3.3.25.1\lib\net45\AWSSDK.Core.dll</HintPath>
+      <HintPath>..\packages\AWSSDK.Core.3.3.25.4\lib\net45\AWSSDK.Core.dll</HintPath>
     </Reference>
     <Reference Include="AWSSDK.S3, Version=3.3.0.0, Culture=neutral, PublicKeyToken=885c28607f98e604, processorArchitecture=MSIL">
       <HintPath>..\packages\AWSSDK.S3.3.3.21.1\lib\net45\AWSSDK.S3.dll</HintPath>
@@ -53,33 +53,36 @@
     <Reference Include="Castle.Core, Version=4.0.0.0, Culture=neutral, PublicKeyToken=407dd0808d44fbdc, processorArchitecture=MSIL">
       <HintPath>..\packages\Castle.Core.4.4.0\lib\net45\Castle.Core.dll</HintPath>
     </Reference>
-    <Reference Include="DDay.iCal">
-      <HintPath>..\RockWeb\Bin\DDay.iCal.dll</HintPath>
+    <Reference Include="EntityFramework, Version=6.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089, processorArchitecture=MSIL">
+      <HintPath>..\packages\EntityFramework.6.1.3\lib\net45\EntityFramework.dll</HintPath>
     </Reference>
-    <Reference Include="EntityFramework">
-      <HintPath>..\RockWeb\Bin\EntityFramework.dll</HintPath>
-    </Reference>
-    <Reference Include="EntityFramework.SqlServer">
-      <HintPath>..\RockWeb\Bin\EntityFramework.SqlServer.dll</HintPath>
+    <Reference Include="EntityFramework.SqlServer, Version=6.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089, processorArchitecture=MSIL">
+      <HintPath>..\packages\EntityFramework.6.1.3\lib\net45\EntityFramework.SqlServer.dll</HintPath>
     </Reference>
     <Reference Include="HttpSimulator, Version=2.3.0.0, Culture=neutral, processorArchitecture=MSIL">
       <HintPath>..\packages\HttpSimulator.2.3.0\lib\net40\HttpSimulator.dll</HintPath>
     </Reference>
     <Reference Include="IdentityModel, Version=3.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\IdentityModel.3.0.0\lib\net452\IdentityModel.dll</HintPath>
+      <HintPath>..\packages\IdentityModel.3.0.0\lib\net461\IdentityModel.dll</HintPath>
     </Reference>
     <Reference Include="Microsoft.CSharp" />
-    <Reference Include="Microsoft.IdentityModel.Logging, Version=1.1.5.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
-      <HintPath>..\packages\Microsoft.IdentityModel.Logging.1.1.5\lib\net451\Microsoft.IdentityModel.Logging.dll</HintPath>
+    <Reference Include="Microsoft.Extensions.FileProviders.Abstractions, Version=2.0.0.0, Culture=neutral, PublicKeyToken=adb9793829ddae60, processorArchitecture=MSIL">
+      <HintPath>..\packages\Microsoft.Extensions.FileProviders.Abstractions.2.0.0\lib\netstandard2.0\Microsoft.Extensions.FileProviders.Abstractions.dll</HintPath>
     </Reference>
-    <Reference Include="Microsoft.IdentityModel.Protocols, Version=2.1.5.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
-      <HintPath>..\packages\Microsoft.IdentityModel.Protocols.2.1.5\lib\net451\Microsoft.IdentityModel.Protocols.dll</HintPath>
+    <Reference Include="Microsoft.Extensions.Primitives, Version=2.0.0.0, Culture=neutral, PublicKeyToken=adb9793829ddae60, processorArchitecture=MSIL">
+      <HintPath>..\packages\Microsoft.Extensions.Primitives.2.0.0\lib\netstandard2.0\Microsoft.Extensions.Primitives.dll</HintPath>
     </Reference>
-    <Reference Include="Microsoft.IdentityModel.Protocols.OpenIdConnect, Version=2.1.5.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
-      <HintPath>..\packages\Microsoft.IdentityModel.Protocols.OpenIdConnect.2.1.5\lib\net451\Microsoft.IdentityModel.Protocols.OpenIdConnect.dll</HintPath>
+    <Reference Include="Microsoft.IdentityModel.Logging, Version=5.2.1.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <HintPath>..\packages\Microsoft.IdentityModel.Logging.5.2.1\lib\net451\Microsoft.IdentityModel.Logging.dll</HintPath>
     </Reference>
-    <Reference Include="Microsoft.IdentityModel.Tokens, Version=5.1.5.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
-      <HintPath>..\packages\Microsoft.IdentityModel.Tokens.5.1.5\lib\net451\Microsoft.IdentityModel.Tokens.dll</HintPath>
+    <Reference Include="Microsoft.IdentityModel.Protocols, Version=5.2.1.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <HintPath>..\packages\Microsoft.IdentityModel.Protocols.5.2.1\lib\net451\Microsoft.IdentityModel.Protocols.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.IdentityModel.Protocols.OpenIdConnect, Version=5.2.1.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <HintPath>..\packages\Microsoft.IdentityModel.Protocols.OpenIdConnect.5.2.1\lib\net451\Microsoft.IdentityModel.Protocols.OpenIdConnect.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.IdentityModel.Tokens, Version=5.2.1.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <HintPath>..\packages\Microsoft.IdentityModel.Tokens.5.2.1\lib\net451\Microsoft.IdentityModel.Tokens.dll</HintPath>
     </Reference>
     <Reference Include="Microsoft.VisualStudio.TestPlatform.TestFramework, Version=14.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
       <HintPath>..\packages\MSTest.TestFramework.2.1.0\lib\net45\Microsoft.VisualStudio.TestPlatform.TestFramework.dll</HintPath>
@@ -88,7 +91,7 @@
       <HintPath>..\packages\MSTest.TestFramework.2.1.0\lib\net45\Microsoft.VisualStudio.TestPlatform.TestFramework.Extensions.dll</HintPath>
     </Reference>
     <Reference Include="MimeKit, Version=2.6.0.0, Culture=neutral, PublicKeyToken=bede1c8a46c66814, processorArchitecture=MSIL">
-      <HintPath>..\packages\MimeKit.2.6.0\lib\net45\MimeKit.dll</HintPath>
+      <HintPath>..\packages\MimeKit.2.6.0\lib\net47\MimeKit.dll</HintPath>
     </Reference>
     <Reference Include="Moq, Version=4.14.0.0, Culture=neutral, PublicKeyToken=69f491c39445e920, processorArchitecture=MSIL">
       <HintPath>..\packages\Moq.4.14.1\lib\net45\Moq.dll</HintPath>
@@ -101,7 +104,7 @@
       <HintPath>..\libs\Quartz\Quartz.dll</HintPath>
     </Reference>
     <Reference Include="RestSharp, Version=105.2.3.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\RestSharp.105.2.3\lib\net452\RestSharp.dll</HintPath>
+      <HintPath>..\packages\RestSharp.105.2.3\lib\net46\RestSharp.dll</HintPath>
     </Reference>
     <Reference Include="SmtpServer, Version=5.3.0.0, Culture=neutral, processorArchitecture=MSIL">
       <HintPath>..\packages\SmtpServer.5.3.0\lib\net45\SmtpServer.dll</HintPath>
@@ -111,60 +114,103 @@
     <Reference Include="System.configuration" />
     <Reference Include="System.Core" />
     <Reference Include="System.Data" />
-    <Reference Include="System.IdentityModel.Tokens.Jwt, Version=5.1.5.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
-      <HintPath>..\packages\System.IdentityModel.Tokens.Jwt.5.1.5\lib\net451\System.IdentityModel.Tokens.Jwt.dll</HintPath>
+    <Reference Include="System.IdentityModel.Tokens.Jwt, Version=5.2.1.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <HintPath>..\packages\System.IdentityModel.Tokens.Jwt.5.2.1\lib\net451\System.IdentityModel.Tokens.Jwt.dll</HintPath>
     </Reference>
-    <Reference Include="System.IO.Compression" />
+    <Reference Include="System.IO.Compression">
+      <Private>True</Private>
+    </Reference>
     <Reference Include="System.Net.Http" />
-    <Reference Include="System.Runtime.CompilerServices.Unsafe, Version=4.0.4.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
-      <HintPath>..\packages\System.Runtime.CompilerServices.Unsafe.4.5.0\lib\netstandard1.0\System.Runtime.CompilerServices.Unsafe.dll</HintPath>
+    <Reference Include="System.Runtime.CompilerServices.Unsafe, Version=5.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <HintPath>..\packages\System.Runtime.CompilerServices.Unsafe.5.0.0\lib\net45\System.Runtime.CompilerServices.Unsafe.dll</HintPath>
     </Reference>
+    <Reference Include="System.Runtime.Serialization" />
     <Reference Include="System.Security" />
-    <Reference Include="System.Threading.Tasks.Extensions, Version=4.2.0.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
-      <HintPath>..\packages\System.Threading.Tasks.Extensions.4.5.1\lib\portable-net45+win8+wp8+wpa81\System.Threading.Tasks.Extensions.dll</HintPath>
+    <Reference Include="System.ServiceModel" />
+    <Reference Include="System.Threading.Tasks.Extensions, Version=4.2.0.1, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
+      <HintPath>..\packages\System.Threading.Tasks.Extensions.4.5.4\lib\net461\System.Threading.Tasks.Extensions.dll</HintPath>
     </Reference>
     <Reference Include="System.Web" />
     <Reference Include="System.Web.Http, Version=5.2.3.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35" />
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Achievement\GivingToAccountAchievementTest.cs" />
     <Compile Include="Achievement\StepProgramAchievementTests.cs" />
     <Compile Include="Achievement\InteractionAchievementTests.cs" />
     <Compile Include="Achievement\AccumulativeAchievementTests.cs" />
     <Compile Include="Achievement\AchievementTests.cs" />
     <Compile Include="Attendances\AttendanceCodeTests.cs" />
     <Compile Include="Communications\EmailTransportComponentTests.cs" />
+    <Compile Include="Communications\SystemCommunicationTests.cs" />
     <Compile Include="Communications\Transport\MailgunTests.cs" />
     <Compile Include="Communications\Transport\SMTPTests.cs" />
     <Compile Include="Communications\Transport\TwilioTests.cs" />
+    <Compile Include="Connections\ConnectionOpportunityTests.cs" />
+    <Compile Include="Core\AttributeTests.cs" />
     <Compile Include="Core\FieldTypesListing.cs" />
+    <Compile Include="Crm\CrmModuleTestHelper.cs" />
+    <Compile Include="Crm\PersonAddressTests.cs" />
+    <Compile Include="Field.Types\AddressFieldTypeTests.cs" />
+    <Compile Include="Field.Types\ContentChannelItemFieldTypeTests.cs" />
     <Compile Include="Field.Types\UrlLinkFieldTypeTests.cs" />
-    <Compile Include="Jobs\GivingAnalyticsJobTests.cs" />
+    <Compile Include="Jobs\GivingAutomationClassificationTests.cs" />
+    <Compile Include="Jobs\GivingJourneyHelperTests.cs" />
     <Compile Include="Jobs\RockJobListenerTestJob.cs" />
+    <Compile Include="Jobs\SendFollowingEventNotificationTests.cs" />
     <Compile Include="Jobs\SendPrayerCommentsJobTests.cs" />
     <Compile Include="Jobs\RockJobListenerTests.cs" />
-    <Compile Include="Lava\CachingTests.cs" />
-    <Compile Include="Lava\LavaFilterTests.cs" />
-    <Compile Include="Lava\MiscellaneousFilterTests.cs" />
+    <Compile Include="Jobs\RockCleanupJobTests.cs" />
+    <Compile Include="Lava\Commands\RockEntityTests.cs" />
+    <Compile Include="Lava\DotLiquid\RockLiquidTests.cs" />
+    <Compile Include="Lava\Engine\EntityPropertyAccessTests.cs" />
+    <Compile Include="Lava\Engine\ConfigurationTests.cs" />
+    <Compile Include="Lava\Engine\PerformanceTests.cs" />
+    <Compile Include="Lava\Engine\ParsingTests.cs" />
+    <Compile Include="Lava\Engine\ExceptionHandlingTests.cs" />
+    <Compile Include="Lava\Engine\ScopeTests.cs" />
+    <Compile Include="Lava\Engine\ParallelExecutionTests.cs" />
+    <Compile Include="Lava\FileSystem\MockFileProvider.cs" />
+    <Compile Include="Lava\Filters\EncodingFilterTests.cs" />
+    <Compile Include="Lava\Filters\AttributeFilterTests.cs" />
+    <Compile Include="Lava\Filters\PersonFilterTests.cs" />
+    <Compile Include="Lava\Filters\WebFilterTests.cs" />
+    <Compile Include="Lava\Filters\MiscellaneousFilterTests.cs" />
     <Compile Include="Lava\EventScheduledInstanceCommandTests.cs" />
     <Compile Include="Lava\CalendarEventsCommandTests.cs" />
+    <Compile Include="Lava\Engine\LavaCommentsTests.cs" />
+    <Compile Include="Lava\Filters\DateFilterTests.cs" />
+    <Compile Include="Lava\Filters\NumericFilterTests.cs" />
+    <Compile Include="Lava\FileSystem\LavaFileSystemTests.cs" />
+    <Compile Include="Lava\LavaIntegrationTestHelper.cs" />
+    <Compile Include="Lava\LavaIntegrationTestBase.cs" />
+    <Compile Include="Lava\FileSystem\MockFileInfo.cs" />
+    <Compile Include="Lava\Commands\ShortcodeCodeTests.cs" />
+    <Compile Include="Lava\Commands\CommandTests.cs" />
+    <Compile Include="Lava\Commands\ShortcodeTemplateTests.cs" />
     <Compile Include="Lava\SqlTests.cs" />
     <Compile Include="Jobs\StepsAutomationJobTests.cs" />
     <Compile Include="Jobs\TestJobDetail.cs" />
     <Compile Include="Jobs\TestJobContext.cs" />
-    <Compile Include="Lava\RockEntityTests.cs" />
+    <Compile Include="Lava\Engine\MockTemplateCacheService.cs" />
     <Compile Include="Model\EventTests.cs" />
+    <Compile Include="Model\BinaryFileTests.cs" />
+    <Compile Include="Model\IdKeyTests.cs" />
     <Compile Include="Model\LocationTests.cs" />
     <Compile Include="Model\IdentityVerificationCodeTests.cs" />
     <Compile Include="Model\IdentityVerificationTests.cs" />
     <Compile Include="Model\ConnectionRequestServiceTests.cs" />
     <Compile Include="Model\CommunicationServiceTests.cs" />
+    <Compile Include="Model\PersonTokenServiceTests.cs" />
     <Compile Include="Model\PersonServiceTests.cs" />
     <Compile Include="Model\StepProgramServiceTests.cs" />
+    <Compile Include="Model\GroupMemberTests.cs" />
+    <Compile Include="Model\UserLoginTests.cs" />
+    <Compile Include="Rest\ControllersTests\FollowingControllerTests.cs" />
     <Compile Include="Rest\ControllersTests\InteractionsControllerTests.cs" />
     <Compile Include="Rest\ControllersTests\AuthControllerTests.cs" />
+    <Compile Include="Rest\SecuredAttributeTests.cs" />
     <Compile Include="Rock.Logging\RockLoggingHelpers.cs" />
-    <Compile Include="Rock.Oidc\RockSigningCredentialsTests.cs" />
     <Compile Include="Rock.Security\OidcClientTests.cs" />
     <Compile Include="StorageTests\AmazonS3ComponentTests.cs" />
     <Compile Include="StorageTests\AzureCloudComponentTests.cs" />
@@ -208,7 +254,7 @@
     <Compile Include="Reporting\DataFilter\Person\StepDataViewDataFilterTests.cs" />
     <Compile Include="Reporting\DataFilter\Person\StepsTakenDataFilterTests.cs" />
     <Compile Include="Reporting\ReportBuilder\ReportBuilderTests.cs" />
-    <Compile Include="TestInitializer.cs" />
+    <Compile Include="IntegrationTestInitializer.cs" />
     <Compile Include="StorageTests\FileSystemComponentTests.cs" />
     <Compile Include="test.Designer.cs">
       <AutoGen>True</AutoGen>
@@ -225,9 +271,9 @@
   <ItemGroup>
     <None Include="app.config" />
     <None Include="app.ConnectionStrings.config" />
-    <None Include="packages.config">
-      <SubType>Designer</SubType>
-    </None>
+    <None Include="packages.config" />
+    <None Include="settings\lava-dotliquid-engine.runsettings" />
+    <None Include="settings\lava-fluid-engine.runsettings" />
     <None Include="test.runsettings">
       <Generator>SettingsSingleFileGenerator</Generator>
       <LastGenOutput>test.Designer.cs</LastGenOutput>
@@ -240,6 +286,26 @@
       <Project>{00edcb8d-ef33-459c-ad62-02876bd24dff}</Project>
       <Name>DotLiquid</Name>
     </ProjectReference>
+    <ProjectReference Include="..\Rock.Common\Rock.Common.csproj">
+      <Project>{13568622-324e-4493-b605-c9896e725d30}</Project>
+      <Name>Rock.Common</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\Rock.Lava.DotLiquid\Rock.Lava.DotLiquid.csproj">
+      <Project>{79AA470A-DC63-4CB4-B0B6-77285F60C69B}</Project>
+      <Name>Rock.Lava.DotLiquid</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\Rock.Lava.Fluid\Rock.Lava.Fluid.csproj">
+      <Project>{AFCE6F84-BF3A-4182-A816-8FB47AFC0305}</Project>
+      <Name>Rock.Lava.Fluid</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\Rock.Lava.Shared\Rock.Lava.Shared.csproj">
+      <Project>{8820cd93-70ee-496d-b17b-0c4c68dd4957}</Project>
+      <Name>Rock.Lava.Shared</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\Rock.Lava\Rock.Lava.csproj">
+      <Project>{37e293dd-f282-4a34-91fa-5fb8503d5672}</Project>
+      <Name>Rock.Lava</Name>
+    </ProjectReference>
     <ProjectReference Include="..\Rock.Mailgun\Rock.Mailgun.csproj">
       <Project>{d6b19c0d-da5e-4f75-8001-04ded86b741f}</Project>
       <Name>Rock.Mailgun</Name>
@@ -248,10 +314,6 @@
       <Project>{704740d8-b539-4560-9f8c-681670c9d6ad}</Project>
       <Name>Rock.Migrations</Name>
     </ProjectReference>
-    <ProjectReference Include="..\Rock.Oidc\Rock.Oidc.csproj">
-      <Project>{8ccb8e2a-073c-48cb-b31a-621ec5430a42}</Project>
-      <Name>Rock.Oidc</Name>
-    </ProjectReference>
     <ProjectReference Include="..\Rock.Rest\Rock.Rest.csproj">
       <Project>{add1edd0-a4cb-4e82-b6ad-6ad1d556deae}</Project>
       <Name>Rock.Rest</Name>
@@ -259,6 +321,10 @@
     <ProjectReference Include="..\Rock.Tests.Shared\Rock.Tests.Shared.csproj">
       <Project>{d8de32c9-25da-4897-a750-7dd8755b3d45}</Project>
       <Name>Rock.Tests.Shared</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\Rock.WebStartup\Rock.WebStartup.csproj">
+      <Project>{515e22e4-4b9b-4886-8477-e5b312b75eb4}</Project>
+      <Name>Rock.WebStartup</Name>
     </ProjectReference>
     <ProjectReference Include="..\Rock\Rock.csproj">
       <Project>{185a31d7-3037-4dae-8797-0459849a84bd}</Project>
@@ -272,12 +338,25 @@
     <Content Include="TestData\test.jpg">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
+    <Content Include="TestData\BinaryFileWidthTests\test_mH.jpg">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="TestData\BinaryFileWidthTests\test_mHgtMw.jpg">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="TestData\BinaryFileWidthTests\test_mW.jpg">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="TestData\BinaryFileWidthTests\test_mWgtMh.jpg">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <Content Include="TestData\TextDoc.txt">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Constants\" />
+    <Folder Include="Rock.Oidc\" />
   </ItemGroup>
   <Import Project="$(VSToolsPath)\TeamTest\Microsoft.TestTools.targets" Condition="Exists('$(VSToolsPath)\TeamTest\Microsoft.TestTools.targets')" />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

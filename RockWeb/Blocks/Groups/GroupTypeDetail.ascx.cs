@@ -40,7 +40,7 @@ namespace RockWeb.Blocks.Groups
     [DisplayName( "Group Type Detail" )]
     [Category( "Groups" )]
     [Description( "Displays the details of the given group type for editing." )]
-    public partial class GroupTypeDetail : RockBlock, IDetailBlock
+    public partial class GroupTypeDetail : RockBlock
     {
         #region Properties
 
@@ -357,8 +357,6 @@ namespace RockWeb.Blocks.Groups
 
         #region Events
 
-        #region Action Events
-
         /// <summary>
         /// Handles the Click event of the btnSave control.
         /// </summary>
@@ -512,6 +510,7 @@ namespace RockWeb.Blocks.Groups
             groupType.SendAttendanceReminder = cbSendAttendanceReminder.Checked;
             groupType.AttendanceRule = ddlAttendanceRule.SelectedValueAsEnum<AttendanceRule>();
             groupType.GroupCapacityRule = ddlGroupCapacityRule.SelectedValueAsEnum<GroupCapacityRule>();
+            groupType.IsCapacityRequired = cbRequireCapacityRule.Checked;
             groupType.AttendancePrintTo = ddlPrintTo.SelectedValueAsEnum<PrintTo>();
             groupType.AllowedScheduleTypes = allowedScheduleTypes;
             groupType.LocationSelectionMode = locationSelectionMode;
@@ -632,9 +631,9 @@ namespace RockWeb.Blocks.Groups
 
                 /* Save Attributes */
                 string qualifierValue = groupType.Id.ToString();
-                SaveAttributes( new GroupType().TypeId, "Id", qualifierValue, GroupTypeAttributesState, rockContext );
-                SaveAttributes( new Group().TypeId, "GroupTypeId", qualifierValue, GroupAttributesState, rockContext );
-                SaveAttributes( new GroupMember().TypeId, "GroupTypeId", qualifierValue, GroupMemberAttributesState, rockContext );
+                SaveAttributes( new GroupType().TypeId, "Id", qualifierValue, GroupTypeAttributesState, rockContext, groupType, false );
+                SaveAttributes( new Group().TypeId, "GroupTypeId", qualifierValue, GroupAttributesState, rockContext, groupType, true );
+                SaveAttributes( new GroupMember().TypeId, "GroupTypeId", qualifierValue, GroupMemberAttributesState, rockContext, groupType, false );
 
                 // Reload to save default role
                 groupType = groupTypeService.Get( groupType.Id );
@@ -686,9 +685,23 @@ namespace RockWeb.Blocks.Groups
             NavigateToParentPage();
         }
 
-        #endregion
-
-        #region Control Events
+        /// <summary>
+        /// Handles the SelectedIndexChanged event of the ddlGroupCapacityRule control.
+        /// </summary>
+        /// <param name="sender">The source of the event.</param>
+        /// <param name="e">The <see cref="EventArgs"/> instance containing the event data.</param>
+        protected void ddlGroupCapacityRule_SelectedIndexChanged( object sender, EventArgs e )
+        {
+            if ( ddlGroupCapacityRule.SelectedIndex == 0 )
+            {
+                cbRequireCapacityRule.Visible = false;
+                cbRequireCapacityRule.Checked = false;
+            }
+            else
+            {
+                cbRequireCapacityRule.Visible = true;
+            }
+        }
 
         /// <summary>
         /// Handles the SelectedIndexChanged event of the gtpInheritedGroupType control.
@@ -703,7 +716,23 @@ namespace RockWeb.Blocks.Groups
             BindInheritedAttributes( gtpInheritedGroupType.SelectedValueAsInt(), groupTypeService, attributeService );
         }
 
-        #endregion
+        /// <summary>
+        /// Handles the CheckedChanged event of the cbSchedulingEnabled control.
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        protected void cbSchedulingEnabled_CheckedChanged( object sender, EventArgs e )
+        {
+            ScheduleTypesRequired();
+        }
+
+        /// <summary>
+        /// Sets the requirement of the "Schedule Types" control based on the checked state of the "Scheduling Enabled" control.
+        /// </summary>
+        private void ScheduleTypesRequired()
+        {
+            cblScheduleTypes.Required = cbSchedulingEnabled.Checked;
+        }
 
         #endregion
 
@@ -838,6 +867,8 @@ namespace RockWeb.Blocks.Groups
             ddlGroupStatusDefinedType.SetValue( groupType.GroupStatusDefinedTypeId );
 
             ddlGroupCapacityRule.SetValue( (int)groupType.GroupCapacityRule );
+            cbRequireCapacityRule.Visible = groupType.GroupCapacityRule != GroupCapacityRule.None;
+            cbRequireCapacityRule.Checked = groupType.IsCapacityRequired;
 
             cbAllowAnyChildGroupType.Checked = groupType.AllowAnyChildGroupType;
             rcwAllowedChildGroupTypes.Visible = !cbAllowAnyChildGroupType.Checked;
@@ -914,6 +945,8 @@ namespace RockWeb.Blocks.Groups
 
             // Scheduling
             cbSchedulingEnabled.Checked = groupType.IsSchedulingEnabled;
+            ScheduleTypesRequired();
+            cblScheduleTypes.RequiredErrorMessage = "A 'Group Schedule Option' must be selected under 'Attendance / Check-In' when Scheduling is enabled.";
 
             ddlScheduleConfirmationSystemCommunication.SetValue( groupType.ScheduleConfirmationSystemCommunicationId );
             cbRequiresReasonIfDeclineSchedule.Checked = groupType.RequiresReasonIfDeclineSchedule;
@@ -1113,7 +1146,6 @@ namespace RockWeb.Blocks.Groups
             {
                 ddlRsvpReminderSystemCommunication.Items.Add( new ListItem( rsvpReminder.Title, rsvpReminder.Id.ToString() ) );
             }
-
         }
 
         /// <summary>
@@ -1439,10 +1471,9 @@ namespace RockWeb.Blocks.Groups
         /// <param name="qualifierColumn">The qualifier column.</param>
         /// <param name="qualifierValue">The qualifier value.</param>
         /// <param name="viewStateAttributes">The view state attributes.</param>
-        /// <param name="attributeService">The attribute service.</param>
-        /// <param name="qualifierService">The qualifier service.</param>
-        /// <param name="categoryService">The category service.</param>
-        private void SaveAttributes( int entityTypeId, string qualifierColumn, string qualifierValue, List<Attribute> viewStateAttributes, RockContext rockContext )
+        /// <param name="rockContext">The rock context.</param>
+        /// <param name="addAuthorizationsFromGroupType">if set to <c>true</c> for new attributes this will copy the explicit permissions for the group type into the attribute.</param>
+        private void SaveAttributes( int entityTypeId, string qualifierColumn, string qualifierValue, List<Attribute> viewStateAttributes, RockContext rockContext, GroupType groupType, bool addAuthorizationsFromGroupType )
         {
             // Get the existing attributes for this entity type and qualifier value
             var attributeService = new AttributeService( rockContext );
@@ -1465,7 +1496,19 @@ namespace RockWeb.Blocks.Groups
             // Update the Attributes that were assigned in the UI
             foreach ( var attributeState in viewStateAttributes )
             {
-                Helper.SaveAttributeEdits( attributeState, entityTypeId, qualifierColumn, qualifierValue, rockContext );
+                var attribute = Helper.SaveAttributeEdits( attributeState, entityTypeId, qualifierColumn, qualifierValue, rockContext );
+
+                // If AddAuthorizationsFromGroupType is true and this is a new attribute then set the explicit authorizations to match the explicit authorizations of the GroupType.
+                var groupTypeId = qualifierValue.AsIntegerOrNull();
+                if ( groupTypeId.HasValue && groupTypeId > 0 && attributeState.Id == 0 && addAuthorizationsFromGroupType )
+                {
+                    // If this is a new group type then this will be null since it is still in an uncommitted transaction and not in the cache.
+                    // Also there are no explicit authorizations to copy.
+                    if ( groupType != null )
+                    {
+                        Authorization.CopyAuthorization( groupType, attribute );
+                    }
+                }
             }
         }
 
@@ -3014,5 +3057,6 @@ namespace RockWeb.Blocks.Groups
         }
 
         #endregion
+
     }
 }

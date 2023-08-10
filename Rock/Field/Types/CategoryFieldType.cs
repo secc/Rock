@@ -20,6 +20,7 @@ using System.Linq;
 using System.Web.UI;
 using System.Web.UI.WebControls;
 
+using Rock.Attribute;
 using Rock.Constants;
 using Rock.Data;
 using Rock.Model;
@@ -31,6 +32,7 @@ namespace Rock.Field.Types
     /// <summary>
     /// Stored as Category.Guid
     /// </summary>
+    [RockPlatformSupport( Utility.RockPlatform.WebForms )]
     public class CategoryFieldType : FieldType, IEntityFieldType
     {
 
@@ -181,6 +183,17 @@ namespace Rock.Field.Types
             }
 
             return base.FormatValue( parentControl, formattedValue, null, condensed );
+        }
+
+        /// <summary>
+        /// Returns the value using the most appropriate datatype
+        /// </summary>
+        /// <param name="value">The value.</param>
+        /// <param name="configurationValues">The configuration values.</param>
+        /// <returns></returns>
+        public override object ValueAsFieldType( string value, Dictionary<string, ConfigurationValue> configurationValues )
+        {
+            return value.AsGuidOrNull();
         }
 
         #endregion

@@ -16,10 +16,13 @@
 //
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Web.UI;
 
+using Rock.Attribute;
 using Rock.Data;
 using Rock.Model;
+using Rock.Web.Cache;
 using Rock.Web.UI.Controls;
 
 namespace Rock.Field.Types
@@ -27,20 +30,15 @@ namespace Rock.Field.Types
     /// <summary>
     /// Field used to save and display an address value
     /// </summary>
+    [RockPlatformSupport( Utility.RockPlatform.WebForms, Utility.RockPlatform.Obsidian )]
+    [IconSvg( @"<svg xmlns=""http://www.w3.org/2000/svg"" viewBox=""0 0 16 16""><g><path d=""M8,1A5.25,5.25,0,0,0,2.75,6.25c0,2.12.74,2.71,4.71,8.47a.66.66,0,0,0,1.08,0c4-5.76,4.71-6.35,4.71-8.47A5.25,5.25,0,0,0,8,1ZM8,13.19c-.48-.7-.91-1.31-1.3-1.85C4.32,8,4.06,7.53,4.06,6.25a3.94,3.94,0,0,1,7.88,0c0,1.28-.26,1.7-2.64,5.09C8.91,11.86,8.48,12.5,8,13.19ZM8,4a2.19,2.19,0,1,0,2.19,2.19A2.19,2.19,0,0,0,8,4Z""/></g></svg>" )]
     public class AddressFieldType : FieldType, IEntityFieldType
     {
 
         #region Formatting
 
-        /// <summary>
-        /// Returns the field's current value(s)
-        /// </summary>
-        /// <param name="parentControl">The parent control.</param>
-        /// <param name="value">Information about the value</param>
-        /// <param name="configurationValues">The configuration values.</param>
-        /// <param name="condensed">Flag indicating if the value should be condensed (i.e. for use in a grid column)</param>
-        /// <returns></returns>
-        public override string FormatValue( Control parentControl, string value, Dictionary<string, ConfigurationValue> configurationValues, bool condensed )
+        /// <inheritdoc/>
+        public override string GetTextValue( string value, Dictionary<string, string> configurationValues )
         {
             string formattedValue = string.Empty;
 
@@ -57,12 +55,102 @@ namespace Rock.Field.Types
                 }
             }
 
+            return formattedValue;
+        }
+
+        /// <summary>
+        /// Returns the field's current value(s)
+        /// </summary>
+        /// <param name="parentControl">The parent control.</param>
+        /// <param name="value">Information about the value</param>
+        /// <param name="configurationValues">The configuration values.</param>
+        /// <param name="condensed">Flag indicating if the value should be condensed (i.e. for use in a grid column)</param>
+        /// <returns></returns>
+        public override string FormatValue( Control parentControl, string value, Dictionary<string, ConfigurationValue> configurationValues, bool condensed )
+        {
+            string formattedValue = GetTextValue( value, configurationValues.ToDictionary( k => k.Key, k => k.Value.Value ) );
+
             return base.FormatValue( parentControl, formattedValue, null, condensed );
         }
 
         #endregion
 
         #region Edit Control
+
+        /// <inheritdoc/>
+        public override string GetPublicValue( string privateValue, Dictionary<string, string> privateConfigurationValues )
+        {
+            var guid = privateValue.AsGuidOrNull();
+            Location location = null;
+
+            if ( guid.HasValue )
+            {
+                location = new LocationService( new RockContext() ).Get( guid.Value );
+            }
+
+            if ( location != null )
+            {
+                return new AddressFieldValue
+                {
+                    Street1 = location.Street1,
+                    Street2 = location.Street2,
+                    City = location.City,
+                    State = location.State,
+                    PostalCode = location.PostalCode,
+                    Country = location.Country
+                }.ToCamelCaseJson( false, true );
+            }
+            else
+            {
+                var globalAttributesCache = GlobalAttributesCache.Get();
+
+                return new AddressFieldValue
+                {
+                    State = globalAttributesCache.OrganizationState,
+                    Country = globalAttributesCache.OrganizationCountry
+                }.ToCamelCaseJson( false, true );
+            }
+        }
+
+        /// <inheritdoc/>
+        public override string GetPrivateEditValue( string publicValue, Dictionary<string, string> privateConfigurationValues )
+        {
+            var addressValue = publicValue.FromJsonOrNull<AddressFieldValue>();
+
+            if (addressValue == null)
+            {
+                return string.Empty;
+            }
+
+            // Check if we have any values.
+            if ( string.IsNullOrWhiteSpace( addressValue.Street1 )
+                 && string.IsNullOrWhiteSpace( addressValue.Street2 )
+                 && string.IsNullOrWhiteSpace( addressValue.City )
+                 && string.IsNullOrWhiteSpace( addressValue.PostalCode ) )
+            {
+                return string.Empty;
+            }
+
+            var globalAttributesCache = GlobalAttributesCache.Get();
+
+            using ( var rockContext = new RockContext() )
+            {
+                var locationService = new LocationService( rockContext );
+                var location = locationService.Get( addressValue.Street1,
+                    addressValue.Street2,
+                    addressValue.City,
+                    addressValue.State,
+                    addressValue.PostalCode,
+                    addressValue.Country.IfEmpty( globalAttributesCache.OrganizationCountry ) );
+
+                if ( location == null )
+                {
+                    return string.Empty;
+                }
+
+                return location.Guid.ToString();
+            }
+        }
 
         /// <summary>
         /// Creates the control(s) necessary for prompting user for a new value ( as Guid )
@@ -86,13 +174,22 @@ namespace Rock.Field.Types
         public override string GetEditValue( Control control, Dictionary<string, ConfigurationValue> configurationValues )
         {
             var addressControl = control as AddressControl;
+            if ( addressControl == null || !addressControl.HasValue )
+            {
+                return null;
+            }
+
             using ( var rockContext = new RockContext() )
             {
                 var locationService = new LocationService( rockContext );
                 string result = null;
 
-                if ( addressControl != null
-                     && addressControl.HasValue )
+                var editLocation = new Location();
+                addressControl.GetValues( editLocation );
+                var addressIsValid = locationService.ValidateAddressRequirements( editLocation, out _ );
+
+                // Only get a LocationGuid if the AddressControl has a value and has met the ValidateAddressRequirements rules
+                if ( addressIsValid )
                 {
                     var guid = Guid.Empty;
 
@@ -241,5 +338,19 @@ namespace Rock.Field.Types
 
         #endregion
 
+        private class AddressFieldValue
+        {
+            public string Street1 { get; set; }
+
+            public string Street2 { get; set; }
+
+            public string City { get; set; }
+
+            public string State { get; set; }
+
+            public string PostalCode { get; set; }
+
+            public string Country { get; set; }
+        }
     }
 }

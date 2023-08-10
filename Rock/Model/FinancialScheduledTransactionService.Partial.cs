@@ -20,8 +20,10 @@ using System.Data.Entity;
 using System.Linq;
 using System.Text;
 
+using Rock.Bus.Message;
 using Rock.Data;
 using Rock.Financial;
+using System.Threading.Tasks;
 using Rock.Transactions;
 using Rock.Web.Cache;
 
@@ -78,21 +80,140 @@ namespace Rock.Model
         /// <returns></returns>
         public FinancialScheduledTransaction GetByScheduleId( string scheduleId, int gatewayId )
         {
-            return Queryable( "ScheduledTransactionDetails,AuthorizedPersonAlias.Person" )
+            var cleanedScheduleId = scheduleId.Trim();
+
+            var scheduledTransaction = Queryable( "ScheduledTransactionDetails,AuthorizedPersonAlias.Person" )
                 .Where( t =>
                     t.FinancialGatewayId == gatewayId &&
-                    t.GatewayScheduleId == scheduleId.Trim() )
+                    t.GatewayScheduleId == cleanedScheduleId )
                 .FirstOrDefault();
+
+            if ( scheduledTransaction != null )
+            {
+                return scheduledTransaction;
+            }
+
+            /* 12/16/2021 MDP
+
+            If unable to find the schedule id, the scheduleId might have been changed. If so, we can dig for it by looking for ScheduleTransactions that had PreviousGatewayScheduleIds.
+            This can happen in cases where a person changes their scheduled transaction, but there are un-downloaded transactions that occurred with the old schedule id.
+
+            https://github.com/SparkDevNetwork/Rock/issues/4526 does a good job explaining how this could happen:
+
+            --
+            9/27: User creates a scheduled transaction that occurs on the 15th of every month with schedule ID: xxx1234
+            10/15: First payment successfully imported.
+            11/15 5am: The Download Payments job is run. Past payments are pulled into Rock
+            11/15 Noon-ish: A new transaction with schedule ID xxx1234 is processed
+            11/15 10pm: User updates their scheduled transaction with an increase in giving. The schedule Id is updated from xxx1234 to xxx5678
+            11/16 5am: The Download Payments job is run. A transaction with schedule ID xxx1234 is pulled into Rock. Since there's no matching scheduled transactions, it isn't saved to Rock.
+            --
+
+            To help avoid this from happening, we now store any previous gateway schedule Ids so that a matching transaction can be found in PreviousGatewayScheduleIds.
+
+            */
+
+            // Note that we'll have to get all the scheduled transactions that have PreviousGatewayScheduleIdsJson, and then look thru PreviousGatewayScheduleIds on each one.
+            var scheduleTransactionsWithPreviousGatewayScheduleIds = Queryable()
+                .Where( a => a.FinancialGatewayId == gatewayId && !string.IsNullOrEmpty( a.PreviousGatewayScheduleIdsJson ) )
+                .AsNoTracking().ToList();
+
+            var scheduleTransactionWithPreviousGatewayScheduleId = scheduleTransactionsWithPreviousGatewayScheduleIds
+                .Where( a => a.PreviousGatewayScheduleIds != null && a.PreviousGatewayScheduleIds.Contains( cleanedScheduleId ) )
+                .OrderByDescending( a => a.Id )
+                .FirstOrDefault();
+
+            if ( scheduleTransactionWithPreviousGatewayScheduleId != null )
+            {
+                // found it, re-fetch it to include ScheduledTransactionDetails and AuthorizedPersonAlias.Person
+                scheduledTransaction = Queryable()
+                            .Include( a => a.ScheduledTransactionDetails )
+                            .Include( a => a.AuthorizedPersonAlias.Person )
+                            .Where( a => a.Id == scheduleTransactionWithPreviousGatewayScheduleId.Id ).FirstOrDefault();
+            }
+
+            return scheduledTransaction;
         }
 
         /// <summary>
-        /// Sets the status.
+        /// Gets the status of each of the <see cref="IEnumerable{FinancialScheduledTransaction}" /> from it's <see cref="FinancialScheduledTransaction.FinancialGateway" />.
+        /// If the schedule is no longer active on the gateway, <see cref="FinancialScheduledTransaction.IsActive"/> is set to <c>false</c>.
+        /// </summary>
+        /// <param name="financialScheduledTransactions">The financial scheduled transactions.</param>
+        /// <param name="activeOnly">if set to <c>true</c> [active scheduled transactions only].</param>
+        /// <returns>
+        ///   <c>true</c> if there are no error, <c>false</c> otherwise.</returns>
+        public bool GetStatus( IEnumerable<FinancialScheduledTransaction> financialScheduledTransactions, bool activeOnly )
+        {
+            return GetStatus( financialScheduledTransactions, activeOnly, out _ );
+        }
+
+        /// <summary>
+        /// Gets the status of each of the <see cref="IEnumerable{FinancialScheduledTransaction}" /> from it's <see cref="FinancialScheduledTransaction.FinancialGateway" />.
+        /// If the schedule is no longer active on the gateway, <see cref="FinancialScheduledTransaction.IsActive"/> is set to <c>false</c>.
+        /// If this method returns false, see <paramref name="errorMessages"/>.
+        /// </summary>
+        /// <param name="financialScheduledTransactions">The financial scheduled transactions.</param>
+        /// <param name="activeOnly">if set to <c>true</c> [active scheduled transactions only].</param>
+        /// <param name="errorMessages">The error messages. The <see cref="IDictionary{TKey, TValue}"/> is keyed by the schedule Id.</param>
+        /// <returns>
+        ///   <c>true</c> if there are no error, <c>false</c> otherwise.</returns>
+        public bool GetStatus( IEnumerable<FinancialScheduledTransaction> financialScheduledTransactions, bool activeOnly, out IDictionary<int, string> errorMessages )
+        {
+            errorMessages = new Dictionary<int, string>();
+            /*
+             * 13-JAN-22 DMV
+             *
+             * This call to GetStatus goes out to the financial gateway
+             * to update the status and next payment date on each transaction.
+             * This can add O^2 runtime to this data bind and cause it to run
+             * very slowly. #4871
+             *
+             */
+            foreach ( var schedule in financialScheduledTransactions )
+            {
+                try
+                {
+                    // This will ensure we have the most recent status, even if the schedule hasn't been making payments.
+                    if ( activeOnly && !schedule.IsActive )
+                    {
+                        continue;
+                    }
+
+                    this.GetStatus( schedule, out string errMsg );
+
+                    if ( !string.IsNullOrEmpty( errMsg ) )
+                    {
+                        errorMessages.Add( schedule.Id, errMsg );
+                    }
+                }
+                catch ( Exception ex )
+                {
+                    // log and ignore
+                    ExceptionLogService.LogException( ex );
+                }
+            }
+
+            return errorMessages.Count > 0;
+        }
+
+        /// <summary>
+        /// Gets the status of the <see cref="FinancialScheduledTransaction"/> from it's <see cref="FinancialScheduledTransaction.FinancialGateway" />.
+        /// If the schedule is no longer active on the gateway, <see cref="FinancialScheduledTransaction.IsActive"/> is set to <c>false</c>.
+        /// If this method returns false, see <paramref name="errorMessages"/>.
         /// </summary>
         /// <param name="scheduledTransaction">The scheduled transaction.</param>
         /// <param name="errorMessages">The error messages.</param>
         /// <returns></returns>
         public bool GetStatus( FinancialScheduledTransaction scheduledTransaction, out string errorMessages )
         {
+            /*
+             * 12-JAN-22 DMV
+             *
+             * This method introduces significant overhead to performance
+             * when run across many transactions.
+             *
+             */
             if ( scheduledTransaction != null &&
                 scheduledTransaction.FinancialGateway != null &&
                 scheduledTransaction.FinancialGateway.IsActive )
@@ -147,7 +268,13 @@ namespace Rock.Model
                 var gateway = scheduledTransaction.FinancialGateway.GetGatewayComponent();
                 if ( gateway != null )
                 {
-                    return gateway.ReactivateScheduledPayment( scheduledTransaction, out errorMessages );
+                    bool isReactivated = gateway.ReactivateScheduledPayment( scheduledTransaction, out errorMessages );
+                    if ( isReactivated )
+                    {
+                        Task.Run( () => ScheduledGiftWasModifiedMessage.PublishScheduledTransactionEvent( scheduledTransaction.Id, ScheduledGiftEventTypes.ScheduledGiftUpdated ) );
+                    }
+
+                    return isReactivated;
                 }
             }
 
@@ -156,7 +283,10 @@ namespace Rock.Model
         }
 
         /// <summary>
-        /// Cancels the specified scheduled transaction.
+        /// Cancels the specified scheduled transaction on the <see cref="FinancialScheduledTransaction.FinancialGateway" />.
+        /// After doing this, the next call to <see cref="FinancialScheduledTransactionService.GetStatus(FinancialScheduledTransaction, out string)"/>
+        /// will set <see cref="FinancialScheduledTransaction.IsActive" /> to <c>false</c>
+        /// if is it successfully cancelled.
         /// </summary>
         /// <param name="scheduledTransaction">The scheduled transaction.</param>
         /// <param name="errorMessages">The error messages.</param>
@@ -175,7 +305,13 @@ namespace Rock.Model
                 var gateway = scheduledTransaction.FinancialGateway.GetGatewayComponent();
                 if ( gateway != null )
                 {
-                    return gateway.CancelScheduledPayment( scheduledTransaction, out errorMessages );
+                    bool isCanceled = gateway.CancelScheduledPayment( scheduledTransaction, out errorMessages );
+                    if ( isCanceled )
+                    {
+                        Task.Run( () => ScheduledGiftWasModifiedMessage.PublishScheduledTransactionEvent( scheduledTransaction.Id, ScheduledGiftEventTypes.ScheduledGiftInactivated ) );
+                    }
+
+                    return isCanceled;
                 }
             }
 
@@ -234,8 +370,6 @@ namespace Rock.Model
             var newTransactionsForReceiptEmails = new List<FinancialTransaction>();
 
             var failedPayments = new List<FinancialTransaction>();
-
-            var contributionTxnType = DefinedValueCache.Get( Rock.SystemGuid.DefinedValue.TRANSACTION_TYPE_CONTRIBUTION.AsGuid() );
 
             int? defaultAccountId = null;
             using ( var rockContext2 = new RockContext() )
@@ -318,6 +452,8 @@ namespace Rock.Model
 
                             if ( scheduledTransaction != null )
                             {
+                                // This is the normal case where we create new transaction as a result of
+                                // a new scheduled transaction that the gateway processed.
                                 scheduledTransactionIds.Add( scheduledTransaction.Id );
                                 if ( payment.ScheduleActive.HasValue )
                                 {
@@ -327,19 +463,31 @@ namespace Rock.Model
                                 transaction.ScheduledTransactionId = scheduledTransaction.Id;
                                 transaction.AuthorizedPersonAliasId = scheduledTransaction.AuthorizedPersonAliasId;
                                 transaction.SourceTypeValueId = scheduledTransaction.SourceTypeValueId;
+                                if ( scheduledTransaction.TransactionTypeValueId.HasValue )
+                                {
+                                    transaction.TransactionTypeValueId = scheduledTransaction.TransactionTypeValueId.Value;
+                                }
+                                else
+                                {
+                                    var defaultTransactionTypeId = DefinedValueCache.GetId( Rock.SystemGuid.DefinedValue.TRANSACTION_TYPE_CONTRIBUTION.AsGuid() ).Value;
+                                    transaction.TransactionTypeValueId = defaultTransactionTypeId;
+                                }
+
                                 financialPaymentDetail = scheduledTransaction.FinancialPaymentDetail;
                                 scheduledTransaction.ScheduledTransactionDetails.ToList().ForEach( d => originalTxnDetails.Add( d ) );
                             }
                             else
                             {
+                                // This handles an edge-case where there is a mismatch between what the Gateway thinks the amount is and what Rock thinks the amount is.
+                                // If there is a mismatch, this will end up creating a new transaction to correct the amounts
                                 transaction.AuthorizedPersonAliasId = originalTxn.AuthorizedPersonAliasId;
                                 transaction.SourceTypeValueId = originalTxn.SourceTypeValueId;
+                                transaction.TransactionTypeValueId = originalTxn.TransactionTypeValueId;
                                 financialPaymentDetail = originalTxn.FinancialPaymentDetail;
                                 originalTxn.TransactionDetails.ToList().ForEach( d => originalTxnDetails.Add( d ) );
                             }
 
                             transaction.FinancialGatewayId = gateway.Id;
-                            transaction.TransactionTypeValueId = contributionTxnType.Id;
 
                             if ( txnAmount < 0.0M )
                             {
@@ -569,15 +717,15 @@ namespace Rock.Model
             }
 
             // Queue a transaction to update the status of all affected scheduled transactions
-            var updatePaymentStatusTxn = new Rock.Transactions.UpdatePaymentStatusTransaction( gateway.Id, scheduledTransactionIds );
-            Rock.Transactions.RockQueue.TransactionQueue.Enqueue( updatePaymentStatusTxn );
+            var updatePaymentStatusTxn = new UpdatePaymentStatusTransaction( gateway.Id, scheduledTransactionIds );
+            RockQueue.TransactionQueue.Enqueue( updatePaymentStatusTxn );
 
             if ( receiptEmail.HasValue && newTransactionsForReceiptEmails.Any() )
             {
                 // Queue a transaction to send receipts
                 var newTransactionIds = newTransactionsForReceiptEmails.Select( t => t.Id ).ToList();
-                var sendPaymentReceiptsTxn = new Rock.Transactions.SendPaymentReceipts( receiptEmail.Value, newTransactionIds );
-                Rock.Transactions.RockQueue.TransactionQueue.Enqueue( sendPaymentReceiptsTxn );
+                var sendPaymentReceiptsTxn = new SendPaymentReceipts( receiptEmail.Value, newTransactionIds );
+                RockQueue.TransactionQueue.Enqueue( sendPaymentReceiptsTxn );
             }
 
             // Queue transactions to launch failed payment workflow
@@ -587,16 +735,16 @@ namespace Rock.Model
                 {
                     // Queue a transaction to send payment failure
                     var newTransactionIds = failedPayments.Select( t => t.Id ).ToList();
-                    var sendPaymentFailureTxn = new Rock.Transactions.SendPaymentReceipts( failedPaymentEmail.Value, newTransactionIds );
-                    Rock.Transactions.RockQueue.TransactionQueue.Enqueue( sendPaymentFailureTxn );
+                    var sendPaymentFailureTxn = new SendPaymentReceipts( failedPaymentEmail.Value, newTransactionIds );
+                    RockQueue.TransactionQueue.Enqueue( sendPaymentFailureTxn );
                 }
 
                 if ( failedPaymentWorkflowType.HasValue )
                 {
                     // Queue a transaction to launch workflow
                     var workflowDetails = failedPayments.Select( p => new LaunchWorkflowDetails( p ) ).ToList();
-                    var launchWorkflowsTxn = new Rock.Transactions.LaunchWorkflowsTransaction( failedPaymentWorkflowType.Value, workflowDetails );
-                    Rock.Transactions.RockQueue.TransactionQueue.Enqueue( launchWorkflowsTxn );
+                    var launchWorkflowsTxn = new LaunchWorkflowsTransaction( failedPaymentWorkflowType.Value, workflowDetails );
+                    RockQueue.TransactionQueue.Enqueue( launchWorkflowsTxn );
                 }
             }
 

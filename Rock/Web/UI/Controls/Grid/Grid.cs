@@ -33,6 +33,7 @@ using OfficeOpenXml;
 using Rock;
 using Rock.Attribute;
 using Rock.Data;
+using Rock.Lava;
 using Rock.Utility;
 using Rock.Web.Cache;
 
@@ -149,6 +150,19 @@ namespace Rock.Web.UI.Controls
             set { ViewState["ShowConfirmDeleteDialog"] = value; }
         }
 
+        /// <summary>
+        /// Gets or sets a value indicating whether [table striped].
+        /// </summary>
+        /// <value>
+        ///   <c>true</c> if [table striped]; otherwise, <c>false</c>.
+        /// </value>
+        [
+        Category( "Appearance" ),
+        DefaultValue( true ),
+        Description( "Show a striped table." )
+        ]
+        public virtual bool TableStriped { get; set; } = true;
+        
         /// <summary>
         /// Gets or sets the name of the row item.
         /// </summary>
@@ -1170,7 +1184,15 @@ $('#{this.ClientID} .{GRID_SELECT_CELL_CSS_CLASS}').on( 'click', function (event
                 this.RemoveCssClass( "table-condensed" );
                 this.RemoveCssClass( "table-light" );
                 this.AddCssClass( "table-bordered" );
-                this.AddCssClass( "table-striped" );
+
+                if ( TableStriped )
+                {
+                    this.AddCssClass( "table-striped" );
+                }
+                else
+                {
+                    this.RemoveCssClass( "table-striped" );
+                }
             }
 
             if ( DisplayType == GridDisplayType.Full
@@ -1932,9 +1954,9 @@ $('#{this.ClientID} .{GRID_SELECT_CELL_CSS_CLASS}').on( 'click', function (event
                         communication.SenderPersonAliasId = rockPage.CurrentPersonAliasId;
                     }
 
-                    if ( rockPage.Request != null && rockPage.Request.Url != null )
+                    if ( rockPage.Request != null && rockPage.Request.UrlProxySafe() != null )
                     {
-                        communication.UrlReferrer = rockPage.Request.Url.AbsoluteUri.TrimForMaxLength( communication, "UrlReferrer" );
+                        communication.UrlReferrer = rockPage.Request.UrlProxySafe().AbsoluteUri.TrimForMaxLength( communication, "UrlReferrer" );
                     }
 
                     communicationService.Add( communication );
@@ -2042,7 +2064,7 @@ $('#{this.ClientID} .{GRID_SELECT_CELL_CSS_CLASS}').on( 'click', function (event
             }
             else
             {
-                var uri = new Uri( Page.Request.Url, routeTemplate );
+                var uri = new Uri( Page.Request.UrlProxySafe(), routeTemplate );
                 var uriBuilder = new UriBuilder( uri.AbsoluteUri );
                 var paramValues = HttpUtility.ParseQueryString( uriBuilder.Query );
                 paramValues.Add( "EntitySetId", entitySetId.Value.ToString() );
@@ -2156,7 +2178,7 @@ $('#{this.ClientID} .{GRID_SELECT_CELL_CSS_CLASS}').on( 'click', function (event
             }
 
             // add the page that created this
-            excel.Workbook.Properties.SetCustomPropertyValue( "Source", this.Page.Request.Url.OriginalString );
+            excel.Workbook.Properties.SetCustomPropertyValue( "Source", this.Page.Request.UrlProxySafe().OriginalString );
 
             ExcelWorksheet worksheet = excel.Workbook.Worksheets.Add( workSheetName );
 
@@ -2202,7 +2224,6 @@ $('#{this.ClientID} .{GRID_SELECT_CELL_CSS_CLASS}').on( 'click', function (event
                 var selectedKeys = SelectedKeys.ToList();
                 for ( int i = 0; i < dataItems.Count; i++ )
                 {
-                    rowCounter++;
                     var dataItem = dataItems[i];
                     var gridViewRow = gridViewRows[i];
 
@@ -2216,6 +2237,7 @@ $('#{this.ClientID} .{GRID_SELECT_CELL_CSS_CLASS}').on( 'click', function (event
                         }
                     }
 
+                    rowCounter++;
                     var args = new RockGridViewRowEventArgs( gridViewRow, true );
                     gridViewRow.DataItem = dataItem;
                     this.OnRowDataBound( args );
@@ -2395,18 +2417,8 @@ $('#{this.ClientID} .{GRID_SELECT_CELL_CSS_CLASS}').on( 'click', function (event
                 // get all properties of the objects in the grid
                 List<PropertyInfo> allprops = new List<PropertyInfo>( oType.GetProperties() );
 
-                // If this is a DotLiquid.Drop class, don't include any of the properties that are inherited from DotLiquid.Drop
-                if ( typeof( DotLiquid.Drop ).IsAssignableFrom( oType ) )
-                {
-                    var dropProperties = typeof( DotLiquid.Drop ).GetProperties().Select( a => a.Name );
-                    allprops = allprops.Where( a => !dropProperties.Contains( a.Name ) ).ToList();
-                }
-                // If this is a RockDynamic class, don't include any of the properties that are inherited from RockDynamic
-                else if ( typeof( RockDynamic ).IsAssignableFrom( oType ) )
-                {
-                    var dropProperties = typeof( RockDynamic ).GetProperties().Select( a => a.Name );
-                    allprops = allprops.Where( a => !dropProperties.Contains( a.Name ) ).ToList();
-                }
+                // If this is a dynamic class, don't include any of the properties that are inherited from the base class.
+                allprops = FilterDynamicObjectPropertiesCollection( oType, allprops );
 
                 // Inspect the collection of Fields that appear in the Grid and add the corresponding data item properties to the set of fields to be exported.
                 // The fields are exported in the same order as they appear in the Grid.
@@ -2433,6 +2445,7 @@ $('#{this.ClientID} .{GRID_SELECT_CELL_CSS_CLASS}').on( 'click', function (event
 
                 // Grid column headings
                 var boundPropNames = new List<string>();
+                var addedHeaderNames = new List<string>();
 
                 // Array provides slight performance improvement here over a list
                 var orderedVisibleFields = visibleFields.OrderBy( f => f.Key ).Select( f => f.Value ).ToArray();
@@ -2445,7 +2458,13 @@ $('#{this.ClientID} .{GRID_SELECT_CELL_CSS_CLASS}').on( 'click', function (event
                     }
                     else
                     {
-                        worksheet.Cells[rowCounter, columnCounter].Value = dataField.HeaderText;
+                        var headerText = dataField.HeaderText;
+                        if ( addedHeaderNames.Contains( dataField.HeaderText, StringComparer.InvariantCultureIgnoreCase ) )
+                        {
+                            headerText = string.Format( "{0} {1}", dataField.HeaderText, i );
+                        }
+                        worksheet.Cells[rowCounter, columnCounter].Value = headerText;
+                        addedHeaderNames.Add( headerText );
                     }
 
                     var boundField = dataField as BoundField;
@@ -2479,7 +2498,20 @@ $('#{this.ClientID} .{GRID_SELECT_CELL_CSS_CLASS}').on( 'click', function (event
                         lavaDataFields.AddOrIgnore( mergeFieldName, new LavaFieldTemplate.DataFieldInfo { PropertyInfo = prop, GridField = null } );
                     }
 
-                    worksheet.Cells[rowCounter, columnCounter].Value = prop.Name.SplitCase();
+                    var headerText = prop.Name.SplitCase();
+                    if ( addedHeaderNames.Contains( headerText, StringComparer.InvariantCultureIgnoreCase ) )
+                    {
+                        var lastInt = 0;
+                        do
+                        {
+                            lastInt += 1;
+                            headerText = string.Format( "{0} {1}", prop.Name.SplitCase(), lastInt );
+                        }
+                        while ( addedHeaderNames.Contains( headerText, StringComparer.InvariantCultureIgnoreCase ) );
+                    }
+
+                    addedHeaderNames.Add( headerText );
+                    worksheet.Cells[rowCounter, columnCounter].Value = headerText;
                     worksheet.Column( columnCounter ).Style.Numberformat.Format = ExcelHelper.DefaultColumnFormat( prop.PropertyType );
 
                     columnCounter++;
@@ -2684,6 +2716,53 @@ $('#{this.ClientID} .{GRID_SELECT_CELL_CSS_CLASS}').on( 'click', function (event
 
             // send the spreadsheet to the browser
             excel.SendToBrowser( this.Page, filename );
+        }
+
+        /// <summary>
+        /// Filters a collection of properties from a dynamic type to exclude properties of the base class.
+        /// </summary>
+        /// <param name="dataSourceObjectType"></param>
+        /// <param name="additionalMergeProperties"></param>
+        /// <returns></returns>
+        private List<PropertyInfo> FilterDynamicObjectPropertiesCollection( Type dataSourceObjectType, List<PropertyInfo> additionalMergeProperties )
+        {
+            if ( LavaService.RockLiquidIsEnabled )
+            {
+                // If this is a DotLiquid.Drop class, don't include any of the properties that are inherited from DotLiquid.Drop
+                if ( typeof( DotLiquid.Drop ).IsAssignableFrom( dataSourceObjectType ) )
+                {
+                    var dropProperties = typeof( DotLiquid.Drop ).GetProperties().Select( a => a.Name );
+                    additionalMergeProperties = additionalMergeProperties.Where( a => !dropProperties.Contains( a.Name ) ).ToList();
+                }
+                // If this is a RockDynamic class, don't include any of the properties that are inherited from RockDynamic
+                else if ( typeof( RockDynamic ).IsAssignableFrom( dataSourceObjectType ) )
+                {
+                    var dropProperties = typeof( RockDynamic ).GetProperties().Select( a => a.Name );
+                    additionalMergeProperties = additionalMergeProperties.Where( a => !dropProperties.Contains( a.Name ) ).ToList();
+                }
+            }
+            else
+            {
+                // If this is a dynamic class, don't include any of the properties that are inherited from the base class.
+                Type excludeType = null;
+
+                if ( typeof( LavaDataObject ).IsAssignableFrom( dataSourceObjectType ) )
+                {
+                    excludeType = typeof( LavaDataObject );
+                }
+                else if ( typeof( RockDynamic ).IsAssignableFrom( dataSourceObjectType ) )
+                {
+                    excludeType = typeof( RockDynamic );
+                }
+
+                if ( excludeType != null )
+                {
+                    var excludeProperties = excludeType.GetProperties().Select( a => a.Name );
+                    additionalMergeProperties = additionalMergeProperties.Where( a => !excludeProperties.Contains( a.Name ) ).ToList();
+                }
+            }
+
+            return additionalMergeProperties;
         }
 
         /// <summary>
@@ -3700,12 +3779,8 @@ $('#{this.ClientID} .{GRID_SELECT_CELL_CSS_CLASS}').on( 'click', function (event
                 additionalMergeProperties = dataSourceObjectType.GetProperties().ToList();
             }
 
-            // If this is a DotLiquid.Drop class, don't include any of the properties that are inherited from DotLiquid.Drop
-            if ( typeof( DotLiquid.Drop ).IsAssignableFrom( dataSourceObjectType ) )
-            {
-                var dropProperties = typeof( DotLiquid.Drop ).GetProperties().Select( a => a.Name );
-                additionalMergeProperties = additionalMergeProperties.Where( a => !dropProperties.Contains( a.Name ) ).ToList();
-            }
+            // If this is a dynamic class, don't include any of the properties that are inherited from the base class.
+            additionalMergeProperties = FilterDynamicObjectPropertiesCollection( dataSourceObjectType, additionalMergeProperties );
 
             var gridDataFields = this.Columns.OfType<BoundField>().ToList();
 

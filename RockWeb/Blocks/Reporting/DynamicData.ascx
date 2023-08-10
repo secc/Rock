@@ -83,6 +83,7 @@
                                     <Rock:RockTextBox ID="tbUrlMask" runat="server" Label="Selection URL" CssClass="input-large"
                                         Help="The URL to redirect user to when they click on a row in the grid.  Any column's value can be used in the URL by including it in braces.  For example if the grid includes an 'Id' column that contains Person Ids, you can link to the Person view, by specifying a value here of '~/Person/{Id}" />
                                     <Rock:Switch ID="cbShowGridFilter" runat="server" Text="Show Grid Filter" TextAlign="Right" />
+                                    <Rock:Switch ID="cbEnableStickyHeaderOnGrid" runat="server" Text="Enable Sticky Header on Grid" TextAlign="Right" />
                                     <Rock:Switch ID="swWrapInPanel" runat="server" Text="Wrap in Panel" CssClass="js-checkbox-wrap-in-panel" />
                                 </div>
                                 <div class="col-md-6">
@@ -150,6 +151,10 @@
                                     <div class="col-md-12">
                                         <Rock:CodeEditor ID="cePageTitleLava" runat="server" Label="Page Title Lava" EditorMode="Lava" CssClass="input-large" EditorHeight="200"
                                             Help="Optional Lava for setting the page title. If nothing is provided then the page's title will be used. Example '{{rows[0].FullName}}' or if the query returns multiple result sets '{{table1.rows[0].FullName}}'." />
+                                        <Rock:CodeEditor ID="ceGridHeaderLava" runat="server" Label="Grid Header Content" EditorMode="Lava" CssClass="input-large" EditorHeight="200"
+                                            Help="This Lava template will be rendered above the grid. It will have access to the same dataset as the grid." />
+                                        <Rock:CodeEditor ID="ceGridFooterLava" runat="server" Label="Grid Footer Content" EditorMode="Lava" CssClass="input-large" EditorHeight="200"
+                                            Help="This Lava template will be rendered below the grid (best used for custom totaling). It will have access to the same dataset as the grid." />
                                     </div>
                                 </div>
                             </Rock:PanelWidget>

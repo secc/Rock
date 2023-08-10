@@ -23,12 +23,13 @@ using System.Linq;
 using System.Net;
 using System.Net.Mail;
 using System.Net.Mime;
-
+using System.Threading.Tasks;
 using RestSharp;
 using RestSharp.Authenticators;
 
 using Rock.Attribute;
 using Rock.Model;
+using Rock.Utility;
 
 namespace Rock.Communication.Transport
 {
@@ -41,12 +42,13 @@ namespace Rock.Communication.Transport
     [ExportMetadata( "ComponentName", "Mailgun HTTP" )]
 
     [TextField( "Base URL", "The API URL provided by Mailgun, keep the default in most cases.", true, @"https://api.mailgun.net/v3", "", 0, "BaseURL" )]
-    [TextField( "Resource", "The URL part provided by Mailgun, keep the default in most cases.", true, @"{domian}/messages", "", 1, "Resource" )]
+    [TextField( "Resource", "The URL part provided by Mailgun, keep the default in most cases.", true, @"{domain}/messages", "", 1, "Resource" )]
     [TextField( "Domain", "The email domain (e.g. rocksolidchurchdemo.com).", true, "", "", 2, "Domain" )]
     [TextField( "API Key", "The Private API Key provided by Mailgun.", true, "", "", 3, "APIKey" )]
     [BooleanField( "Track Opens", "Allow Mailgun to track opens, clicks, and unsubscribes.", true, "", 4, "TrackOpens" )]
     [BooleanField( "Replace Unsafe Sender", "Defaults to \"Yes\".  If set to \"No\" Mailgun will allow relaying email \"on behalf of\" regardless of the sender's domain.  The safe sender list will still be used for adding a \"Sender\" header.", true, "", 5 )]
-    public class MailgunHttp : EmailTransportComponent
+    [IntegerField( "Concurrent Send Workers", "", false, 10, "", 6, key: "MaxParallelization" )]
+    public class MailgunHttp : EmailTransportComponent, IAsyncTransport
     {
         /// <summary>
         /// Gets the response returned from the Mailgun API REST call.
@@ -66,6 +68,20 @@ namespace Rock.Communication.Transport
         public override bool CanTrackOpens
         {
             get { return GetAttributeValue( "TrackOpens" ).AsBoolean( true ); }
+        }
+
+        /// <summary>
+        /// Gets the maximum parallelization.
+        /// </summary>
+        /// <value>
+        /// The maximum parallelization.
+        /// </value>
+        public int MaxParallelization
+        {
+            get
+            {
+                return GetAttributeValue( "MaxParallelization" ).AsIntegerOrNull() ?? 10;
+            }
         }
 
         /// <summary>
@@ -91,6 +107,21 @@ namespace Rock.Communication.Transport
         /// </value>
         protected override EmailSendResponse SendEmail( RockEmailMessage rockEmailMessage )
         {
+            return AsyncHelpers.RunSync( () => SendEmailAsync( rockEmailMessage ) );
+        }
+
+        /// <summary>
+        /// Sends the email asynchronous.
+        /// </summary>
+        /// <param name="rockEmailMessage">The rock email message.</param>
+        /// <returns></returns>
+        /// <exception cref="System.Exception"></exception>
+        /// <remarks>
+        /// This class will call this method and pass the post processed data in a rock email message which
+        /// can then be used to send the implementation specific message.
+        /// </remarks>
+        protected override async Task<EmailSendResponse> SendEmailAsync( RockEmailMessage rockEmailMessage )
+        {
             var restRequest = GetRestRequestFromRockEmailMessage( rockEmailMessage );
 
             var restClient = new RestClient
@@ -99,13 +130,29 @@ namespace Rock.Communication.Transport
                 Authenticator = new HttpBasicAuthenticator( "api", GetAttributeValue( "APIKey" ) )
             };
 
+            var retriableStatusCode = new List<HttpStatusCode>()
+            {
+                HttpStatusCode.InternalServerError,
+                HttpStatusCode.BadGateway,
+                HttpStatusCode.ServiceUnavailable,
+                HttpStatusCode.GatewayTimeout,
+                (HttpStatusCode) 429
+            };
+
+            var methodRetry = new MethodRetry();
+
             // Call the API and get the response
-            Response = restClient.Execute( restRequest );
+            Response = await methodRetry.ExecuteAsync( () => restClient.ExecuteTaskAsync( restRequest ), ( response ) => !retriableStatusCode.Contains( response.StatusCode ) ).ConfigureAwait( false );
+
+            if ( Response.StatusCode != HttpStatusCode.OK )
+            {
+                throw new Exception( Response.ErrorMessage ?? Response.StatusDescription );
+            }
 
             return new EmailSendResponse
             {
                 Status = Response.StatusCode == HttpStatusCode.OK ? CommunicationRecipientStatus.Delivered : CommunicationRecipientStatus.Failed,
-                StatusNote = Response.StatusDescription
+                StatusNote = $"HTTP Status Code: {Response.StatusCode} \r\n Status Description: {Response.StatusDescription}"
             };
         }
 
@@ -122,6 +169,7 @@ namespace Rock.Communication.Transport
             {
                 return base.CheckSafeSender( toEmailAddresses, fromEmail, organizationEmail );
             }
+
             return new SafeSenderResult();
         }
 
@@ -148,7 +196,7 @@ namespace Rock.Communication.Transport
         private RestRequest GetRestRequestFromRockEmailMessage( RockEmailMessage rockEmailMessage )
         {
             var restRequest = new RestRequest( GetAttributeValue( "Resource" ), Method.POST );
-            restRequest.AddParameter( "domian", GetAttributeValue( "Domain" ), ParameterType.UrlSegment );
+            restRequest.AddParameter( "domain", GetAttributeValue( "Domain" ), ParameterType.UrlSegment );
 
             // To
             rockEmailMessage.GetRecipients().ForEach( r => restRequest.AddParameter( "to", new MailAddress( r.To, r.Name ).ToString() ) );

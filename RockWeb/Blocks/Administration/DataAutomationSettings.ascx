@@ -53,6 +53,15 @@
                                 </div>
                             </div>
 
+                             <div class="clearfix margin-b-lg">
+                                <div class="pull-left" style="width: 40px">
+                                    <Rock:RockCheckBox ID="cbRegisteredInAnyEvent" runat="server" />
+                                </div>
+                                <div class="pull-left">
+                                    <Rock:NumberBox ID="nbRegisteredInAnyEvent" runat="server" Label="Any family member has registered for any event in the last" AppendText="days" CssClass="input-width-md" Text="90" />
+                                </div>
+                            </div>
+
                             <div class="clearfix margin-b-lg">
                                 <div class="pull-left" style="width: 40px">
                                     <Rock:RockCheckBox ID="cbAttendanceInGroupType" runat="server" />
@@ -206,6 +215,15 @@
 
                             <div class="clearfix margin-b-lg">
                                 <div class="pull-left" style="width: 40px">
+                                    <Rock:RockCheckBox ID="cbNoRegistrationInAnyEvent" runat="server" />
+                                </div>
+                                <div class="pull-left">
+                                    <Rock:NumberBox ID="nbNoRegistrationInAnyEvent" runat="server" Label="No family member has registered for any event  in the last" AppendText="days" CssClass="input-width-md" Text="500" />
+                                </div>
+                            </div>
+
+                            <div class="clearfix margin-b-lg">
+                                <div class="pull-left" style="width: 40px">
                                     <Rock:RockCheckBox ID="cbNoSiteLogin" runat="server" />
                                 </div>
                                 <div class="pull-left">
@@ -295,9 +313,13 @@
                                 </div>
                                 <div class="pull-left">
                                     <Rock:NumberBox ID="nbMostFamilyAttendance" runat="server" Label="Calculate campus based on the most family attendance to a campus-specific location in the last" AppendText="days" CssClass="input-width-md" Text="90" />
+                                    <Rock:NumberBox ID="nbTimesToTriggerCampusChange" runat="server" Label="Minimum number of times to attend a campus before triggering a campus change" MinimumValue="1" AppendText="times" CssClass="input-width-md" Text="3" />
+                                </div>
+                                <div class="pull-right">
+                                    <Rock:SchedulePicker ID="spExcludeSchedules" runat="server" AllowMultiSelect="true" Label="Exclude Schedules" />
                                 </div>
                             </div>
-
+    
                             <div class="clearfix margin-b-lg">
                                 <div class="pull-left" style="width: 40px">
                                     <Rock:RockCheckBox ID="cbMostFamilyGiving" runat="server" />
@@ -307,7 +329,6 @@
                                     <Rock:RockDropDownList ID="ddlAttendanceOrGiving" CssClass="input-width-lg" runat="server" Label="If the calculated campus for most attendance and most giving are different" />
                                 </div>
                             </div>
-
                             <div class="clearfix margin-b-lg">
                                 <div class="pull-left" style="width: 40px">
                                     <Rock:RockCheckBox ID="cbIgnoreIfManualUpdate" runat="server" />
@@ -411,7 +432,7 @@
 
                 </fieldset>
 
-                <div class="actions margin-t-lg">
+                <div class="actions">
                     <Rock:BootstrapButton ID="bbtnSaveConfig" runat="server" CssClass="btn btn-primary" AccessKey="s" ToolTip="Alt+s" OnClick="bbtnSaveConfig_Click" Text="Save"
                         DataLoadingText="&lt;i class='fa fa-refresh fa-spin'&gt;&lt;/i&gt; Saving"
                         CompletedText="Success" CompletedMessage="<div class='margin-t-md alert alert-success'>Changes have been saved.</div>" CompletedDuration="3"></Rock:BootstrapButton>

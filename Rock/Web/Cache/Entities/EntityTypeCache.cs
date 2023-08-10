@@ -88,6 +88,16 @@ namespace Rock.Web.Cache
         public bool IsSecured { get; private set; }
 
         /// <summary>
+        /// Gets a flag indicating whether this entity type is a commonly used entity.
+        /// If so, it will grouped at the top by the entity type picker control
+        /// </summary>
+        /// <value>
+        /// A <see cref="System.Boolean"/> value that is <c>true</c> if this instance is common; otherwise, <c>false</c>.
+        /// </value>
+        [DataMember]
+        public bool IsCommon { get; private set; }
+
+        /// <summary>
         /// Gets or sets the single value field type identifier.
         /// </summary>
         /// <value>
@@ -320,7 +330,7 @@ namespace Rock.Web.Cache
 
         #region Cache Related Methods
 
-        private static Dictionary<int, Type> _cacheableEntityTypeIds = null;
+        private static Dictionary<string, Type> _cachedEntityTypeByEntityType = null;
         private System.Reflection.MethodInfo _cachedItemGetMethod = null;
         private System.Reflection.MethodInfo _cachedItemFlushItemMethod = null;
         private System.Reflection.MethodInfo _cachedItemClearMethod = null;
@@ -379,18 +389,18 @@ namespace Rock.Web.Cache
         /// <returns></returns>
         public Type GetEntityCacheType()
         {
-            if ( _cacheableEntityTypeIds == null )
+            if ( _cachedEntityTypeByEntityType == null )
             {
-                _cacheableEntityTypeIds = Reflection.FindTypes( typeof( IEntityCache ) ).Values
+                _cachedEntityTypeByEntityType = Reflection.FindTypes( typeof( IEntityCache ) ).Values
                     .Select( a => new
                     {
                         CacheTypeType = a.BaseType.GenericTypeArguments[0],
                         EntityTypeType = a.BaseType.GenericTypeArguments[1]
                     } )
-                    .ToDictionary( k => EntityTypeCache.Get( k.EntityTypeType ).Id, v => v.CacheTypeType );
+                    .ToDictionary( k => k.EntityTypeType.FullName, v => v.CacheTypeType );
             }
 
-            var entityCacheType = _cacheableEntityTypeIds?.GetValueOrNull( this.Id );
+            var entityCacheType = _cachedEntityTypeByEntityType?.GetValueOrNull( this.Name );
 
             return entityCacheType;
         }
@@ -420,6 +430,7 @@ namespace Rock.Web.Cache
             FriendlyName = entityType.FriendlyName;
             IsEntity = entityType.IsEntity;
             IsSecured = entityType.IsSecured;
+            IsCommon = entityType.IsCommon;
             SingleValueFieldTypeId = entityType.SingleValueFieldTypeId;
             MultiValueFieldTypeId = entityType.MultiValueFieldTypeId;
             IsIndexingEnabled = entityType.IsIndexingEnabled;
@@ -495,65 +506,6 @@ namespace Rock.Web.Cache
         {
             return Get( typeof( T ), createIfNotFound, rockContext );
         }
-
-        #region Obsolete Methods
-
-        /// <summary>
-        /// Reads the specified type.
-        /// </summary>
-        /// <param name="type">The type.</param>
-        /// <param name="createIfNotFound">if set to <c>true</c> [create if not found].</param>
-        /// <param name="rockContext">The rock context.</param>
-        /// <returns></returns>
-        [RockObsolete( "1.8" )]
-        [Obsolete("Use Get instead", true )]
-        public static EntityTypeCache Read( Type type, bool createIfNotFound = true, RockContext rockContext = null )
-        {
-            return Get( type, createIfNotFound, rockContext );
-        }
-
-        /// <summary>
-        /// Reads the specified type
-        /// </summary>
-        /// <typeparam name="T"></typeparam>
-        /// <param name="createIfNotFound">if set to <c>true</c> [create if not found].</param>
-        /// <param name="rockContext">The rock context.</param>
-        /// <returns></returns>
-        [RockObsolete( "1.8" )]
-        [Obsolete( "Use Get instead", true )]
-        public static EntityTypeCache Read<T>( bool createIfNotFound = true, RockContext rockContext = null )
-        {
-            return Get<T>( createIfNotFound, rockContext );
-        }
-
-        /// <summary>
-        /// Returns EntityType object from cache.  If entityBlockType does not already exist in cache, it
-        /// will be read and added to cache
-        /// </summary>
-        /// <param name="name">The name.</param>
-        /// <returns></returns>
-        [RockObsolete( "1.8" )]
-        [Obsolete( "Use Get instead", true )]
-        public static EntityTypeCache Read( string name )
-        {
-            return Get( name, true );
-        }
-
-        /// <summary>
-        /// Reads the specified name.
-        /// </summary>
-        /// <param name="name">The name.</param>
-        /// <param name="createNew">if set to <c>true</c> [create new].</param>
-        /// <param name="rockContext">The rock context.</param>
-        /// <returns></returns>
-        [RockObsolete( "1.8" )]
-        [Obsolete( "Use Get instead", true )]
-        public static EntityTypeCache Read( string name, bool createNew, RockContext rockContext = null )
-        {
-            return Get( name, createNew, rockContext );
-        }
-
-        #endregion
 
         /// <summary>
         /// Gets an EntityType cache object based on the specified type.
@@ -641,7 +593,7 @@ namespace Rock.Web.Cache
 
             if ( rockContext != null )
             {
-                var entityTypeModel = new EntityTypeService( rockContext ).Get( name, createNew );
+                var entityTypeModel = new EntityTypeService( rockContext ).GetByName( name, createNew );
                 if ( entityTypeModel != null )
                 {
                     entityType = Get( entityTypeModel );
@@ -651,7 +603,7 @@ namespace Rock.Web.Cache
             {
                 using ( var myRockContext = new RockContext() )
                 {
-                    var entityTypeModel = new EntityTypeService( myRockContext ).Get( name, createNew );
+                    var entityTypeModel = new EntityTypeService( myRockContext ).GetByName( name, createNew );
                     if ( entityTypeModel != null )
                     {
                         entityType = Get( entityTypeModel );

@@ -13,26 +13,23 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 // </copyright>
-//
+
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.Data.Entity;
-using System.IO;
 using System.Linq;
+using System.Text;
+using System.Web.Security.AntiXss;
 using System.Web.UI;
 using System.Web.UI.WebControls;
-
 using Rock;
+using Rock.Attribute;
 using Rock.Data;
 using Rock.Model;
+using Rock.Security;
 using Rock.Web;
 using Rock.Web.Cache;
 using Rock.Web.UI.Controls;
-using Rock.Attribute;
-using Rock.Store;
-using System.Text;
-using Rock.Security;
 
 namespace RockWeb.Blocks.Connection
 {
@@ -231,7 +228,6 @@ namespace RockWeb.Blocks.Connection
             UpdateList();
         }
 
-
         #endregion
 
         #region Internal Methods
@@ -267,7 +263,7 @@ namespace RockWeb.Blocks.Connection
                     var searchCampuses = cblCampus.SelectedValuesAsInt;
                     if ( searchCampuses.Count > 0 )
                     {
-                        searchSelections.Add( "cblCampus", searchCampuses.AsDelimited("|") );
+                        searchSelections.Add( "cblCampus", searchCampuses.AsDelimited( "|" ) );
                         qrySearch = qrySearch.Where( o => o.ConnectionOpportunityCampuses.Any( c => searchCampuses.Contains( c.CampusId ) ) );
                     }
                 }
@@ -291,18 +287,20 @@ namespace RockWeb.Blocks.Connection
 
                 var opportunities = qrySearch
                     .ToList()
-                    .Where(o => o.IsAuthorized( Authorization.VIEW, CurrentPerson ))
-                    .OrderBy( s => s.PublicName )
+                    .Where( o => o.IsAuthorized( Authorization.VIEW, CurrentPerson ) )
+                    .OrderBy( o => o.Order )
+                    .ThenBy( o => o.Name )
                     .ToList();
 
                 var mergeFields = new Dictionary<string, object>();
                 mergeFields.Add( "CurrentPerson", CurrentPerson );
                 mergeFields.Add( "CampusContext", RockPage.GetCurrentContext( EntityTypeCache.Get( "Rock.Model.Campus" ) ) as Campus );
                 var pageReference = new PageReference( GetAttributeValue( AttributeKey.DetailPage ), null );
-                mergeFields.Add( "DetailPage", BuildDetailPageUrl(pageReference.BuildUrl()) );
+                // Not using the BuildUrlEncoded due to the additional method here that handles the encoding
+                mergeFields.Add( "DetailPage", BuildDetailPageUrl( pageReference.BuildUrl() ) );
 
                 // iterate through the opportunities and lava merge the summaries and descriptions
-                foreach(var opportunity in opportunities )
+                foreach ( var opportunity in opportunities )
                 {
                     opportunity.Summary = opportunity.Summary.ResolveMergeFields( mergeFields );
                     opportunity.Description = opportunity.Description.ResolveMergeFields( mergeFields );
@@ -316,8 +314,8 @@ namespace RockWeb.Blocks.Connection
                 {
                     string pageTitle = "Connection";
                     RockPage.PageTitle = pageTitle;
-                    RockPage.BrowserTitle = String.Format( "{0} | {1}", pageTitle, RockPage.Site.Name );
-                    RockPage.Header.Title = String.Format( "{0} | {1}", pageTitle, RockPage.Site.Name );
+                    RockPage.BrowserTitle = string.Format( "{0} | {1}", pageTitle, RockPage.Site.Name );
+                    RockPage.Header.Title = string.Format( "{0} | {1}", pageTitle, RockPage.Site.Name );
                 }
             }
         }
@@ -328,10 +326,10 @@ namespace RockWeb.Blocks.Connection
         /// </summary>
         /// <param name="detailPage">The detail page.</param>
         /// <returns></returns>
-        private string BuildDetailPageUrl(string detailPage )
+        private string BuildDetailPageUrl( string detailPage )
         {
             StringBuilder sbUrlParms = new StringBuilder();
-            foreach(var parm in this.RockPage.PageParameters() )
+            foreach ( var parm in this.RockPage.PageParameters() )
             {
                 if ( parm.Key != "PageId" )
                 {
@@ -346,7 +344,8 @@ namespace RockWeb.Blocks.Connection
                 }
             }
 
-            return detailPage + sbUrlParms.ToString();
+            // This is going on the page, make sure it is encoded properly
+            return AntiXssEncoder.HtmlEncode( detailPage + sbUrlParms.ToString(), false );
         }
 
         /// <summary>
@@ -384,26 +383,30 @@ namespace RockWeb.Blocks.Connection
                     {
                         tbSearchName.Text = searchSelections["tbSearchName"];
                     }
-                    if ( searchSelections.ContainsKey( "cblCampus" ) )
-                    {
-                        var selectedItems = searchSelections["cblCampus"].SplitDelimitedValues().AsIntegerList();
-                        cblCampus.SetValues( selectedItems );
-                    }
-                }
-                else if ( GetAttributeValue( AttributeKey.EnableCampusContext ).AsBoolean() )
-                {
-                    var campusEntityType = EntityTypeCache.Get( "Rock.Model.Campus" );
-                    var contextCampus = RockPage.GetCurrentContext( campusEntityType ) as Campus;
 
-                    if ( contextCampus != null )
+                    var selectedCampusIds = new List<int>();
+                    if ( GetAttributeValue( AttributeKey.EnableCampusContext ).AsBoolean() )
                     {
-                        cblCampus.SetValue( contextCampus.Id.ToString() );
+                        var campusEntityType = EntityTypeCache.Get( "Rock.Model.Campus" );
+                        var contextCampus = RockPage.GetCurrentContext( campusEntityType ) as Campus;
+
+                        if ( contextCampus != null )
+                        {
+                            selectedCampusIds.Add( contextCampus.Id );
+                        }
                     }
+
+                    if ( !selectedCampusIds.Any() && searchSelections.ContainsKey( "cblCampus" ) )
+                    {
+                        selectedCampusIds.AddRange( searchSelections["cblCampus"].SplitDelimitedValues().AsIntegerList() );
+                    }
+
+                    cblCampus.SetValues( selectedCampusIds );
                 }
 
                 if ( GetAttributeValue( AttributeKey.DisplayAttributeFilters ).AsBoolean() )
                 {
-                    // Parse the attribute filters 
+                    // Parse the attribute filters
                     AvailableAttributes = new List<AttributeCache>();
                     if ( connectionType != null )
                     {
@@ -434,7 +437,7 @@ namespace RockWeb.Blocks.Connection
                             {
                                 if ( control is IRockControl )
                                 {
-                                    var rockControl = (IRockControl)control;
+                                    var rockControl = ( IRockControl ) control;
                                     rockControl.Label = attribute.Name;
                                     rockControl.Help = attribute.Description;
                                     phAttributeFilters.Controls.Add( control );
@@ -448,7 +451,7 @@ namespace RockWeb.Blocks.Connection
                                     phAttributeFilters.Controls.Add( wrapper );
                                 }
 
-                                if ( setValues && searchSelections.ContainsKey(controlId))
+                                if ( setValues && searchSelections.ContainsKey( controlId ) )
                                 {
                                     var values = searchSelections[controlId].FromJsonOrNull<List<string>>();
                                     attribute.FieldType.Field.SetFilterValues( control, attribute.QualifierValues, values );
@@ -465,6 +468,5 @@ namespace RockWeb.Blocks.Connection
         }
 
         #endregion
-
     }
 }

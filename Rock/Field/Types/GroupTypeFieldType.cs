@@ -20,6 +20,7 @@ using System.Linq;
 using System.Web.UI;
 using System.Web.UI.WebControls;
 
+using Rock.Attribute;
 using Rock.Data;
 using Rock.Model;
 using Rock.Web.Cache;
@@ -31,6 +32,7 @@ namespace Rock.Field.Types
     /// Field Type to select a single (or null) GroupType
     /// Stored as GroupType.Guid
     /// </summary>
+    [RockPlatformSupport( Utility.RockPlatform.WebForms )]
     public class GroupTypeFieldType : FieldType, IEntityFieldType
     {
 
@@ -176,7 +178,8 @@ namespace Rock.Field.Types
                 }
             }
 
-            editControl.GroupTypes = qryGroupTypes.OrderBy( a => a.Name ).ToList();
+            editControl.IsSortedByName = true;
+            editControl.GroupTypes = qryGroupTypes.ToList();
             return editControl;
         }
 

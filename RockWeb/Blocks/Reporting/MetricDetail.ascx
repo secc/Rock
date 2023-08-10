@@ -28,6 +28,7 @@
                     <div class="row">
                         <div class="col-md-6">
                             <Rock:DataTextBox ID="tbTitle" runat="server" SourceTypeName="Rock.Model.Metric, Rock" PropertyName="Title" />
+                            <asp:CustomValidator ID="cvTitle" runat="server" ControlToValidate="tbTitle" OnServerValidate="cvTitle_ServerValidate" Display="None" ErrorMessage="Title already in use. Metrics that have 'Enable Analytics' checked must have unique Titles." />
                             <Rock:DataTextBox ID="tbSubtitle" runat="server" SourceTypeName="Rock.Model.Metric, Rock" PropertyName="Subtitle" />
                         </div>
                         <div class="col-md-6">
@@ -126,8 +127,14 @@
                 </div>
 
                 <fieldset id="fieldsetViewDetails" runat="server">
-                    <Rock:HighlightLabel ID="lMetricChartSummary" runat="server" Text="Summary of Values" />
-                    <Rock:LineChart ID="lcMetricsChart" runat="server" />
+                    <div class="row">
+                        <div class="col-sm-12">
+                            <Rock:NotificationBox ID="nbActivityChartMessage" runat="server" NotificationBoxType="Info" />
+                            <div id="pnlActivityChart" runat="server" class="chart-banner">
+                                <canvas id="chartCanvas" runat="server" />
+                            </div>
+                        </div>
+                    </div>
 
                     <div class="row">
                         <div class="col-md-6">
@@ -144,7 +151,10 @@
                         <asp:LinkButton ID="btnEdit" runat="server" AccessKey="e" ToolTip="Alt+e" Text="Edit" CssClass="btn btn-primary" OnClick="btnEdit_Click" CausesValidation="false" />
                         <Rock:ModalAlert ID="mdDeleteWarning" runat="server" />
                         <asp:LinkButton ID="btnDelete" runat="server" Text="Delete" CssClass="btn btn-link" OnClick="btnDelete_Click" CausesValidation="false" />
-                        <Rock:SecurityButton ID="btnSecurity" runat="server" class="btn btn-sm btn-square btn-security pull-right" />
+                        <div class="pull-right">
+                            <Rock:HighlightLabel ID="hlDataView" runat="server" CssClass="" /> &nbsp;
+                            <Rock:SecurityButton ID="btnSecurity" runat="server" class="btn btn-sm btn-square btn-security pull-right" />
+                        </div>
                     </div>
 
                 </fieldset>

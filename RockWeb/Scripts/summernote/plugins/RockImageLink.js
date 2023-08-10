@@ -15,6 +15,8 @@
     footer: footer
   }).render().appendTo($(document.body));
 
+  var $img;
+
   $dialog.find('.js-set-image-link-btn').on('click', { dialog: $dialog }, function (a)
   {
     var $dialog = a.data.dialog;
@@ -22,7 +24,7 @@
 
     var $imageLinkInput = $dialog.find('.js-image-link');
     var imageLinkUrl = $imageLinkInput.val();
-    var $img = $(context.layoutInfo.editable.data('target'));
+    var $editable = context.layoutInfo.editable;
     if (imageLinkUrl && imageLinkUrl != '') {
       if ($img.parent().is('a')) {
         $img.parent().attr('href', imageLinkUrl);
@@ -37,7 +39,7 @@
         $img.unwrap();
       }
     }
-    context.invoke('triggerEvent', 'change');
+    context.triggerEvent( 'change', $editable.html() );
   });
 
   // create button
@@ -47,7 +49,8 @@
     tooltip: 'Set Image Link',
     click: function (a)
     {
-      var $img = $(context.layoutInfo.editable.data('target'));
+      // Store a reference to the image so it is accessible after the dialog is displayed and the current target is lost.
+      $img = $(context.layoutInfo.editable.data('target'));
       var $imageLinkInput = $dialog.find('.js-image-link');
       if ($img.parent().is('a')) {
         $imageLinkInput.val($img.parent().attr('href'));
@@ -56,6 +59,7 @@
         $imageLinkInput.val('');
       }
       ui.showDialog($dialog);
+      $imageLinkInput.focus();
     }
   });
 

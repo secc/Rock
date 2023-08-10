@@ -28,6 +28,14 @@ namespace Rock.Client.Enums
     #pragma warning disable CS1591
     /// <summary>
     /// </summary>
+    public enum AccountHierarchyDirection
+    {
+        CurrentAccountToParent = 0x0,
+        ParentAccountToLastDescendantAccount = 0x1,
+    }
+
+    /// <summary>
+    /// </summary>
     public enum AddressInvalidReason
     {
         None = 0x0,
@@ -125,6 +133,16 @@ namespace Rock.Client.Enums
 
     /// <summary>
     /// </summary>
+    public enum BenevolenceWorkflowTriggerType
+    {
+        RequestStarted = 0x0,
+        StatusChanged = 0x1,
+        CaseworkerAssigned = 0x2,
+        Manual = 0x3,
+    }
+
+    /// <summary>
+    /// </summary>
     public enum BlockLocation
     {
         Layout = 0x0,
@@ -141,6 +159,15 @@ namespace Rock.Client.Enums
         Available = 0x1,
         AlwaysOn = 0x2,
         Passive = 0x3,
+    }
+
+    /// <summary>
+    /// </summary>
+    public enum ChangeType
+    {
+        Add = 0x0,
+        Modify = 0x1,
+        Delete = 0x2,
     }
 
     /// <summary>
@@ -242,6 +269,22 @@ namespace Rock.Client.Enums
 
     /// <summary>
     /// </summary>
+    public enum ConnectionWorkflowTriggerType
+    {
+        RequestStarted = 0x0,
+        RequestConnected = 0x1,
+        StatusChanged = 0x2,
+        StateChanged = 0x3,
+        ActivityAdded = 0x4,
+        PlacementGroupAssigned = 0x5,
+        Manual = 0x6,
+        RequestTransferred = 0x7,
+        RequestAssigned = 0x8,
+        FutureFollowupDateReached = 0x9,
+    }
+
+    /// <summary>
+    /// </summary>
     public enum ContentChannelDateType
     {
         SingleDate = 0x1,
@@ -314,6 +357,7 @@ namespace Rock.Client.Enums
         AllActiveAdultsInGivingGroup = 0x0,
         PrimaryGiver = 0x1,
         AllActiveFamilyMembersInGivingGroup = 0x2,
+        DoNotSave = 0x3,
     }
 
     /// <summary>
@@ -413,6 +457,15 @@ namespace Rock.Client.Enums
 
     /// <summary>
     /// </summary>
+    public enum GroupRequirementsFilter
+    {
+        Ignore = 0x0,
+        MustMeet = 0x1,
+        DoesNotMeet = 0x2,
+    }
+
+    /// <summary>
+    /// </summary>
     public enum GroupSchedulerResourceListSourceType
     {
         GroupMembers = 0x0,
@@ -420,6 +473,7 @@ namespace Rock.Client.Enums
         AlternateGroup = 0x2,
         ParentGroup = 0x3,
         DataView = 0x4,
+        GroupMatchingAssignment = 0x5,
     }
 
     /// <summary>
@@ -452,16 +506,9 @@ namespace Rock.Client.Enums
         ConnectionRequestStatusModify = 0xe,
         ConnectionRequestStateModify = 0xf,
         ConnectionRequestDelete = 0x10,
-    }
-
-    /// <summary>
-    /// </summary>
-    public enum IconCssWeight
-    {
-        Regular = 0x0,
-        Solid = 0x1,
-        Light = 0x2,
-        Thin = 0x3,
+        StepAdded = 0x11,
+        StepStatusModify = 0x12,
+        StepCampusModify = 0x13,
     }
 
     /// <summary>
@@ -472,6 +519,15 @@ namespace Rock.Client.Enums
         Success = 0x2,
         Error = 0x3,
         None = 0x4,
+    }
+
+    /// <summary>
+    /// </summary>
+    public enum KioskType
+    {
+        IPad = 0x0,
+        WindowsApp = 0x1,
+        Browser = 0x2,
     }
 
     /// <summary>
@@ -579,13 +635,6 @@ namespace Rock.Client.Enums
 
     /// <summary>
     /// </summary>
-    public enum PaymentRedirectVendor
-    {
-        Pushpay = 0x1,
-    }
-
-    /// <summary>
-    /// </summary>
     public enum PersistedDatasetDataFormat
     {
         JSON = 0x0,
@@ -680,7 +729,7 @@ namespace Rock.Client.Enums
         GroupMemberAttribute = 0x2,
         RegistrantAttribute = 0x4,
 
-        [Obsolete( "Use RegistrantAttribute instead", false )]
+        [Obsolete( "Use RegistrantAttribute instead", true )]
         RegistrationAttribute = 0x4,
     }
 
@@ -881,6 +930,8 @@ namespace Rock.Client.Enums
     {
         Daily = 0x0,
         Weekly = 0x1,
+        Monthly = 0x2,
+        Yearly = 0x3,
     }
 
     /// <summary>
@@ -895,6 +946,7 @@ namespace Rock.Client.Enums
         InteractionChannel = 0x5,
         InteractionComponent = 0x6,
         InteractionMedium = 0x7,
+        FinancialTransaction = 0x8,
     }
 
     /// <summary>

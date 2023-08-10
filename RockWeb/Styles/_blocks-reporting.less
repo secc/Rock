@@ -12,7 +12,9 @@
 
 /* data views */
 .filter-toggle {
-  margin-top: 5px;
+  align-self: flex-start;
+  padding-right: 8px;
+  //margin-top: 5px;
 
   & > span {
     float: left;
@@ -97,8 +99,9 @@ span.data-view-filter-label {
 
 .list-panel {
   > .grid-filter {
-    padding: 6px 12px;
-    margin: -15px -15px 15px;
+    padding: 6px 0;
+    margin: -@panel-body-padding -@panel-body-padding @panel-body-padding;
+    border-bottom: 1px solid @panel-border;
 
     > header {
       position: relative;
@@ -106,6 +109,7 @@ span.data-view-filter-label {
 
     .grid-filter-entry {
       padding-top: inherit;
+      border: 0;
     }
 
     .btn-link {
@@ -117,13 +121,55 @@ span.data-view-filter-label {
 
 // 4. Form Field Filter
 // -------------------------
-
+.filter-rule-remove,
 .filtervisibilityrules-type {
   margin-bottom: @form-group-margin-bottom;
 }
 
+.filter-rule {
+  display: flex;
+  align-items: flex-start;
+
+  @media (min-width: @screen-md-min) {
+    align-items: flex-end;
+  }
+}
+
+.filter-rule {
+  .filter-rule-fields {
+    flex: 1 1 auto;
+    margin-right: 5px;
+  }
+
+  .flex-rule-remove {
+    flex: 0 0 auto;
+  }
+}
+
+.filter-rule-fieldfilter,
+.filter-rule-fieldfilter .field-criteria,
+.filter-rule-fields {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: end;
+}
+
+.filter-rule-fieldfilter .field-criteria,
+.filter-rule-fields {
+  &::before,
+  &::after {
+    display: none !important;
+  }
+}
+
+.filter-rule-fieldfilter .field-criteria {
+  width: ~"calc(100% + 10px)";
+}
+
+// .control-wrapper is for Obsidian
 .filter-rule-comparefield > .form-control,
-.filter-rule-fieldfilter > .field-criteria > div > .form-control {
+.filter-rule-comparefield > .control-wrapper,
+.filter-rule-fieldfilter > .field-criteria .form-control {
   min-width: 100%;
   margin-bottom: @form-group-margin-bottom;
 }

@@ -51,7 +51,7 @@ namespace RockWeb.Blocks.Cms
         Category = "",
         Order = 0 )]
 
-    public partial class SiteDetail : RockBlock, IDetailBlock
+    public partial class SiteDetail : RockBlock
     {
         #region Attribute Keys
         private static class AttributeKey
@@ -441,7 +441,15 @@ namespace RockWeb.Blocks.Cms
                 site.EnableMobileRedirect = cbEnableMobileRedirect.Checked;
                 site.MobilePageId = ppMobilePage.PageId;
                 site.ExternalUrl = tbExternalURL.Text;
-                site.AllowedFrameDomains = tbAllowedFrameDomains.Text;
+
+                // re-format allowed frame domains to ensure the header ouput is correctly formatted.
+                site.AllowedFrameDomains = tbAllowedFrameDomains.Text
+                    .Replace( ", ", " " )
+                    .Replace( ",", " " )
+                    .Replace( Environment.NewLine, " " )
+                    .Replace( "\n", " " )
+                    .Replace( "  ", " " );
+
                 site.RedirectTablets = cbRedirectTablets.Checked;
                 site.EnablePageViews = cbEnablePageViews.Checked;
                 site.IsActive = cbIsActive.Checked;
@@ -449,6 +457,8 @@ namespace RockWeb.Blocks.Cms
                 site.IsIndexEnabled = cbEnableIndexing.Checked;
                 site.IndexStartingLocation = tbIndexStartingLocation.Text;
                 site.EnableExclusiveRoutes = cbEnableExclusiveRoutes.Checked;
+                site.EnablePageViewGeoTracking = cbEnablePageViewGeoTracking.Checked;
+                site.DisablePredictableIds = cbDisablePredictableIds.Checked;
 
                 site.PageHeaderContent = cePageHeaderContent.Text;
 
@@ -895,7 +905,7 @@ namespace RockWeb.Blocks.Cms
             cbEnableMobileRedirect.Checked = site.EnableMobileRedirect;
             ppMobilePage.SetValue( site.MobilePage );
             tbExternalURL.Text = site.ExternalUrl;
-            tbAllowedFrameDomains.Text = site.AllowedFrameDomains;
+            tbAllowedFrameDomains.Text = site.AllowedFrameDomains?.Replace( " ", Environment.NewLine );
             cbRedirectTablets.Checked = site.RedirectTablets;
             cbEnablePageViews.Checked = site.EnablePageViews;
 
@@ -911,6 +921,8 @@ namespace RockWeb.Blocks.Cms
             cbEnableIndexing.Checked = site.IsIndexEnabled;
             tbIndexStartingLocation.Text = site.IndexStartingLocation;
             cbEnableExclusiveRoutes.Checked = site.EnableExclusiveRoutes;
+            cbEnablePageViewGeoTracking.Checked = site.EnablePageViewGeoTracking;
+            cbDisablePredictableIds.Checked = site.DisablePredictableIds;
 
             // disable the indexing features if indexing on site is disabled
             var siteEntityType = EntityTypeCache.Get( "Rock.Model.Site" );

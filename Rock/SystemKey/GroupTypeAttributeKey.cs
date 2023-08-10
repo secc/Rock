@@ -17,7 +17,7 @@
 namespace Rock.SystemKey
 {
     /// <summary>
-    /// 
+    ///
     /// </summary>
     public class GroupTypeAttributeKey
     {
@@ -108,6 +108,16 @@ namespace Rock.SystemKey
         /// </summary>
         public const string CHECKIN_REGISTRATION_DISPLAYSMSBUTTON = "core_checkin_registration_DisplaySmsButton";
 
+        /// <summary>
+        /// Show or hide the control to set the Birthdate on Children
+        /// </summary>
+        public const string CHECKIN_REGISTRATION_DISPLAYBIRTHDATEONCHILDREN = "core_checkin_registration_DisplayBirthdateOnChildren";
+
+        /// <summary>
+        /// Show or hide the control to set the Grade on Children
+        /// </summary>
+        public const string CHECKIN_REGISTRATION_DISPLAYGRADEONCHILDREN = "core_checkin_registration_DisplayGradeOnChildren";
+
         #endregion Registration Specific
 
         #region Checkin
@@ -133,6 +143,10 @@ namespace Rock.SystemKey
         /// </summary>
         public const string CHECKIN_GROUPTYPE_ACHIEVEMENT_TYPES = "core_checkin_AchievementTypes";
 
+        /// <summary>
+        /// Attribute key for grouptypes location selection strategy (Ask, Fill in order, balance).
+        /// </summary>
+        public const string CHECKIN_GROUPTYPE_LOCATION_SELECTION_STRATEGY = "core_LocationSelectionStrategy";
         #endregion
 
         #region Display
@@ -195,7 +209,7 @@ namespace Rock.SystemKey
         /// <summary>
         /// The <see cref="CHECKIN_SUCCESS_LAVA_TEMPLATE" /> display mode override. Possible values are:
         /// Never (default),
-        /// Replace 
+        /// Replace
         /// or Append.
         /// </summary>
         public const string CHECKIN_SUCCESS_LAVA_TEMPLATE_OVERRIDE_DISPLAY_MODE = "core_checkin_SuccessLavaTemplateOverrideDisplayMode";

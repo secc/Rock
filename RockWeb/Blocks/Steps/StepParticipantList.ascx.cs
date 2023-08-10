@@ -27,6 +27,7 @@ using Newtonsoft.Json;
 using Rock;
 using Rock.Attribute;
 using Rock.Data;
+using Rock.Lava;
 using Rock.Model;
 using Rock.Security;
 using Rock.Utility;
@@ -39,6 +40,7 @@ namespace RockWeb.Blocks.Steps
     [DisplayName( "Step Participant List" )]
     [Category( "Steps" )]
     [Description( "Lists all the participants in a Step." )]
+    [ContextAware( typeof( Campus ) )]
 
     #region Block Attributes
 
@@ -61,7 +63,7 @@ namespace RockWeb.Blocks.Steps
 
     #endregion
 
-    public partial class StepParticipantList : RockBlock, ISecondaryBlock, ICustomGridColumns
+    public partial class StepParticipantList : ContextEntityBlock, ISecondaryBlock, ICustomGridColumns
     {
         #region Attribute Keys
 
@@ -620,11 +622,17 @@ namespace RockWeb.Blocks.Steps
             gSteps.ExportSource = ExcelExportSource.DataSource;
             gSteps.ShowConfirmDeleteDialog = true;
 
-            // Allow Edit if authorized to edit the block or the Step Type.
-            bool canEditBlock = IsUserAuthorized( Authorization.EDIT ) || _stepType.IsAuthorized( Authorization.EDIT, CurrentPerson ) || _stepType.IsAuthorized( Authorization.MANAGE_MEMBERS, CurrentPerson );
+            var canEdit = false;
+            /*
+             Block Authorization is removed once the parent authority for Step is Set as Step Type.
+            */
+            if ( _stepType != null )
+            {
+                canEdit = _stepType.IsAuthorized( Authorization.EDIT, CurrentPerson ) || _stepType.IsAuthorized( Authorization.MANAGE_STEPS, CurrentPerson );
+            }
 
-            gSteps.Actions.ShowAdd = canEditBlock;
-            gSteps.IsDeleteEnabled = canEditBlock;
+            gSteps.Actions.ShowAdd = canEdit;
+            gSteps.IsDeleteEnabled = canEdit;
 
             if ( _stepType != null )
             {
@@ -714,6 +722,7 @@ namespace RockWeb.Blocks.Steps
             AddAttributeColumns();
             AddAttributeFilterFields();
             AddGridRowButtons();
+            ConditionallyHideCampusFilter();
         }
 
         /// <summary>
@@ -801,6 +810,18 @@ namespace RockWeb.Blocks.Steps
             foreach ( var column in gSteps.Columns.OfType<AttributeField>().ToList() )
             {
                 gSteps.Columns.Remove( column );
+            }
+        }
+
+        /// <summary>
+        /// Hides the campus filter, if a context campus has been selected
+        /// </summary>
+        private void ConditionallyHideCampusFilter()
+        {
+            var campusContext = ContextEntity<Campus>();
+            if ( campusContext != null )
+            {
+                cpCampusFilter.Visible = false;
             }
         }
 
@@ -1005,7 +1026,8 @@ namespace RockWeb.Blocks.Steps
                 qry = qry.Where( m => m.Note.Contains( note ) );
             }
 
-            var campusId = cpCampusFilter.SelectedCampusId;
+            var campusContext = ContextEntity<Campus>();
+            var campusId = campusContext == null ? cpCampusFilter.SelectedCampusId : campusContext.Id;
             if ( campusId != null )
             {
                 qry = qry.Where( m => m.CampusId == campusId );
@@ -1132,7 +1154,6 @@ namespace RockWeb.Blocks.Steps
         /// <summary>
         /// A view-model that represents a single row on the Steps Participant grid.
         /// </summary>
-        /// <seealso cref="DotLiquid.Drop" />
         public class StepParticipantListViewModel : RockDynamic
         {
             public int Id { get; set; }

@@ -1,4 +1,4 @@
-{%- comment -%}
+{% comment %}
     This is the default lava template for the PublicProfileEdit block
     Available Lava Fields:
 
@@ -8,10 +8,13 @@
     ShowFamilyMembers - If this is true, family members should be listed
     FamilyMembers -  (List of Rock.Model.GroupMember) The family members (of the selected family), not including the currentperson
     Families = (List of Rock.Model.Group) The families that this person is in
+    ShowGender - If this is true, gender should be shown
 
+    ShowAddresses - If this is true, addresses should be shown
     AddressTypeValueId - (DefinedValueCache Id) The address type defined value Id that is displayed
     Address = (Rock.Model.GroupLocation) The address to be displayed
 
+    ShowEmailPreference - If this is true, email preference should be shown
     ShowPhoneNumbers - If this is true, phone numbers should be shown
     DisplayedPhoneTypeValueIds - (List of DefinedValueCache Ids) - The Phone Type defined values ids that should be shown
     PhoneNumbers (List of Rock.Model.PhoneNumber)) - The phone numbers that can be displayed
@@ -22,7 +25,7 @@
     FamilyAttributes - (List of AttributeCache) - The family attributes that should be displayed
     PersonAttributesAdults - (List of AttributeCache) - The person attributes that should be displayed for Adults
     PersonAttributesChildren - (List of AttributeCache) - The person attributes that should be displayed for Children
-{%- endcomment -%}
+{% endcomment %}
 {%- assign childRoleGuid = 'c8b1814f-6aa7-4055-b2d7-48fe20429cb9' -%}
 {%- assign familyCount = Families | Size -%}
 
@@ -77,7 +80,7 @@
                                 {% assign marriedDate = CurrentPerson.AnniversaryDate | Date:'M/d' %}
                                 {{ maritalStatusValue.Value }} {{ marriedYears }} {{ 'yr' | PluralizeForQuantity:marriedYears }} <small>({{ marriedDate }})</small>
                             {% else %}
-                                {{ maritalStatusValue }}
+                                {{ maritalStatusValue.Value }}
                             {% endif %}
                         {% endif %}
                     </li>
@@ -147,7 +150,7 @@
 
         {% if personAttributes %}
             <div class="row">
-            {%- comment -%}loop thru Attributes so we can get the attribute value without checking security{%- endcomment -%}
+            {% comment %}loop thru Attributes so we can get the attribute value without checking security{% endcomment %}
             {%- for personAttribute in personAttributes -%}
                 {%- for attribute in CurrentPerson.AttributeValues -%}
                     {%- if attribute.AttributeKey == personAttribute.Key -%}
@@ -165,7 +168,7 @@
             </div>
         {% endif %}
 
-        {%- comment -%}loop thru Attributes to see if there are any non-blank ones{%- endcomment%}
+        {% comment %}loop thru Attributes to see if there are any non-blank ones{% endcomment%}
         {% assign showFamilyAttributes = false %}
         {% for familyAttribute in FamilyAttributes %}
             {% for attribute in Family.AttributeValues %}
@@ -185,7 +188,7 @@
                 <h3 class="font-weight-bold">Family Information</h3>
             </div>
 
-            {%- comment -%}loop thru Attributes so we can get the attribute value without checking security{%- endcomment -%}
+            {% comment %}loop thru Attributes so we can get the attribute value without checking security{% endcomment %}
             {% for familyAttribute in FamilyAttributes %}
                 {% for attribute in Family.AttributeValues %}
                     {% if attribute.AttributeKey == familyAttribute.Key %}
@@ -254,7 +257,7 @@
         	                                        {% assign marriedDate = familyMember.Person.AnniversaryDate | Date:'M/d' %}
         	                                        {{ maritalStatusValue.Value }} {{ marriedYears }} {{ 'yr' | PluralizeForQuantity:marriedYears }} <small>({{ marriedDate }})</small>
         	                                    {% else %}
-        	                                        {{ maritalStatusValue }}
+        	                                        {{ maritalStatusValue.Value }}
         	                                    {% endif %}
         	                                </li>
         	                            </ul>
@@ -272,7 +275,7 @@
         	                                    {% assign numberTypeValue = phoneNumber.NumberTypeValueId | FromCache:'DefinedValue' %}
         	                                    {% assign displayPhoneType = DisplayedPhoneTypeValueIds | Contains:numberTypeValue.Id %}
         	                                    {% if displayPhoneType %}
-        	                                        <li>{{ phoneNumber.NumberFormatted }}<small>{{ numberTypeValue }} {% if phoneNumber.IsUnlisted %}Unlisted{% endif %}</small></li>
+        	                                        <li>{{ phoneNumber.NumberFormatted }}<small>{{ numberTypeValue.Value }} {% if phoneNumber.IsUnlisted %}Unlisted{% endif %}</small></li>
         	                                    {% endif %}
         	                                {% endfor %}
         	                                </ul>
@@ -297,7 +300,7 @@
 
         	            {% if personAttributes %}
         	                <div class="row">
-        	                {%- comment -%}loop thru Attributes so we can get the attribute value without checking security{%- endcomment -%}
+        	                {% comment %}loop thru Attributes so we can get the attribute value without checking security{% endcomment %}
         	                {%- for personAttribute in personAttributes -%}
         	                    {%- for attribute in familyMember.Person.AttributeValues -%}
         	                        {%- if attribute.AttributeKey == personAttribute.Key -%}

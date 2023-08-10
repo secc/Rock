@@ -18,6 +18,7 @@ using System;
 using System.Collections.Generic;
 using System.Data.Entity;
 using System.Linq;
+using System.Net.Http;
 using System.ServiceModel.Channels;
 using System.Web.Http;
 
@@ -68,11 +69,12 @@ namespace Rock.Rest.Controllers
         /// Gets the launch packet.
         /// </summary>
         /// <param name="deviceIdentifier">The unique device identifier for this device.</param>
+        /// <param name="notificationsEnabled">Determines if notifications are fully enabled on the device.</param>
         /// <returns>An action result.</returns>
         [Route( "api/mobile/GetLaunchPacket" )]
         [HttpGet]
         [Authenticate]
-        public IHttpActionResult GetLaunchPacket( string deviceIdentifier = null )
+        public IHttpActionResult GetLaunchPacket( string deviceIdentifier = null, bool? notificationsEnabled = null )
         {
             var site = MobileHelper.GetCurrentApplicationSite();
             var additionalSettings = site?.AdditionalSettings.FromJsonOrNull<AdditionalSiteSettings>();
@@ -85,10 +87,23 @@ namespace Rock.Rest.Controllers
                 return NotFound();
             }
 
+            // Ensure the user login is still active, otherwise log them out.
+            var principal = ControllerContext.Request.GetUserPrincipal();
+            if ( person != null && !principal.Identity.Name.StartsWith( "rckipid=" ) )
+            {
+                var userLogin = new UserLoginService( rockContext ).GetByUserName( principal.Identity.Name );
+
+                if ( userLogin?.IsConfirmed != true || userLogin?.IsLockedOut == true )
+                {
+                    person = null;
+                }
+            }
+
             var launchPacket = new LaunchPacket
             {
+                RockVersion = Rock.VersionInfo.VersionInfo.GetRockProductVersionNumber(),
                 LatestVersionId = additionalSettings.LastDeploymentVersionId ?? ( int ) ( additionalSettings.LastDeploymentDate.Value.ToJavascriptMilliseconds() / 1000 ),
-                IsSiteAdministrator = site.IsAuthorized( Authorization.EDIT, person )
+                IsSiteAdministrator = site.IsAuthorized( Rock.Security.Authorization.EDIT, person )
             };
 
             if ( deviceData.DeviceType == DeviceType.Phone )
@@ -106,7 +121,7 @@ namespace Rock.Rest.Controllers
 
             if ( person != null )
             {
-                var principal = ControllerContext.Request.GetUserPrincipal();
+                //var principal = ControllerContext.Request.GetUserPrincipal();
 
                 launchPacket.CurrentPerson = MobileHelper.GetMobilePerson( person, site );
                 launchPacket.CurrentPerson.AuthToken = MobileHelper.GetAuthenticationToken( principal.Identity.Name );
@@ -137,20 +152,50 @@ namespace Rock.Rest.Controllers
                         NotificationsEnabled = true,
                         Manufacturer = deviceData.Manufacturer,
                         Model = deviceData.Model,
-                        Name = deviceData.Name
+                        Name = deviceData.Name,
+                        LastSeenDateTime = RockDateTime.Now
                     };
 
                     personalDeviceService.Add( personalDevice );
                     rockContext.SaveChanges();
                 }
-                else if ( !personalDevice.IsActive || personalDevice.Name != deviceData.Name )
+                else
                 {
-                    personalDevice.IsActive = true;
-                    personalDevice.Manufacturer = deviceData.Manufacturer;
-                    personalDevice.Model = deviceData.Model;
-                    personalDevice.Name = deviceData.Name;
+                    // A change is determined as one of the following:
+                    // 1) A change in Name, Manufacturer, Model, or NotificationsEnabled.
+                    // 2) Device not being active.
+                    // 3) Not seen in 24 hours.
+                    // 4) Signed in with a different person.
+                    var hasDeviceChanged = !personalDevice.IsActive
+                        || personalDevice.Name != deviceData.Name
+                        || personalDevice.Manufacturer != deviceData.Manufacturer
+                        || personalDevice.Model != deviceData.Model
+                        || personalDevice.NotificationsEnabled != ( notificationsEnabled ?? true )
+                        || !personalDevice.LastSeenDateTime.HasValue
+                        || personalDevice.LastSeenDateTime.Value.AddDays( 1 ) < RockDateTime.Now
+                        || ( person != null && personalDevice.PersonAliasId != person.PrimaryAliasId );
 
-                    rockContext.SaveChanges();
+                    if ( hasDeviceChanged )
+                    {
+                        personalDevice.IsActive = true;
+                        personalDevice.Manufacturer = deviceData.Manufacturer;
+                        personalDevice.Model = deviceData.Model;
+                        personalDevice.Name = deviceData.Name;
+                        personalDevice.LastSeenDateTime = RockDateTime.Now;
+
+                        if ( notificationsEnabled.HasValue )
+                        {
+                            personalDevice.NotificationsEnabled = notificationsEnabled.Value;
+                        }
+
+                        // Update the person tied to the device, but never blank it out. 
+                        if ( person != null && personalDevice.PersonAliasId != person.PrimaryAliasId )
+                        {
+                            personalDevice.PersonAliasId = person.PrimaryAliasId;
+                        }
+
+                        rockContext.SaveChanges();
+                    }
                 }
 
                 launchPacket.PersonalDeviceGuid = personalDevice.Guid;
@@ -164,10 +209,11 @@ namespace Rock.Rest.Controllers
         /// </summary>
         /// <param name="personalDeviceGuid">The personal device unique identifier.</param>
         /// <param name="registration">The registration token used to send push notifications.</param>
-        /// <returns></returns>
+        /// <param name="notificationsEnabled">Determines if notifications are fully enabled on the device.</param>
+        /// <returns>A status code that indicates if the request was successful.</returns>
         [Route( "api/mobile/UpdateDeviceRegistrationByGuid/{personalDeviceGuid}" )]
         [HttpPut]
-        public IHttpActionResult UpdateDeviceRegistrationByGuid( Guid personalDeviceGuid, string registration )
+        public IHttpActionResult UpdateDeviceRegistrationByGuid( Guid personalDeviceGuid, string registration, bool? notificationsEnabled = null )
         {
             using ( var rockContext = new Rock.Data.RockContext() )
             {
@@ -181,6 +227,12 @@ namespace Rock.Rest.Controllers
                 }
 
                 personalDevice.DeviceRegistrationId = registration;
+
+                if ( notificationsEnabled.HasValue )
+                {
+                    personalDevice.NotificationsEnabled = notificationsEnabled.Value;
+                }
+
                 rockContext.SaveChanges();
 
                 return Ok();
@@ -405,7 +457,6 @@ namespace Rock.Rest.Controllers
         [HttpPost]
         public IHttpActionResult Login( [FromBody] LoginParameters loginParameters, Guid? personalDeviceGuid = null )
         {
-            var authController = new AuthController();
             var site = MobileHelper.GetCurrentApplicationSite();
 
             if ( site == null )
@@ -414,10 +465,13 @@ namespace Rock.Rest.Controllers
             }
 
             //
-            // Chain to the existing login method for actual authorization check.
-            // Throws exception if not authorized.
+            // Use the existing AuthController.IsLoginValid method for actual authorization check. Throws exception if not authorized.
             //
-            authController.Login( loginParameters );
+            if ( !AuthController.IsLoginValid( loginParameters, out var errorMessage, out var userName ) )
+            {
+                var errorResponse = ControllerContext.Request.CreateErrorResponse( System.Net.HttpStatusCode.Unauthorized, errorMessage );
+                throw new HttpResponseException( errorResponse );
+            }
 
             //
             // Find the user and translate to a mobile person.

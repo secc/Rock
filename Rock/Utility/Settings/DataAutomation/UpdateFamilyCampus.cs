@@ -36,6 +36,8 @@ namespace Rock.Utility.Settings.DataAutomation
 
             IsIgnoreIfManualUpdateEnabled = true;
             IgnoreIfManualUpdatePeriod = 90;
+
+            TimesToTriggerCampusChange = 3;
         }
 
         /// <summary>
@@ -45,6 +47,14 @@ namespace Rock.Utility.Settings.DataAutomation
         ///   <c>true</c> if this instance is enabled; otherwise, <c>false</c>.
         /// </value>
         public bool IsEnabled { get; set; }
+
+        /// <summary>
+        /// Gets or sets the number of times to trigger campus change.
+        /// </summary>
+        /// <value>
+        /// The number of times to trigger campus change.
+        /// </value>
+        public int TimesToTriggerCampusChange { get; set; }
 
         /// <summary>
         /// Gets or sets a value indicating whether this instance is most family attendance enabled.
@@ -117,6 +127,11 @@ namespace Rock.Utility.Settings.DataAutomation
         /// The ignore campus changes.
         /// </value>
         public List<IgnoreCampusChangeItem> IgnoreCampusChanges { get; set; }
+
+        /// <summary>
+        /// Gets or sets the schedules to exclude from the attendance criteria
+        /// </summary>
+        public List<int> ExcludeSchedules { get; set; }
     }
 
     /// <summary>

@@ -91,7 +91,7 @@ namespace Rock.Data
         /// <param name="guid">The GUID.</param>
         public void UpdateEntityType( string name, string friendlyName, string assemblyName, bool isEntity, bool isSecured, string guid )
         {
-            /* 
+            /*
                02/23/2021 MDP, NA
 
                In this script, we put the AttributeIds into a @attributeIds table variable, then use that for the UPDATE
@@ -99,7 +99,7 @@ namespace Rock.Data
                to use the IX_FieldTypeId Index on Attribute, but doing a Full Table Scan on AttributeValue.
 
                Putting the AttributeIds into the table variable helped the SQL optimizer to use the IX_AttributeId index
-               on AttributeValue instead of doing the Full Table Scan. 
+               on AttributeValue instead of doing the Full Table Scan.
             */
 
 
@@ -417,7 +417,7 @@ namespace Rock.Data
         public void UpdateBlockTypeByGuid( string name, string description, string path, string category, string guid )
         {
             Migration.Sql( $@"
-                -- delete just in case Rock added it automatically before it was migrated
+                -- delete just in case Rock added it automatically (with a different guid) before it was migrated
                 DELETE FROM [BlockType] 
 	            WHERE [Path] = '{path}' AND [Guid] != '{guid}';
 
@@ -584,7 +584,7 @@ namespace Rock.Data
                 BEGIN
                     INSERT INTO [Attribute] (
                         [IsSystem],[FieldTypeId],[EntityTypeId],[EntityTypeQualifierColumn],[EntityTypeQualifierValue],
-                        [Order],[IsGridColumn],[IsMultiValue],[IsRequired],                        
+                        [Order],[IsGridColumn],[IsMultiValue],[IsRequired],
                         [Key],[Name],[DefaultValue], [Guid])
                     VALUES(
                         1,@FieldTypeId,NULL,'{Rock.Model.Attribute.SYSTEM_SETTING_QUALIFIER}','',
@@ -626,7 +626,7 @@ namespace Rock.Data
                 BEGIN
                     INSERT INTO [Attribute] (
                         [IsSystem],[FieldTypeId],[EntityTypeId],[EntityTypeQualifierColumn],[EntityTypeQualifierValue],
-                        [Order],[IsGridColumn],[IsMultiValue],[IsRequired],                        
+                        [Order],[IsGridColumn],[IsMultiValue],[IsRequired],
                         [Key],[Name],[DefaultValue], [Guid])
                     VALUES(
                         1,@FieldTypeId,NULL,'{Rock.Model.Attribute.SYSTEM_SETTING_QUALIFIER}','',
@@ -836,7 +836,7 @@ namespace Rock.Data
         }
 
         /// <summary>
-        /// Deletes the Page 
+        /// Deletes the Page
         /// </summary>
         /// <param name="guid">The GUID.</param>
         public void DeletePage( string guid )
@@ -879,19 +879,19 @@ namespace Rock.Data
         /// <param name="guid">The unique identifier.</param>
         public void AddPageRoute( string pageGuid, string route, string guid )
         {
-            guid = guid != null ? string.Format( "'{0}'", guid ) : "NEWID()";
+            // Known GUID or create one. This is needed because we don't want ticks around the NEWID function.
+            guid = guid != null ? $"'{guid}'" : "NEWID()";
 
-            Migration.Sql( string.Format( @"
-
+            Migration.Sql( $@"
                 DECLARE @PageId int
-                SET @PageId = (SELECT [Id] FROM [Page] WHERE [Guid] = '{0}')
+                SET @PageId = (SELECT [Id] FROM [Page] WHERE [Guid] = '{pageGuid}')
 
-                IF NOT EXISTS(SELECT [Id] FROM [PageRoute] WHERE [PageId] = @PageId AND [Route] = '{1}')
-                    INSERT INTO [PageRoute] (
-                        [IsSystem],[PageId],[Route],[Guid])
-                    VALUES(
-                        1, @PageId, '{1}', {2} )
-", pageGuid, route, guid ) );
+                IF @PageId IS NOT NULL AND NOT EXISTS(SELECT [Id] FROM [PageRoute] WHERE [PageId] = @PageId AND [Route] = '{route}')
+                BEGIN
+                    INSERT INTO [PageRoute] ([IsSystem],[PageId],[Route],[Guid])
+                    VALUES(1, @PageId, '{route}', {guid} )
+                END" );
+
         }
 
         /// <summary>
@@ -1529,7 +1529,7 @@ BEGIN
         SET @BinaryFileId = (SELECT SCOPE_IDENTITY());
     END
 
-    
+
     IF (@AddNewBinaryFileData = 1 AND @BinaryFileId IS NOT NULL)
     BEGIN
         -- Add a new BinaryFileData record whose ID matches the BinaryFile record
@@ -2163,6 +2163,8 @@ END" );
         /// <param name="defaultValue">The default value.</param>
         /// <param name="guid">The GUID.</param>
         /// <param name="key">The key. Defaults to Name without Spaces. If this is a core global attribute, specify the key with a 'core_' prefix</param>
+        [Obsolete("Use AddOrUpdateEntityAttribute instead.")]
+        [RockObsolete("1.13")]
         public void AddEntityAttribute( string entityTypeName, string fieldTypeGuid, string entityTypeQualifierColumn, string entityTypeQualifierValue, string name, string category, string description, int order, string defaultValue, string guid, string key = null )
         {
             if ( !string.IsNullOrWhiteSpace( category ) )
@@ -2231,11 +2233,39 @@ END" );
         /// <param name="defaultValue">The default value.</param>
         /// <param name="guid">The unique identifier.</param>
         /// <param name="key">The key.  Defaults to Name without Spaces. If this is a core global attribute, specify the key with a 'core_' prefix</param>
+        [Obsolete("Use AddNewEntityAttributeDeletingAllAttributeValues or AddOrUpdateEntityAttribute instead.")]
+        [RockObsolete("1.13")]
         public void AddNewEntityAttribute( string entityTypeName, string fieldTypeGuid, string entityTypeQualifierColumn, string entityTypeQualifierValue, string name, string abbreviatedName, string description, int order, string defaultValue, string guid, string key )
+        {
+            AddNewEntityAttributeDeletingAllAttributeValues( entityTypeName, fieldTypeGuid, entityTypeQualifierColumn, entityTypeQualifierValue, name, abbreviatedName, description, order, defaultValue, guid, key );
+        }
+
+        /// <summary>
+        /// Adds a new EntityType Attribute for the given EntityType, FieldType, and name (key).
+        /// NOTE: If the attribute exists for the EntityType, Key, EntityTypeQualifierColumn, and EntityTypeQualifierValue it will be deleted first, which also deletes the AttributeValues.
+        /// Consider using AddOrUpdateEntityAttribute if the AttributeValues should be retained.
+        /// </summary>
+        /// <param name="entityTypeName">Name of the entity type.</param>
+        /// <param name="fieldTypeGuid">The field type unique identifier.</param>
+        /// <param name="entityTypeQualifierColumn">The entity type qualifier column.</param>
+        /// <param name="entityTypeQualifierValue">The entity type qualifier value.</param>
+        /// <param name="name">The name.</param>
+        /// <param name="abbreviatedName">Name of the abbreviated.</param>
+        /// <param name="description">The description.</param>
+        /// <param name="order">The order.</param>
+        /// <param name="defaultValue">The default value.</param>
+        /// <param name="guid">The unique identifier.</param>
+        /// <param name="key">The key.</param>
+        public void AddNewEntityAttributeDeletingAllAttributeValues( string entityTypeName, string fieldTypeGuid, string entityTypeQualifierColumn, string entityTypeQualifierValue, string name, string abbreviatedName, string description, int order, string defaultValue, string guid, string key )
         {
             if ( string.IsNullOrWhiteSpace( key ) )
             {
                 key = name.Replace( " ", string.Empty );
+            }
+
+            if ( abbreviatedName.IsNullOrWhiteSpace() )
+            {
+                abbreviatedName = name.Truncate( 100, false );
             }
 
             string formattedName = name.Replace( "'", "''" );
@@ -2270,7 +2300,8 @@ END" );
                     , [DefaultValue]
                     , [IsMultiValue]
                     , [IsRequired]
-                    , [Guid])
+                    , [Guid]
+                    , [AbbreviatedName])
                 VALUES(
                       1
                     , @FieldTypeId
@@ -2285,7 +2316,8 @@ END" );
                     , '{formattedDefaultValue}'
                     , 0
                     , 0
-                    , '{guid}')" );
+                    , '{guid}'
+                    , '{abbreviatedName}')" );
         }
 
         /// <summary>
@@ -2957,7 +2989,7 @@ END" );
                         AND [Key] = '{key}' )
                 BEGIN
                     UPDATE [Attribute] SET
-                        , [Name] = '{name}'
+                          [Name] = '{name}'
                         , [Description] = '{formattedDescription}'
                         , [Order] = {order}
                         , [DefaultValue] = '{defaultValue}'
@@ -2985,7 +3017,7 @@ END" );
                         , [IsMultiValue]
                         , [IsRequired]
                         , [Guid]
-                        , [AbbreviatdName])
+                        , [AbbreviatedName])
                     VALUES(
                           1
                         , @FieldTypeId
@@ -4347,29 +4379,34 @@ BEGIN
             char allowChar = allow ? 'A' : 'D';
 
             string sql = $@"
-DECLARE @groupId INT
+DECLARE @groupId INT;
+DECLARE @order INT = {order};
+DECLARE @specialRole INT = {specialRole};
+DECLARE @action NVARCHAR(50) = '{action}';
+DECLARE @allowChar NVARCHAR(1) = '{allowChar}';
+DECLARE @entityTypeName NVARCHAR(100) = '{entityTypeName}';
 
 SET @groupId = (
 		SELECT [Id]
 		FROM [Group]
 		WHERE [Guid] = '{groupGuid}'
-		)
+		);
 
-DECLARE @entityTypeId INT
+DECLARE @entityTypeId INT;
 
 SET @entityTypeId = (
 		SELECT [Id]
 		FROM [EntityType]
-		WHERE [name] = '{entityTypeName}'
-		)
+		WHERE [name] = @entityTypeName
+		);
 
-DECLARE @entityId INT
+DECLARE @entityId INT;
 
 SET @entityId = (
 		SELECT [Id]
 		FROM [{entityTypeTableName}]
 		WHERE [{entityGuidField}] = '{entityGuid}'
-		)
+		);
 
 IF (
 		@entityId IS NOT NULL
@@ -4381,11 +4418,30 @@ BEGIN
 			FROM [Auth]
 			WHERE [EntityTypeId] = @entityTypeId
 				AND [EntityId] = @entityId
-				AND [Action] = '{action}'
-				AND [SpecialRole] = {specialRole}
+				AND [Action] = @action
+				AND [SpecialRole] = @specialRole
 				AND ISNULL([GroupId], 0) = ISNULL(@groupId, 0)
 			)
 	BEGIN
+        IF EXISTS (
+            SELECT [Id]
+            FROM [dbo].[Auth]
+            WHERE [Guid] = '{authGuid}'
+            )
+            BEGIN
+                /*
+                  DV 4-Feb-22
+                  Duplicate Guid Check, all of the other values don't match
+                  we have a rare instance of a duplicate GUID value.
+                  We will just reassign the other one.
+                  It is very likely this record is orphaned but we don't have
+                  enough context here to make that determination.
+                */
+                UPDATE [dbo].[Auth]
+                SET [Guid] = NEWID()
+                WHERE [Guid] = '{authGuid}';
+            END
+
 		INSERT INTO [dbo].[Auth] (
 			[EntityTypeId]
 			,[EntityId]
@@ -4399,13 +4455,13 @@ BEGIN
 		VALUES (
 			@entityTypeId
 			,@entityId
-			,{order}
-			,'{action}'
-			,'{allowChar}'
-			,{specialRole}
+			,@order
+			,@action
+			,@allowChar
+			,@specialRole
 			,@groupId
 			,'{authGuid}'
-			)
+			);
 	END
 END
 ";
@@ -4459,45 +4515,71 @@ END
         /// <param name="IsSystem">if set to <c>true</c> [is system].</param>
         /// <param name="iconCssClass">The icon CSS class.</param>
         /// <param name="AllowWatching">if set to <c>true</c> [allow watching].</param>
+        [Obsolete( "Use AddOrUpdateNoteTypeByMatchingNameAndEntityType() instead." )]
+        [RockObsolete( "1.13" )]
         public void UpdateNoteType( string name, string entityTypeName, bool userSelectable, string guid, bool IsSystem = true, string iconCssClass = null, bool AllowWatching = false )
         {
-            EnsureEntityTypeExists( entityTypeName );
+            AddOrUpdateNoteTypeByMatchingNameAndEntityType( name, entityTypeName, userSelectable, guid, IsSystem, iconCssClass, AllowWatching );
+        }
 
-            if ( iconCssClass == null )
-            {
-                iconCssClass = "NULL";
-            }
-            else
-            {
-                iconCssClass = $"'{iconCssClass}'";
-            }
+        /// <summary>
+        /// Adds the type of the or update note type by matching name and entity.
+        /// </summary>
+        /// <param name="name">The name.</param>
+        /// <param name="entityTypeName">Name of the entity type.</param>
+        /// <param name="userSelectable">if set to <c>true</c> [user selectable].</param>
+        /// <param name="guid">The unique identifier.</param>
+        /// <param name="IsSystem">if set to <c>true</c> [is system].</param>
+        /// <param name="iconCssClass">The icon CSS class.</param>
+        /// <param name="AllowWatching">if set to <c>true</c> [allow watching].</param>
+        public void AddOrUpdateNoteTypeByMatchingNameAndEntityType( string name, string entityTypeName, bool userSelectable, string guid, bool IsSystem, string iconCssClass, bool AllowWatching )
+        {
+            EnsureEntityTypeExists( entityTypeName );
+            iconCssClass = iconCssClass.IsNullOrWhiteSpace() ? "NULL" : $"'{iconCssClass}'";
 
             Migration.Sql( $@"
-
                 DECLARE @EntityTypeId int = (SELECT top 1 [Id] FROM [EntityType] WHERE [Name] = '{entityTypeName}')
-
                 DECLARE @Id int = (SELECT [Id] FROM [NoteType] WHERE [Name] = '{name}' AND [EntityTypeId] = @EntityTypeId)
 
                 IF @Id IS NULL
                 BEGIN
-                    INSERT INTO [NoteType] (
-                        [Name],[EntityTypeId],[UserSelectable],[Guid],[IsSystem], [IconCssClass], [AllowsWatching])
-                    VALUES(
-                        '{name}',@EntityTypeId,{userSelectable.Bit()},'{guid}',{IsSystem.Bit()}, {iconCssClass}, {AllowWatching.Bit()})
+                    INSERT INTO [NoteType] ([Name], [EntityTypeId], [UserSelectable], [Guid], [IsSystem], [IconCssClass], [AllowsWatching])
+                    VALUES('{name}', @EntityTypeId, {userSelectable.Bit()}, '{guid}', {IsSystem.Bit()}, {iconCssClass}, {AllowWatching.Bit()})
                 END
-                ELSE
-                BEGIN
-                    UPDATE [NoteType] SET
-                        [Name] = '{name}',
-                        [EntityTypeId] = @EntityTypeId,
-                        [UserSelectable] = {userSelectable.Bit()},
-                        [Guid] = '{guid}',
-                        [IsSystem] = {IsSystem.Bit()},
-                        [IconCssClass] = {iconCssClass},
-                        [AllowsWatching] = {AllowWatching.Bit()}
+                ELSE BEGIN
+                    UPDATE [NoteType]
+                    SET
+                          [UserSelectable] = {userSelectable.Bit()}
+                        , [Guid] = '{guid}'
+                        , [IsSystem] = {IsSystem.Bit()}
+                        , [IconCssClass] = {iconCssClass}
+                        , [AllowsWatching] = {AllowWatching.Bit()}
                     WHERE Id = @Id;
                 END" );
+        }
 
+        /// <summary>
+        /// Updates the note type by unique identifier.
+        /// </summary>
+        /// <param name="name">The name.</param>
+        /// <param name="entityTypeGuid">The entity type unique identifier.</param>
+        /// <param name="userSelectable">if set to <c>true</c> [user selectable].</param>
+        /// <param name="guid">The unique identifier.</param>
+        /// <param name="IsSystem">if set to <c>true</c> [is system].</param>
+        /// <param name="iconCssClass">The icon CSS class.</param>
+        /// <param name="AllowWatching">if set to <c>true</c> [allow watching].</param>
+        public void UpdateNoteTypeByGuid( string name, string entityTypeGuid, bool userSelectable, string guid, bool IsSystem, string iconCssClass, bool AllowWatching )
+        {
+            Migration.Sql( $@"
+                UPDATE [NoteType]
+                SET
+                      [Name] = '{name}'
+                    , [EntityTypeId] = (SELECT [Id] FROM [EntityType] WHERE [Guid] = '{entityTypeGuid}')
+                    , [UserSelectable] = {userSelectable.Bit()}
+                    , [IsSystem] = {IsSystem.Bit()}
+                    , [IconCssClass] = {(iconCssClass.IsNullOrWhiteSpace() ? "NULL" : $"'{iconCssClass}'")}
+                    , [AllowsWatching] = {AllowWatching.Bit()}
+                WHERE [Guid] = '{guid}'" );
         }
 
         /// <summary>
@@ -7446,16 +7528,16 @@ END
         /// <summary>
         /// Normalizes line endings of the given column so your WHERE clause
         /// or REPLACE function works as you expect it to.
-        /// 
+        ///
         /// Call this on the search _condition column of your WHERE clause
         /// or on the string_expression in your REPLACE call when you are using
         /// multi line strings!
-        /// 
+        ///
         /// <para>
         /// NOTE: It does this by first changing CRLF (13 10) to GS (29;group separator),
         /// then changing LF to CRLF, then changing GS back to CRLF.
         /// </para>
-        /// 
+        ///
         /// <para>
         /// Example 1:
         ///     "WHERE " + NormalizeColumnCRLF( "GroupViewLavaTemplate" ) + " LIKE '%...%'"
@@ -7953,7 +8035,7 @@ END
         #region Index Helpers
 
         /// <summary>
-        /// Creates the index if it doesn't exist. The index name is calculated from the keys.
+        /// Creates the index if it doesn't exist. The index name is calculated from the keys. Uses a default fill factor of 90%.
         /// </summary>
         /// <param name="tableName">Name of the table.</param>
         /// <param name="keys">The keys.</param>
@@ -7965,7 +8047,7 @@ END
         }
 
         /// <summary>
-        /// Creates the index if it doesn't exist.
+        /// Creates the index if it doesn't exist. Uses a default fill factor of 90%.
         /// </summary>
         /// <param name="tableName">Name of the table.</param>
         /// <param name="indexName">Name of the index.</param>

@@ -20,10 +20,10 @@ using System.ComponentModel;
 using System.Data.Entity;
 using System.Linq;
 using System.Text;
-using System.Web;
 using System.Web.UI;
 using System.Web.UI.HtmlControls;
 using System.Web.UI.WebControls;
+
 using Newtonsoft.Json;
 
 using Rock;
@@ -70,6 +70,7 @@ namespace RockWeb.Blocks.Groups
         private class GroupMemberRegistrationItem
         {
             public int RegistrationId { get; set; }
+
             public string RegistrationName { get; set; }
         }
 
@@ -234,7 +235,7 @@ namespace RockWeb.Blocks.Groups
                 }
                 else
                 {
-                    syncedRolesHtml = string.Join( "<br>", _group.GroupSyncs.Select( s => string.Format( "<small><i class='text-info'>{0}</i> as {1}</small>", s.SyncDataView.Name, s.GroupTypeRole.Name ) ).ToArray() );
+                    syncedRolesHtml = string.Join( "<br>", _group.GroupSyncs.Select( s => string.Format( "<small><i>{0}</i> as {1}</small>", s.SyncDataView.Name, s.GroupTypeRole.Name ) ).ToArray() );
                 }
 
                 spanSyncLink.Attributes.Add( "data-content", syncedRolesHtml );
@@ -293,8 +294,10 @@ namespace RockWeb.Blocks.Groups
         private bool _isExporting = false;
         private bool _showAttendance = false;
         private bool _hasGroupRequirements = false;
+        private bool _allowGroupScheduling = false;
         private HashSet<int> _groupMemberIdsThatLackGroupRequirements = new HashSet<int>();
         private List<int> _groupMemberIdsWithWarnings = new List<int>();
+        private List<int> _groupMemberIdsPersonInMultipleRoles = new List<int>();
         private bool _showDateAdded = false;
         private bool _showNoteColumn = false;
 
@@ -440,9 +443,20 @@ namespace RockWeb.Blocks.Groups
                     {
                         sbNameHtml.Append( " <i class='fa fa-exclamation-triangle text-danger'></i>" );
                     }
-                    else if ( _groupMemberIdsWithWarnings.Contains( groupMember.Id) )
+                    else if ( _groupMemberIdsWithWarnings.Contains( groupMember.Id ) )
                     {
                         sbNameHtml.Append( " <i class='fa fa-exclamation-triangle text-warning'></i>" );
+                    }
+                }
+
+                if ( _allowGroupScheduling )
+                {
+                    if ( _groupMemberIdsPersonInMultipleRoles.Contains( groupMember.Id ) )
+                    {
+                        sbNameHtml.Append( " <span class='js-group-member-note' data-toggle='tooltip' data-placement='top' title=" +
+                            "'This person has multiple roles in this group. This is an unsupported configuration for groups with Group Scheduling enabled. The system does not support scheduling the same person with different roles.'>" +
+                            "<i class='fa fa-exclamation-circle text-warning'></i>" +
+                            "</span>" );
                     }
                 }
 
@@ -1169,8 +1183,9 @@ namespace RockWeb.Blocks.Groups
                     var trigger = _group.GetGroupMemberWorkflowTriggers().FirstOrDefault( a => a.Id == hfPlaceElsewhereTriggerId.Value.AsInteger() );
                     if ( trigger != null )
                     {
-                        // create a transaction for the selected trigger
-                        var transaction = new Rock.Transactions.GroupMemberPlacedElsewhereTransaction( groupMember, tbPlaceElsewhereNote.Text, trigger );
+                        // create a transaction for the selected trigger (before deleting the groupMember)
+                        groupMember.LoadAttributes();
+                        var groupMemberPlacedElsewhereTransaction = new Rock.Transactions.GroupMemberPlacedElsewhereTransaction( groupMember, tbPlaceElsewhereNote.Text, trigger );
 
                         // Un-link any registrant records that point to this group member.
                         foreach ( var registrant in new RegistrationRegistrantService( rockContext ).Queryable()
@@ -1184,8 +1199,8 @@ namespace RockWeb.Blocks.Groups
 
                         rockContext.SaveChanges();
 
-                        // queue up the transaction
-                        Rock.Transactions.RockQueue.TransactionQueue.Enqueue( transaction );
+                        // queue a transaction for the selected trigger
+                        groupMemberPlacedElsewhereTransaction.Enqueue();
                     }
                 }
 
@@ -1407,11 +1422,20 @@ namespace RockWeb.Blocks.Groups
             _inactiveStatus = DefinedValueCache.Get( Rock.SystemGuid.DefinedValue.PERSON_RECORD_STATUS_INACTIVE );
 
             _hasGroupRequirements = new GroupRequirementService( rockContext ).Queryable().Where( a => ( a.GroupId.HasValue && a.GroupId == _group.Id ) || ( a.GroupTypeId.HasValue && a.GroupTypeId == _group.GroupTypeId ) ).Any();
+            _allowGroupScheduling = _group.GroupType.IsSchedulingEnabled;
 
-            // If there are group requirements that that member doesn't meet, show an icon in the grid
+            // If there are group requirements that a member doesn't meet, show an icon in the grid
             var groupService = new GroupService( rockContext );
             _groupMemberIdsThatLackGroupRequirements = new HashSet<int>( groupService.GroupMembersNotMeetingRequirements( _group, false, true ).Select( a => a.Key.Id ).ToList().Distinct() );
             _groupMemberIdsWithWarnings = groupService.GroupMemberIdsWithRequirementWarnings( _group );
+
+            // Get a collection of group member Ids that are in the group more than once (because they have multiple roles in the group) if this group allows scheduling.
+            if ( _allowGroupScheduling )
+            {
+                _groupMemberIdsPersonInMultipleRoles = _group.Members
+                    .Where( gm => _group.Members.Where( m => m.GroupMemberStatus == GroupMemberStatus.Active ).GroupBy( m => m.PersonId ).Where( g => g.Count() > 1 ).Select( g => g.Key ).Contains( gm.PersonId ) )
+                    .Select( m => m.Id ).ToList();
+            }
 
             gGroupMembers.EntityTypeId = EntityTypeCache.Get( Rock.SystemGuid.EntityType.GROUP_MEMBER.AsGuid() ).Id;
 

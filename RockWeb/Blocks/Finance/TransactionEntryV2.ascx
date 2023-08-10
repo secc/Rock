@@ -34,8 +34,6 @@
         </asp:Panel>
 
         <asp:Panel ID="pnlTransactionEntry" runat="server">
-            <asp:HiddenField ID="hfTargetPersonId" runat="server" />
-
             <div class="row">
                 <%-- Transaction Entry Panel --%>
                 <asp:Panel ID="pnlTransactionEntryPanel" runat="server" CssClass="col-xs-12 col-sm-8">
@@ -46,19 +44,24 @@
 
                             <asp:Literal ID="lIntroMessage" runat="server" />
 
+                            <%-- Special input with rock-fullname class --%>
+                            <Rock:RockTextBox ID="tbRockFullName_AmountEntry" runat="server" CssClass="rock-fullname" ValidationGroup="vgRockFullName_AmountEntry" Placeholder="Please enter name (Required)" />
+                            <Rock:NotificationBox ID="nbRockFullName_AmountEntry" runat="server" NotificationBoxType="Validation" />
+
                             <Rock:CampusAccountAmountPicker ID="caapPromptForAccountAmounts" runat="server" />
 
-                            <asp:Panel ID="pnlScheduledTransaction" runat="server">
+                            <asp:Panel ID="pnlScheduledTransactionFrequency" runat="server">
                                 <div class="form-group">
                                     <Rock:RockDropDownList ID="ddlFrequency" runat="server" Label="Frequency" AutoPostBack="true" OnSelectedIndexChanged="ddlFrequency_SelectedIndexChanged" />
                                 </div>
+                            </asp:Panel>
 
-                                <asp:Panel ID="pnlSavedAccounts" runat="server" class="form-group" Visible="false">
-                                    <Rock:RockDropDownList ID="ddlPersonSavedAccount" runat="server" Label="Giving Method" AutoPostBack="true" OnSelectedIndexChanged="ddlPersonSavedAccount_SelectedIndexChanged" />
-                                </asp:Panel>
+                            <asp:Panel ID="pnlSavedAccounts" runat="server" class="form-group" Visible="false">
+                                <Rock:RockDropDownList ID="ddlPersonSavedAccount" runat="server" Label="Giving Method" AutoPostBack="true" OnSelectedIndexChanged="ddlPersonSavedAccount_SelectedIndexChanged" />
+                            </asp:Panel>
 
+                            <asp:Panel ID="pnlScheduledTransactionStartDate" runat="server">
                                 <Rock:DatePicker ID="dtpStartDate" runat="server" AllowPastDateSelection="false" Label="Start Date" />
-
                             </asp:Panel>
 
                             <Rock:RockTextBox ID="tbCommentEntry" runat="server" Required="true" Label="Comment" />
@@ -69,7 +72,7 @@
 
                             <%-- Cover the Fee checkbox (When a Saved Account is selected and we know the currency type already) --%>
                             <asp:Panel ID="pnlGiveNowCoverTheFee" runat="server" CssClass="js-coverthefee-container" Visible="false">
-                                <Rock:RockCheckBox ID="cbGiveNowCoverTheFee" runat="server" Text="Hello $<span class='js-coverthefee-checkbox-fee-amount-text'></span> World" CssClass="js-givenow-coverthefee" />
+                                <Rock:RockCheckBox ID="cbGiveNowCoverTheFee" runat="server" Text="$<span class='js-coverthefee-checkbox-fee-amount-text'></span>" CssClass="js-givenow-coverthefee" />
                             </asp:Panel>
 
                             <Rock:BootstrapButton ID="btnGiveNow" runat="server" CssClass="btn btn-primary btn-give-now" Text="Give Now" OnClick="btnGiveNow_Click" />
@@ -125,6 +128,10 @@
 
                             <Rock:Toggle ID="tglIndividualOrBusiness" runat="server" ButtonGroupCssClass="btn-group-justified" OnText="Business" OffText="Individual" OnCheckedChanged="tglIndividualOrBusiness_CheckedChanged" />
 
+                            <%-- Special input with rock-fullname class --%>
+                            <Rock:RockTextBox ID="tbRockFullName_PersonalInformation" runat="server" CssClass="rock-fullname" ValidationGroup="vgRockFullName_PersonalInformation" Placeholder="Please enter name (Required)" />
+                            <Rock:NotificationBox ID="nbRockFullName_PersonalInformation" runat="server" NotificationBoxType="Validation" />
+
                             <asp:Panel ID="pnlPersonInformationAsIndividual" runat="server">
                                 <asp:Panel ID="pnlLoggedInNameDisplay" runat="server">
                                     <div class="form-control-static">
@@ -143,7 +150,9 @@
                                 <Rock:AddressControl ID="acAddressIndividual" runat="server" UseStateAbbreviation="true" UseCountryAbbreviation="false" Label="" ShowAddressLine2="false" Required="true" />
 
                                 <Rock:PhoneNumberBox ID="pnbPhoneIndividual" runat="server" Placeholder="Phone" CssClass="margin-b-sm" />
-                                <Rock:EmailBox ID="tbEmailIndividual" runat="server" Placeholder="Email" CssClass="margin-b-sm" />
+                                <div class="form-group">
+                                    <Rock:EmailBox ID="tbEmailIndividual" runat="server" Placeholder="Email" CssClass="margin-b-sm" Required="true"/>
+                                </div>
                                 <Rock:RockCheckBox ID="cbGiveAnonymouslyIndividual" runat="server" Text="Give Anonymously" />
                             </asp:Panel>
 
@@ -156,7 +165,9 @@
 
                                 <Rock:AddressControl ID="acAddressBusiness" runat="server" UseStateAbbreviation="true" UseCountryAbbreviation="false" Label="" ShowAddressLine2="false" Required="true" />
                                 <Rock:PhoneNumberBox ID="pnbPhoneBusiness" runat="server" Placeholder="Business Phone" CssClass="margin-b-sm" />
-                                <Rock:EmailBox ID="tbEmailBusiness" runat="server" Placeholder="Business Email" CssClass="margin-b-sm" />
+                                <div class="form-group">
+                                    <Rock:EmailBox ID="tbEmailBusiness" runat="server" Placeholder="Business Email" CssClass="margin-b-sm required" Required="true" />
+                                 </div>
                                 <Rock:RockCheckBox ID="cbGiveAnonymouslyBusiness" runat="server" Text="Give Anonymously" />
 
                                 <%-- If anonymous and giving as a new business, prompt for Contact information --%>
@@ -170,7 +181,9 @@
                                         <Rock:RockTextBox ID="tbBusinessContactLastName" runat="server" Placeholder="Last Name" CssClass="margin-b-sm" Required="true" />
                                     </div>
                                     <Rock:PhoneNumberBox ID="pnbBusinessContactPhone" runat="server" Placeholder="Phone" CssClass="margin-b-sm" />
-                                    <Rock:EmailBox ID="tbBusinessContactEmail" runat="server" Placeholder="Email" CssClass="margin-b-sm" />
+                                    <div class="form-group">
+                                        <Rock:EmailBox ID="tbBusinessContactEmail" runat="server" Placeholder="Email" CssClass="margin-b-sm" Required="true" />
+                                    </div>
                                 </asp:Panel>
                             </asp:Panel>
 

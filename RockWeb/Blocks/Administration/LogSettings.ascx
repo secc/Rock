@@ -15,7 +15,9 @@
                 <asp:Panel runat="server" ID="pnlReadOnlySettings">
                     <Rock:RockLiteral runat="server" ID="litVerbosityLevel" Label="Verbosity Level" CssClass="col-sm-3" />
                     <Rock:RockLiteral runat="server" ID="litDomains" Label="Domains" CssClass="col-sm-9" />
-                    <asp:Button runat="server" ID="btnEdit" Text="Edit" CssClass="btn btn-primary" OnClick="btnEdit_Click" />
+                    <div class="actions">
+                        <asp:Button runat="server" ID="btnEdit" Text="Edit" CssClass="btn btn-primary" OnClick="btnEdit_Click" />
+                    </div>
                 </asp:Panel>
 
                 <asp:Panel runat="server" ID="pnlEditSettings" Visible="false">
@@ -37,14 +39,14 @@
                         CssClass="input-width-md js-max-file-size"
                         ValidationGroup="LoggingSettings"></Rock:NumberBox>
 
-                    <Rock:NumberBox runat="server" ID="txtFilesToRetain" Label="Retained Backup Files"
+                    <Rock:NumberBox runat="server" ID="txtFilesToRetain" Label="Retained Backup Files" NumberType="Integer" MinimumValue="1"
                         Help="The maximum number of backup files that are kept before the oldest is erased."
                         CssClass="input-width-md js-files-to-retain"
                         ValidationGroup="LoggingSettings"></Rock:NumberBox>
-
+                    <div class="clearfix"></div>
                     <p>Logs could take up to <span id="maxLogSize">400</span> MB on the server's filesystem.</p>
 
-                    <div class="actions margin-t-lg">
+                    <div class="actions">
                         <Rock:BootstrapButton
                             ID="btnLoggingSave"
                             runat="server"

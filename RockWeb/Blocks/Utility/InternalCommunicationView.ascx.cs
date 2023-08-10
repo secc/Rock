@@ -30,8 +30,9 @@ using Rock.Web.UI.Controls;
 using Rock.Attribute;
 using System.Data.Entity;
 using System.Text;
-using DotLiquid;
 using System.Runtime.Serialization;
+using Rock.Utility;
+using Rock.Lava;
 
 namespace RockWeb.Blocks.Utility
 {
@@ -257,7 +258,7 @@ namespace RockWeb.Blocks.Utility
                     .Skip( _currentPage )
                     .ToList();
 
-                if ( contentChannelItems.IsNull() || contentChannelItems.Count == 0 )
+                if ( contentChannelItems == null || contentChannelItems.Count == 0 )
                 {
                     nbMessages.Text = "It appears that there are no active communications to display for this content channel.";
                     nbMessages.NotificationBoxType = NotificationBoxType.Info;
@@ -375,7 +376,7 @@ namespace RockWeb.Blocks.Utility
         /// </summary>
 		[Serializable]
         [DataContract]
-        protected class MetricResult : Drop
+        protected class MetricResult : RockDynamic
         {
             /// <summary>
             /// Gets or sets the identifier.
@@ -448,7 +449,7 @@ namespace RockWeb.Blocks.Utility
         /// </summary>
 		[Serializable]
         [DataContract]
-        protected class MetricValue : Drop
+        protected class MetricValue : RockDynamic
         {
             /// <summary>
             /// Gets or sets the date time.

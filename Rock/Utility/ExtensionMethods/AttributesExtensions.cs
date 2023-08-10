@@ -18,10 +18,13 @@ using System;
 using System.Collections.Generic;
 using System.Data.Entity;
 using System.Linq;
+using System.Linq.Expressions;
 
 using Rock.Attribute;
 using Rock.Data;
 using Rock.Model;
+using Rock.ViewModel;
+using Rock.ViewModel.NonEntities;
 using Rock.Web.Cache;
 
 namespace Rock
@@ -173,6 +176,280 @@ namespace Rock
         }
 
         /// <summary>
+        /// Populates a view model with attributes and values from the entity for
+        /// purpose of viewing the values.
+        /// </summary>
+        /// <remarks>
+        ///     <para>
+        ///         <strong>This is an internal API</strong> that supports the Rock
+        ///         infrastructure and not subject to the same compatibility standards
+        ///         as public APIs. It may be changed or removed without notice in any
+        ///         release and should therefore not be directly used in any plug-ins.
+        ///     </para>
+        /// </remarks>
+        /// <param name="viewModel">The view model to be populated.</param>
+        /// <param name="entity">The entity whose attributes are requested.</param>
+        /// <param name="currentPerson">The current person.</param>
+        /// <param name="enforceSecurity">if set to <c>true</c> then security will be enforced.</param>
+        [RockInternal]
+        public static void PopulatePublicAttributesAndValuesForView( this IViewModelWithAttributes viewModel, IHasAttributes entity, Person currentPerson, bool enforceSecurity = true )
+        {
+            viewModel.Attributes = GetPublicAttributesForView( entity, currentPerson, enforceSecurity );
+            viewModel.AttributeValues = GetPublicAttributeValuesForView( entity, currentPerson, enforceSecurity );
+        }
+
+        /// <summary>
+        /// Populates a view model with attributes and values from the entity for
+        /// the purpose of editing the values.
+        /// </summary>
+        /// <remarks>
+        ///     <para>
+        ///         <strong>This is an internal API</strong> that supports the Rock
+        ///         infrastructure and not subject to the same compatibility standards
+        ///         as public APIs. It may be changed or removed without notice in any
+        ///         release and should therefore not be directly used in any plug-ins.
+        ///     </para>
+        /// </remarks>
+        /// <param name="viewModel">The view model to be populated.</param>
+        /// <param name="entity">The entity whose attributes are requested.</param>
+        /// <param name="currentPerson">The current person.</param>
+        /// <param name="enforceSecurity">if set to <c>true</c> then security will be enforced.</param>
+        [RockInternal]
+        public static void PopulatePublicAttributesAndValuesForEdit( this IViewModelWithAttributes viewModel, IHasAttributes entity, Person currentPerson, bool enforceSecurity = true )
+        {
+            viewModel.Attributes = GetPublicAttributesForEdit( entity, currentPerson, enforceSecurity );
+            viewModel.AttributeValues = GetPublicAttributeValuesForEdit( entity, currentPerson, enforceSecurity );
+        }
+
+        /// <summary>
+        /// Gets the attributes in a format that can be sent to public devices
+        /// for the purpose of displaying the current value.
+        /// </summary>
+        /// <remarks>
+        ///     <para>
+        ///         <strong>This is an internal API</strong> that supports the Rock
+        ///         infrastructure and not subject to the same compatibility standards
+        ///         as public APIs. It may be changed or removed without notice in any
+        ///         release and should therefore not be directly used in any plug-ins.
+        ///     </para>
+        /// </remarks>
+        /// <param name="entity">The entity whose attributes are requested.</param>
+        /// <param name="currentPerson">The current person.</param>
+        /// <param name="enforceSecurity">if set to <c>true</c> then security will be enforced.</param>
+        /// <returns>A dictionary that represents the attribute values.</returns>
+        [RockInternal]
+        public static Dictionary<string, PublicAttributeViewModel> GetPublicAttributesForView( this IHasAttributes entity, Person currentPerson, bool enforceSecurity = true )
+        {
+            if ( entity == null || entity.Attributes == null )
+            {
+                return new Dictionary<string, PublicAttributeViewModel>();
+            }
+
+            return entity.Attributes
+                .Select( a => new
+                {
+                    Value = entity.GetAttributeValue( a.Key ),
+                    Attribute = a.Value
+                } )
+                .Where( av => !enforceSecurity || av.Attribute.IsAuthorized( Rock.Security.Authorization.VIEW, currentPerson ) )
+                .ToDictionary( av => av.Attribute.Key, kvp => PublicAttributeHelper.GetPublicAttributeForView( kvp.Attribute, kvp.Value ) );
+        }
+
+        /// <summary>
+        /// Gets the attribute values in a format that can be sent to public
+        /// devices for the purpose of displaying the value.
+        /// </summary>
+        /// <remarks>
+        ///     <para>
+        ///         <strong>This is an internal API</strong> that supports the Rock
+        ///         infrastructure and not subject to the same compatibility standards
+        ///         as public APIs. It may be changed or removed without notice in any
+        ///         release and should therefore not be directly used in any plug-ins.
+        ///     </para>
+        /// </remarks>
+        /// <param name="entity">The entity whose attributes are requested.</param>
+        /// <param name="currentPerson">The current person.</param>
+        /// <param name="enforceSecurity">if set to <c>true</c> then security will be enforced.</param>
+        /// <returns>A dictionary that represents the attribute values.</returns>
+        [RockInternal]
+        public static Dictionary<string, string> GetPublicAttributeValuesForView( this IHasAttributes entity, Person currentPerson, bool enforceSecurity = true )
+        {
+            if ( entity == null || entity.Attributes == null )
+            {
+                return new Dictionary<string, string>();
+            }
+
+            return entity.Attributes
+                .Select( a => new
+                {
+                    Value = entity.GetAttributeValue( a.Key ),
+                    Attribute = a.Value
+                } )
+                .Where( av => !enforceSecurity || av.Attribute.IsAuthorized( Rock.Security.Authorization.VIEW, currentPerson ) )
+                .ToDictionary( av => av.Attribute.Key, kvp => PublicAttributeHelper.GetPublicValueForView( kvp.Attribute, kvp.Value ) );
+        }
+
+        /// <summary>
+        /// Gets the attributes in a format that can be sent to public devices
+        /// for the purpose of editing values.
+        /// </summary>
+        /// <remarks>
+        ///     <para>
+        ///         <strong>This is an internal API</strong> that supports the Rock
+        ///         infrastructure and not subject to the same compatibility standards
+        ///         as public APIs. It may be changed or removed without notice in any
+        ///         release and should therefore not be directly used in any plug-ins.
+        ///     </para>
+        /// </remarks>
+        /// <param name="entity">The entity whose attributes are requested.</param>
+        /// <param name="currentPerson">The current person.</param>
+        /// <param name="enforceSecurity">if set to <c>true</c> then security will be enforced.</param>
+        /// <returns>A dictionary that represents the attributes.</returns>
+        [RockInternal]
+        public static Dictionary<string, PublicAttributeViewModel> GetPublicAttributesForEdit( this IHasAttributes entity, Person currentPerson, bool enforceSecurity = true )
+        {
+            if ( entity == null || entity.Attributes == null )
+            {
+                return new Dictionary<string, PublicAttributeViewModel>();
+            }
+
+            return entity.Attributes
+                .Select( a => a.Value )
+                .Where( a => !enforceSecurity || a.IsAuthorized( Rock.Security.Authorization.VIEW, currentPerson ) )
+                .ToDictionary( a => a.Key, a => PublicAttributeHelper.GetPublicAttributeForEdit( a ) );
+        }
+
+        /// <summary>
+        /// Gets the attribute values in a format that can be sent to a public
+        /// device for the purpose of editing the value.
+        /// </summary>
+        /// <remarks>
+        ///     <para>
+        ///         <strong>This is an internal API</strong> that supports the Rock
+        ///         infrastructure and not subject to the same compatibility standards
+        ///         as public APIs. It may be changed or removed without notice in any
+        ///         release and should therefore not be directly used in any plug-ins.
+        ///     </para>
+        /// </remarks>
+        /// <param name="entity">The entity whose attributes are requested.</param>
+        /// <param name="currentPerson">The current person.</param>
+        /// <param name="enforceSecurity">if set to <c>true</c> then security will be enforced.</param>
+        /// <returns>A dictionary that represents the attribute values.</returns>
+        [RockInternal]
+        public static Dictionary<string, string> GetPublicAttributeValuesForEdit( this IHasAttributes entity, Person currentPerson, bool enforceSecurity = true )
+        {
+            if ( entity == null || entity.Attributes == null )
+            {
+                return new Dictionary<string, string>();
+            }
+
+            return entity.Attributes
+                .Select( a => new
+                {
+                    Value = entity.GetAttributeValue( a.Key ),
+                    Attribute = a.Value
+                } )
+                .Where( av => !enforceSecurity || av.Attribute.IsAuthorized( Rock.Security.Authorization.VIEW, currentPerson ) )
+                .ToDictionary( av => av.Attribute.Key, av => PublicAttributeHelper.GetPublicEditValue( av.Attribute, av.Value ) );
+        }
+
+        /// <summary>
+        /// Sets attribute values that have been provided by a remote client.
+        /// </summary>
+        /// <remarks>
+        ///     <para>
+        ///         This should be used to handle values the client sent back after
+        ///         calling the <see cref="GetPublicAttributeValuesForEdit(IHasAttributes, Person, bool)"/>
+        ///         method. It handles conversion from custom data formats into the
+        ///         proper values to be stored in the database.
+        ///     </para>
+        ///     <para>
+        ///         <strong>This is an internal API</strong> that supports the Rock
+        ///         infrastructure and not subject to the same compatibility standards
+        ///         as public APIs. It may be changed or removed without notice in any
+        ///         release and should therefore not be directly used in any plug-ins.
+        ///     </para>
+        /// </remarks>
+        /// <param name="entity">The entity.</param>
+        /// <param name="attributeValues">The attribute values.</param>
+        /// <param name="currentPerson">The current person.</param>
+        /// <param name="enforceSecurity">if set to <c>true</c> then security will be enforced.</param>
+        [RockInternal]
+        public static void SetPublicAttributeValues( this IHasAttributes entity, Dictionary<string, string> attributeValues, Person currentPerson, bool enforceSecurity = true )
+        {
+            if ( entity == null || entity.Attributes == null || entity.AttributeValues == null )
+            {
+                return;
+            }
+
+            foreach ( var kvp in attributeValues )
+            {
+                if ( !entity.Attributes.ContainsKey( kvp.Key ) || !entity.AttributeValues.ContainsKey( kvp.Key ) )
+                {
+                    continue;
+                }
+
+                var attribute = entity.Attributes[kvp.Key];
+
+                if ( enforceSecurity && !attribute.IsAuthorized( Rock.Security.Authorization.EDIT, currentPerson ) )
+                {
+                    continue;
+                }
+
+                var value = PublicAttributeHelper.GetPrivateValue( attribute, kvp.Value );
+
+                entity.SetAttributeValue( kvp.Key, value );
+            }
+        }
+
+        /// <summary>
+        /// Sets a single attribute values that have been provided by a remote client.
+        /// </summary>
+        /// <remarks>
+        ///     <para>
+        ///         This should be used to handle values the client sent back after
+        ///         calling the <see cref="GetPublicAttributeValuesForEdit(IHasAttributes, Person, bool)"/>
+        ///         method. It handles conversion from custom data formats into the
+        ///         proper values to be stored in the database.
+        ///     </para>
+        ///     <para>
+        ///         <strong>This is an internal API</strong> that supports the Rock
+        ///         infrastructure and not subject to the same compatibility standards
+        ///         as public APIs. It may be changed or removed without notice in any
+        ///         release and should therefore not be directly used in any plug-ins.
+        ///     </para>
+        /// </remarks>
+        /// <param name="entity">The entity.</param>
+        /// <param name="key">The attribute key to set.</param>
+        /// <param name="value">The value provided by the remote client.</param>
+        /// <param name="currentPerson">The current person.</param>
+        /// <param name="enforceSecurity">if set to <c>true</c> then security will be enforced.</param>
+        [RockInternal]
+        public static void SetPublicAttributeValue( this IHasAttributes entity, string key, string value, Person currentPerson, bool enforceSecurity = true )
+        {
+            if ( entity == null || entity.Attributes == null || entity.AttributeValues == null )
+            {
+                return;
+            }
+
+            if ( !entity.Attributes.ContainsKey( key ) || !entity.AttributeValues.ContainsKey( key ) )
+            {
+                return;
+            }
+
+            var attribute = entity.Attributes[key];
+
+            if ( enforceSecurity && !attribute.IsAuthorized( Rock.Security.Authorization.EDIT, currentPerson ) )
+            {
+                return;
+            }
+
+            var databaseValue = PublicAttributeHelper.GetPrivateValue( attribute, value );
+
+            entity.SetAttributeValue( key, databaseValue );
+        }
+
+        /// <summary>
         /// Gets the authorized attributes.
         /// </summary>
         /// <param name="entity">The entity.</param>
@@ -184,7 +461,9 @@ namespace Rock
             var authorizedAttributes = new Dictionary<string, AttributeCache>();
 
             if ( entity == null )
+            {
                 return authorizedAttributes;
+            }
 
             foreach ( var item in entity.Attributes )
             {
@@ -202,7 +481,7 @@ namespace Rock
         /// </summary>
         /// <param name="attributeQuery">The attribute query.</param>
         /// <returns></returns>
-        [Obsolete( "Use ToAttributeCacheList instead" )]
+        [Obsolete( "Use ToAttributeCacheList instead", true )]
         [RockObsolete( "1.9" )]
         public static List<AttributeCache> ToCacheAttributeList( this IQueryable<Rock.Model.Attribute> attributeQuery )
         {
@@ -219,7 +498,53 @@ namespace Rock
             return attributeQuery.AsNoTracking().Select( a => a.Id ).ToList().Select( a => AttributeCache.Get( a ) ).ToList().Where( a => a != null ).ToList();
         }
 
-        #endregion IHasAttributes extensions
+        /// <summary>
+        /// Query by AttributeIds. This is optimized to execute about 10-15ms more quickly than doing a Contains statement.
+        /// </summary>
+        /// <param name="attributeValueQuery">The attribute value query.</param>
+        /// <param name="attributeIds">The attribute ids.</param>
+        /// <returns>IQueryable&lt;AttributeValue&gt;.</returns>
+        public static IQueryable<AttributeValue> WhereAttributeIds( this IQueryable<Rock.Model.AttributeValue> attributeValueQuery, List<int> attributeIds )
+        {
+            if ( attributeIds.Count != 1 )
+            {
+                if ( attributeIds.Count >= 1000 )
+                {
+                    // the linq Expression.Or tree gets too big if there is more than 1000 attributes, so just do a contains instead
+                    attributeValueQuery = attributeValueQuery.Where( v => attributeIds.Contains( v.AttributeId ) );
+                }
+                else
+                {
+                    // a Linq query that uses 'Contains' can't be cached in the EF Plan Cache, so instead of doing a Contains, build a List of OR conditions. This can save 15-20ms per call (and still ends up with the exact same SQL)
+                    var parameterExpression = Expression.Parameter( typeof( AttributeValue ), "p" );
+                    MemberExpression propertyExpression = Expression.Property( parameterExpression, "AttributeId" );
+                    Expression expression = null;
 
+                    foreach ( var attributeId in attributeIds )
+                    {
+                        Expression attributeIdValue = Expression.Constant( attributeId );
+                        if ( expression != null )
+                        {
+                            expression = Expression.Or( expression, Expression.Equal( propertyExpression, attributeIdValue ) );
+                        }
+                        else
+                        {
+                            expression = Expression.Equal( propertyExpression, attributeIdValue );
+                        }
+                    }
+
+                    attributeValueQuery = attributeValueQuery.Where( parameterExpression, expression );
+                }
+            }
+            else
+            {
+                int attributeId = attributeIds[0];
+                attributeValueQuery = attributeValueQuery.Where( v => v.AttributeId == attributeId );
+            }
+
+            return attributeValueQuery;
+        }
+
+        #endregion IHasAttributes extensions
     }
 }

@@ -358,6 +358,7 @@ namespace RockWeb
             var response = new
             {
                 Id = binaryFile.Id,
+                Guid = binaryFile.Guid,
                 FileName = binaryFile.FileName.UrlEncode()
             };
 

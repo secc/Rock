@@ -54,7 +54,7 @@ namespace RockWeb.Blocks.Finance
         DefaultBooleanValue = false,
         Order = 6,
         Key = AttributeKey.EnableForeignCurrency )]
-    public partial class TransactionDetail : Rock.Web.UI.RockBlock, IDetailBlock
+    public partial class TransactionDetail : Rock.Web.UI.RockBlock
     {
         #region Keys
 
@@ -101,7 +101,7 @@ namespace RockWeb.Blocks.Finance
 
         private bool ShowForeignCurrencyFields
         {
-            get { return GetAttributeValue(AttributeKey.EnableForeignCurrency).AsBoolean() && _foreignCurrencyCodeDefinedValueId != 0; }
+            get { return GetAttributeValue( AttributeKey.EnableForeignCurrency ).AsBoolean() && _foreignCurrencyCodeDefinedValueId != 0; }
         }
 
         private List<int> TransactionImagesState { get; set; }
@@ -170,7 +170,7 @@ namespace RockWeb.Blocks.Finance
                 TransactionImagesState = new List<int>();
             }
 
-            _foreignCurrencyCodeDefinedValueId = (int) ViewState["ForeignCurrencyCodeDefinedValueId"];
+            _foreignCurrencyCodeDefinedValueId = ( int ) ViewState["ForeignCurrencyCodeDefinedValueId"];
         }
 
         /// <summary>
@@ -386,18 +386,16 @@ namespace RockWeb.Blocks.Finance
 
             if ( isValid && savedTransactionId.HasValue )
             {
-                // Requery the batch to support EF navigation properties
-                var savedTxn = GetTransaction( savedTransactionId.Value );
-                if ( savedTxn != null )
-                {
-                    savedTxn.LoadAttributes();
-                    if ( savedTxn.FinancialPaymentDetail != null )
-                    {
-                        savedTxn.FinancialPaymentDetail.LoadAttributes();
-                    }
-
-                    ShowReadOnlyDetails( savedTxn );
-                }
+                /**
+                  * 08/07/2022 - KA
+                  *
+                  * We reload the page with the new transaction here so the recently added Transaction is displayed along with the History of the transaction.
+                  * This is the ideal option because the call to RockPage.UpdateBlocks( "~/Blocks/Core/HistoryLog.ascx" ) on line 651 will trigger a page reload
+                  * but without the newly created transactionId thus the page will not display the transaction details.
+                */
+                var pageRef = new PageReference( CurrentPageReference.PageId, CurrentPageReference.RouteId );
+                pageRef.Parameters.Add( "TransactionId", savedTransactionId.ToString() );
+                NavigateToPage( pageRef );
             }
         }
 
@@ -480,7 +478,7 @@ namespace RockWeb.Blocks.Finance
                     txn.ForeignCurrencyCodeValueId = dvpForeignCurrencyCode.SelectedValue.AsIntegerOrNull();
                 }
 
-                txn.Summary = tbSummary.Text;
+                txn.Summary = tbComments.Text;
                 var singleAccountAmountMinusFeeCoverageAmount = tbSingleAccountAmountMinusFeeCoverageAmount.Value;
                 var feeCoverageAmount = tbSingleAccountFeeCoverageAmount.Value;
                 decimal totalAmount;
@@ -530,6 +528,24 @@ namespace RockWeb.Blocks.Finance
                     {
                         return;
                     }
+                }
+
+                bool hasValidAmount;
+                if ( UseSimpleAccountMode )
+                {
+                    var accountAmountMinusFeeCoverageAmount = tbSingleAccountAmountMinusFeeCoverageAmount.Value ?? 0.0M;
+                    var accountAmountFeeCoverageAmount = tbSingleAccountFeeCoverageAmount.Value;
+                    hasValidAmount = accountAmountMinusFeeCoverageAmount != 0.0M || ( accountAmountFeeCoverageAmount.HasValue && accountAmountFeeCoverageAmount.Value != 0.0M );
+                }
+                else
+                {
+                    hasValidAmount = TransactionDetailsState.Any( d => d.Amount != 0.0M || ( d.FeeCoverageAmount.HasValue && d.FeeCoverageAmount.Value != 0.0M ) );
+                }
+
+                if ( !hasValidAmount )
+                {
+                    nbTransactionDetailValidationMessage.Visible = true;
+                    return;
                 }
 
                 rockContext.WrapTransaction( () =>
@@ -997,6 +1013,13 @@ namespace RockWeb.Blocks.Finance
                 }
 
                 BindAccounts();
+
+                if ( nbTransactionDetailValidationMessage.Visible )
+                {
+                    // If a message about no amounts is showing, hide it now that they have added one.
+                    // It'll get re-checked when saved.
+                    nbTransactionDetailValidationMessage.Visible = false;
+                }
             }
 
             HideDialog();
@@ -1534,7 +1557,7 @@ namespace RockWeb.Blocks.Finance
                     }
                 }
 
-                detailsLeft.Add( "Summary", txn.Summary.ConvertCrLfToHtmlBr() );
+                detailsLeft.Add( "Comments", txn.Summary.ConvertCrLfToHtmlBr() );
 
                 if ( txn.RefundDetails != null )
                 {
@@ -1886,7 +1909,7 @@ namespace RockWeb.Blocks.Finance
 
                 BindAccounts();
 
-                tbSummary.Text = txn.Summary;
+                tbComments.Text = txn.Summary;
 
                 BindImages();
 
@@ -1966,7 +1989,7 @@ namespace RockWeb.Blocks.Finance
 
         private void SetForeignCurrencyCodeVisibility( FinancialTransaction txn )
         {
-            dvpForeignCurrencyCode.Visible = GetAttributeValue( AttributeKey.EnableForeignCurrency ).AsBoolean() && (txn == null || txn.Id == 0 || txn.ForeignCurrencyCodeValueId != null);
+            dvpForeignCurrencyCode.Visible = GetAttributeValue( AttributeKey.EnableForeignCurrency ).AsBoolean() && ( txn == null || txn.Id == 0 || txn.ForeignCurrencyCodeValueId != null );
         }
 
         /// <summary>
@@ -1989,6 +2012,12 @@ namespace RockWeb.Blocks.Finance
             var foreignCurrencyColumn = GetForeignCurrencyColumn( gAccountsEdit, "ForeignCurrencyAmount" );
             foreignCurrencyColumn.CurrencyCodeDefinedValueId = _foreignCurrencyCodeDefinedValueId;
             foreignCurrencyColumn.Visible = ShowForeignCurrencyFields;
+
+            if ( UseSimpleAccountMode )
+            {
+                var txnDetail = TransactionDetailsState.FirstOrDefault();
+                ApplyFeeValueToField( tbSingleAccountFeeAmount, txnDetail );
+            }
 
             if ( UseSimpleAccountMode && TransactionDetailsState.Count() == 1 )
             {
@@ -2043,6 +2072,7 @@ namespace RockWeb.Blocks.Finance
                     ForeignCurrencyAmount = totalForeignCurrencyAmount
                 } );
 
+                feeColumn.Visible = hasFeeInfo;
                 gAccountsEdit.DataSource = accounts;
                 gAccountsEdit.DataBind();
                 feeColumn.Visible = hasFeeInfo;
@@ -2387,6 +2417,16 @@ namespace RockWeb.Blocks.Finance
             {
                 tbAccountAmountMinusFeeCoverageAmount.Value = accountAmount;
             }
+        }
+
+        /// </summary>
+        /// <param name="field">The tb single account fee amount.</param>
+        /// <param name="transactionDetail">The transaction detail.</param>
+        private void ApplyFeeValueToField( CurrencyBox field, FinancialTransactionDetail transactionDetail )
+        {
+            var hasFeeInfo = TransactionDetailsState.Any( d => d.FeeAmount.HasValue );
+            field.Visible = hasFeeInfo;
+            field.Value = transactionDetail.FeeAmount;
         }
 
         /// <summary>

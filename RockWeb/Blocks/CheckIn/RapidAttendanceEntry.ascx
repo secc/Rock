@@ -14,7 +14,7 @@
                     $('#<%= hfPersonDirty.ClientID %>').val('true')
                 });
 
-                 $('.js-person-item-checkbox').find('input').change(function () {
+                $('.js-person-item-checkbox').find('input').change(function () {
                     $('#<%= hfPersonDirty.ClientID %>').val('true')
                 });
 
@@ -55,7 +55,7 @@
         <asp:Panel ID="pnlStart" runat="server" Visible="false">
             <div class="panel panel-block">
                 <div class="panel-heading">
-                    <h1 class="panel-title"><i class="fa fa-user-friends"></i> Contact Entry</h1>
+                    <h1 class="panel-title"><i class="fa fa-user-friends"></i>Contact Entry</h1>
                 </div>
                 <div class="panel-body">
                     <div class="row">
@@ -72,6 +72,9 @@
                             </asp:Panel>
                             <Rock:DatePicker ID="dpAttendanceDate" runat="server" Required="true" Label="Attendance Date" ValidationGroup="AttendanceSetting" />
                         </div>
+                        <div class="col-md-6">
+                            <Rock:CampusPicker ID="cpCampus" runat="server" Label="Campus" OnSelectedIndexChanged="cpCampus_SelectedIndexChanged" AutoPostBack="True" />
+                        </div>
                     </div>
                     <div class="actions">
                         <Rock:BootstrapButton ID="lbStart" runat="server" Text="Start" CssClass="btn btn-primary pull-right" CausesValidation="true" OnClick="lbStart_Click" ValidationGroup="AttendanceSetting" />
@@ -82,12 +85,12 @@
         <asp:Panel ID="pnlMainPanel" runat="server" Visible="false">
             <div class="panel panel-block">
                 <div class="panel-heading">
-                    <h1 class="panel-title"><i class="fa fa-user-friends"></i> Contact Entry</h1>
+                    <h1 class="panel-title"><i class="fa fa-user-friends"></i>Contact Entry</h1>
                     <div class="panel-labels">
                         <Rock:HighlightLabel ID="hlAttendance" runat="server" LabelType="Info" />
                         <Rock:HighlightLabel ID="hlCurrentCount" runat="server" LabelType="Success" />
+                        <asp:LinkButton ID="lbSetting" runat="server" CssClass="btn btn-default btn-square margin-l-sm btn-xs" OnClick="lbSetting_Click" CausesValidation="false"><i class="fa fa-cog"></i></asp:LinkButton>
                     </div>
-                    <asp:LinkButton ID="lbSetting" runat="server" CssClass="btn btn-default btn-square margin-l-sm btn-xs" OnClick="lbSetting_Click" CausesValidation="false"><i class="fa fa-cog"></i></asp:LinkButton>
                 </div>
                 <div>
                     <asp:HiddenField ID="hfPersonGuid" runat="server" />
@@ -97,7 +100,7 @@
                                 <div class="d-flex width-full padding-all-sm">
                                     <div class="resource-search js-resource-search flex-grow-1 input-group">
                                         <span class="input-group-addon"><i class='fa fa-search'></i></span>
-                                        <Rock:RockTextBox ID="tbSearch" runat="server"  Placeholder="Search" spellcheck="false" onkeydown="javascript:return handleSearchKeyPress(this, event.keyCode);" onkeyup="javascript:handleSearchKeyPress(event.keyCode)" />
+                                        <Rock:RockTextBox ID="tbSearch" runat="server" Placeholder="Search" spellcheck="false" onkeydown="javascript:return handleSearchKeyPress(this, event.keyCode);" onkeyup="javascript:handleSearchKeyPress(event.keyCode)" />
                                         <span class="input-group-btn">
                                             <asp:LinkButton ID="btnGo" runat="server" CssClass="btn btn-primary js-main-event" Text="Go" OnClick="btnGo_Click" />
                                         </span>
@@ -209,7 +212,7 @@
                                         <div class="pull-left margin-b-md">
                                             <asp:Literal ID="lPreviousAddress" runat="server" />
                                         </div>
-                                        <div class="pull-right">
+                                        <div class="pull-right mb-2">
                                             <asp:LinkButton ID="lbMoved" CssClass="btn btn-default btn-xs" runat="server" OnClick="lbMoved_Click"><i class="fa fa-truck"></i> Moved</asp:LinkButton>
                                         </div>
                                     </div>

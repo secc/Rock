@@ -19,6 +19,7 @@ using System.Collections.Generic;
 using System.Linq.Expressions;
 using System.Web.UI;
 
+using Rock.Attribute;
 using Rock.Reporting;
 
 namespace Rock.Field
@@ -35,6 +36,69 @@ namespace Rock.Field
         /// </summary>
         /// <returns></returns>
         List<string> ConfigurationKeys();
+
+        /// <summary>
+        /// Gets the public configuration values. This data will be sent to remote systems
+        /// which have no security protection. Sensitive data should not
+        /// be included or should be encrypted before storing in the dictionary.
+        /// </summary>
+        /// <param name="privateConfigurationValues">The private (database) configuration values.</param>
+        /// <param name="usage">The way the public configuration values are intended to be used.</param>
+        /// <param name="internalValue">The current private value. This is required when <paramref name="usage"/> is <see cref="ConfigurationValueUsage.View"/> and will be <c>null</c> in other cases.</param>
+        /// <returns>The configuration values that are safe for public use.</returns>
+        /// <remarks>
+        ///     <para>
+        ///         <strong>This is an internal API</strong> that supports the Rock
+        ///         infrastructure and not subject to the same compatibility standards
+        ///         as public APIs. It may be changed or removed without notice in any
+        ///         release and should therefore not be directly used in any plug-ins.
+        ///     </para>
+        /// </remarks>
+        [RockInternal]
+        Dictionary<string, string> GetPublicConfigurationValues( Dictionary<string, string> privateConfigurationValues, ConfigurationValueUsage usage, string internalValue );
+
+        /// <summary>
+        /// Get the edit configuration properties that are safe to send to a remote
+        /// device when editing a field type. This is custom data your field type
+        /// can use to provide, for example, a list of options to pick from. This
+        /// method may be called multiple times while editing a field type.
+        /// </summary>
+        /// <remarks>
+        ///     <para>This method is used during the editing of a field type's configuration.</para>
+        ///     <para>
+        ///         The return value should include all data required to display
+        ///         the current selections to the user, even if they wouldn't
+        ///         normally have access to make those selections. This ensures
+        ///         configuration is not accidentally wiped out by the person if
+        ///         they don't have access to something.
+        ///     </para>
+        /// </remarks>
+        /// <param name="privateConfigurationValues">The private configuration values that are currently selected.</param>
+        /// <returns>A <see cref="Dictionary{TKey, TValue}"/> of custom key and value pairs.</returns>
+        [RockInternal]
+        Dictionary<string, string> GetPublicEditConfigurationProperties( Dictionary<string, string> privateConfigurationValues );
+
+        /// <summary>
+        /// Gets the private configuration options that will be saved to the
+        /// database.
+        /// </summary>
+        /// <remarks>
+        ///     <para>This method is used during the editing of a field type's configuration.</para>
+        ///     <para>
+        ///         Calling this method with the results from <see cref="GetPublicConfigurationValues(Dictionary{string, string}, ConfigurationValueUsage, string)"/>
+        ///         should return the same data that was originally passed to <see cref="GetPublicConfigurationValues(Dictionary{string, string}, ConfigurationValueUsage, string)"/>.
+        ///     </para>
+        ///     <para>
+        ///         <strong>This is an internal API</strong> that supports the Rock
+        ///         infrastructure and not subject to the same compatibility standards
+        ///         as public APIs. It may be changed or removed without notice in any
+        ///         release and should therefore not be directly used in any plug-ins.
+        ///     </para>
+        /// </remarks>
+        /// <param name="publicConfigurationValues">The public configuration values.</param>
+        /// <returns>A <see cref="Dictionary{TKey, TValue}"/> of options that are safe to store to the database.</returns>
+        [RockInternal]
+        Dictionary<string, string> GetPrivateConfigurationValues( Dictionary<string, string> publicConfigurationValues );
 
         /// <summary>
         /// Creates the HTML controls required to configure this type of field
@@ -64,6 +128,95 @@ namespace Rock.Field
         /// Gets the align value that should be used when displaying value
         /// </summary>
         System.Web.UI.WebControls.HorizontalAlign AlignValue { get; }
+
+        /// <summary>
+        /// Formats the value into a user-friendly string of plain text.
+        /// </summary>
+        /// <param name="privateValue">The private (database) value.</param>
+        /// <param name="privateConfigurationValues">The private (database) configuration values.</param>
+        /// <returns>A plain string of text.</returns>
+        /// <remarks>
+        ///     <para>
+        ///         <strong>This is an internal API</strong> that supports the Rock
+        ///         infrastructure and not subject to the same compatibility standards
+        ///         as public APIs. It may be changed or removed without notice in any
+        ///         release and should therefore not be directly used in any plug-ins.
+        ///     </para>
+        /// </remarks>
+        [RockInternal]
+        string GetTextValue( string privateValue, Dictionary<string, string> privateConfigurationValues );
+
+        /// <summary>
+        /// Formats the value into a string of HTML text that can be rendered
+        /// on a web page.
+        /// </summary>
+        /// <param name="privateValue">The private (database) value.</param>
+        /// <param name="privateConfigurationValues">The private (database) configuration values.</param>
+        /// <returns>A string of HTML text.</returns>
+        /// <remarks>
+        ///     <para>
+        ///         <strong>This is an internal API</strong> that supports the Rock
+        ///         infrastructure and not subject to the same compatibility standards
+        ///         as public APIs. It may be changed or removed without notice in any
+        ///         release and should therefore not be directly used in any plug-ins.
+        ///     </para>
+        /// </remarks>
+        [RockInternal]
+        string GetHtmlValue( string privateValue, Dictionary<string, string> privateConfigurationValues );
+
+        /// <summary>
+        /// Formats the value into a condensed user-friendly string of plain text.
+        /// This value will be used when space is limited.
+        /// </summary>
+        /// <param name="privateValue">The private (database) value.</param>
+        /// <param name="privateConfigurationValues">The private (database) configuration values.</param>
+        /// <returns>A plain string of text.</returns>
+        /// <remarks>
+        ///     <para>
+        ///         <strong>This is an internal API</strong> that supports the Rock
+        ///         infrastructure and not subject to the same compatibility standards
+        ///         as public APIs. It may be changed or removed without notice in any
+        ///         release and should therefore not be directly used in any plug-ins.
+        ///     </para>
+        /// </remarks>
+        [RockInternal]
+        string GetCondensedTextValue( string privateValue, Dictionary<string, string> privateConfigurationValues );
+
+        /// <summary>
+        /// Formats the value into a string of HTML text that can be rendered
+        /// on a web page. This value will be used when space is limited.
+        /// </summary>
+        /// <param name="privateValue">The private (database) value.</param>
+        /// <param name="privateConfigurationValues">The private (database) configuration values.</param>
+        /// <returns>A string of HTML text.</returns>
+        /// <remarks>
+        ///     <para>
+        ///         <strong>This is an internal API</strong> that supports the Rock
+        ///         infrastructure and not subject to the same compatibility standards
+        ///         as public APIs. It may be changed or removed without notice in any
+        ///         release and should therefore not be directly used in any plug-ins.
+        ///     </para>
+        /// </remarks>
+        [RockInternal]
+        string GetCondensedHtmlValue( string privateValue, Dictionary<string, string> privateConfigurationValues );
+
+        /// <summary>
+        /// Gets the value that will be sent to remote devices. This value is
+        /// used by those devices to do custom formatting when displaying the value.
+        /// </summary>
+        /// <param name="privateValue">The private (database) value.</param>
+        /// <param name="privateConfigurationValues">The private (database) configuration values.</param>
+        /// <returns>A string of text to send to the device.</returns>
+        /// <remarks>
+        ///     <para>
+        ///         <strong>This is an internal API</strong> that supports the Rock
+        ///         infrastructure and not subject to the same compatibility standards
+        ///         as public APIs. It may be changed or removed without notice in any
+        ///         release and should therefore not be directly used in any plug-ins.
+        ///     </para>
+        /// </remarks>
+        [RockInternal]
+        string GetPublicValue( string privateValue, Dictionary<string, string> privateConfigurationValues );
 
         /// <summary>
         /// Formats the value based on the type and qualifiers
@@ -119,6 +272,14 @@ namespace Rock.Field
         object ValueAsFieldType( Control parentControl, string value, Dictionary<string, ConfigurationValue> configurationValues );
 
         /// <summary>
+        /// Returns the value using the most appropriate datatype
+        /// </summary>
+        /// <param name="value">The value.</param>
+        /// <param name="configurationValues">The configuration values.</param>
+        /// <returns></returns>
+        object ValueAsFieldType( string value, Dictionary<string, ConfigurationValue> configurationValues );
+
+        /// <summary>
         /// Returns the value that should be used for sorting, using the most appropriate datatype
         /// </summary>
         /// <param name="parentControl">The parent control.</param>
@@ -147,6 +308,42 @@ namespace Rock.Field
         /// <c>true</c> if this instance has default control; otherwise, <c>false</c>.
         /// </value>
         bool HasDefaultControl { get; }
+
+        /// <summary>
+        /// Gets the value that will be sent to remote devices. This value is
+        /// used for custom formatting as well as device-side editing.
+        /// </summary>
+        /// <param name="privateValue">The private (database) value.</param>
+        /// <param name="privateConfigurationValues">The private (database) configuration values.</param>
+        /// <returns>A string of text to send to the remote device.</returns>
+        /// <remarks>
+        ///     <para>
+        ///         <strong>This is an internal API</strong> that supports the Rock
+        ///         infrastructure and not subject to the same compatibility standards
+        ///         as public APIs. It may be changed or removed without notice in any
+        ///         release and should therefore not be directly used in any plug-ins.
+        ///     </para>
+        /// </remarks>
+        [RockInternal]
+        string GetPublicEditValue( string privateValue, Dictionary<string, string> privateConfigurationValues );
+
+        /// <summary>
+        /// Gets the value to be stored in the database from the value sent by
+        /// a device at the end of an edit.
+        /// </summary>
+        /// <param name="publicValue">The public value received from a remote device.</param>
+        /// <param name="privateConfigurationValues">The private (database) configuration values.</param>
+        /// <returns>A string value to store in the database.</returns>
+        /// <remarks>
+        ///     <para>
+        ///         <strong>This is an internal API</strong> that supports the Rock
+        ///         infrastructure and not subject to the same compatibility standards
+        ///         as public APIs. It may be changed or removed without notice in any
+        ///         release and should therefore not be directly used in any plug-ins.
+        ///     </para>
+        /// </remarks>
+        [RockInternal]
+        string GetPrivateEditValue( string publicValue, Dictionary<string, string> privateConfigurationValues );
 
         /// <summary>
         /// Creates an HTML control.
@@ -202,6 +399,42 @@ namespace Rock.Field
         #endregion
 
         #region Filter Control
+
+        /// <summary>
+        /// Gets the value that will be sent to remote devices. This value will
+        /// be used when editing the filter value on the device.
+        /// </summary>
+        /// <remarks>
+        ///     <para>
+        ///         <strong>This is an internal API</strong> that supports the Rock
+        ///         infrastructure and not subject to the same compatibility standards
+        ///         as public APIs. It may be changed or removed without notice in any
+        ///         release and should therefore not be directly used in any plug-ins.
+        ///     </para>
+        /// </remarks>
+        /// <param name="privateValue">The private (database) value.</param>
+        /// <param name="privateConfigurationValues">The private (database) configuration values.</param>
+        /// <returns>A <see cref="ComparisonValue"/> that has been parsed and sanitized.</returns>
+        [RockInternal]
+        ComparisonValue GetPublicFilterValue( string privateValue, Dictionary<string, string> privateConfigurationValues );
+
+        /// <summary>
+        /// Gets the filter value to be stored in the database from the value sent
+        /// by a device at the end of an edit on a filter control.
+        /// </summary>
+        /// <param name="publicValue">The public value received from a remote device.</param>
+        /// <param name="privateConfigurationValues">The private (database) configuration values.</param>
+        /// <returns>A string value to store in the database.</returns>
+        /// <remarks>
+        ///     <para>
+        ///         <strong>This is an internal API</strong> that supports the Rock
+        ///         infrastructure and not subject to the same compatibility standards
+        ///         as public APIs. It may be changed or removed without notice in any
+        ///         release and should therefore not be directly used in any plug-ins.
+        ///     </para>
+        /// </remarks>
+        [RockInternal]
+        string GetPrivateFilterValue( ComparisonValue publicValue, Dictionary<string, string> privateConfigurationValues );
 
         /// <summary>
         /// Creates the control needed to filter (query) values using this field type using the specified FilterMode

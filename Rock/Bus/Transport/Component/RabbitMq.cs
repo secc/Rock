@@ -92,6 +92,16 @@ namespace Rock.Bus.Transport
         /// <returns></returns>
         public override ISendEndpoint GetSendEndpoint( IBusControl bus, string queueName )
         {
+            /* 
+                 4/6/2022 - SMC
+
+                 This URL should probably be changed to use the amqps:// protocol prefix (like
+                 the one used in the GetBusControl() method above) , instead of rabbitmq://
+                 with the TLS port number (5671) hard-coded, but it is being left in a
+                 known-working configuration for the moment.
+
+            */
+
             var url = $"rabbitmq://{GetHost()}:5671/{GetUser()}/{queueName}";
             return bus.GetSendEndpoint( new Uri( url ) ).Result;
         }

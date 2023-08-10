@@ -73,11 +73,15 @@ namespace Rock.Bus.Message
         /// </summary>
         public static void Publish( string key )
         {
-            if ( !RockMessageBus.IsRockStarted )
-            {
-                // Don't publish cache events until Rock is all the way started
-                return;
-            }
+            /*  06-07-2022 MP
+
+              In the case of publishing a AuthorizationCacheWasUpdatedMessage, we don't need to check RockMessageBus.IsRockStarted. The AuthorizationCacheWasUpdatedMessage publish
+              logic doesn't have a dependency on having Rock fully started.
+
+              Also, we really need to publish these messages regardless of IsRockStarted to prevent AuthorizationCacheWasUpdatedMessage caches on other servers from getting stale.
+
+              If we later discover that this isn't OK, we'll revisit this decision and make any updates to make it OK again.
+           */
 
             var message = new AuthorizationCacheWasUpdatedMessage
             {

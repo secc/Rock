@@ -18,6 +18,7 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
+using System.Globalization;
 using System.Linq;
 using System.Text.RegularExpressions;
 using System.Web.UI;
@@ -26,6 +27,7 @@ using System.Web.UI.WebControls;
 using Rock;
 using Rock.Attribute;
 using Rock.Data;
+using Rock.Lava;
 using Rock.Model;
 using Rock.Web.Cache;
 using Rock.Web.UI;
@@ -194,6 +196,12 @@ namespace RockWeb.Blocks.Reporting
         Category = "CustomSetting",
         Key = AttributeKey.ShowGridFilter )]
 
+    [BooleanField( "Enable Sticky Header on Grid",
+        Description = "Determines whether the header on the grid will be stick at the top of the page.",
+        DefaultBooleanValue = false,
+        Category = "CustomSetting",
+        Key = AttributeKey.EnableStickyHeaderOnGrid )]
+
     [BooleanField( "Wrap In Panel",
         Description = "This will wrap the results grid in a panel.",
         DefaultBooleanValue = false,
@@ -210,6 +218,23 @@ namespace RockWeb.Blocks.Reporting
         Category = "CustomSetting",
         Key = AttributeKey.PanelTitleCssClass )]
 
+    [CodeEditorField( "Grid Header Content",
+        Description = "This Lava template will be rendered above the grid. It will have access to the same dataset as the grid.",
+        EditorMode = CodeEditorMode.Lava,
+        EditorTheme = CodeEditorTheme.Rock,
+        EditorHeight = 200,
+        IsRequired = false,
+        Category = "CustomSetting",
+        Key = AttributeKey.GridHeaderContent )]
+
+    [CodeEditorField( "Grid Footer Content",
+        Description = "This Lava template will be rendered below the grid (best used for custom totaling). It will have access to the same dataset as the grid.",
+        EditorMode = CodeEditorMode.Lava,
+        EditorTheme = CodeEditorTheme.Rock,
+        EditorHeight = 200,
+        IsRequired = false,
+        Category = "CustomSetting",
+        Key = AttributeKey.GridFooterContent )]
     #endregion
     public partial class DynamicData : RockBlockCustomSettings
     {
@@ -242,10 +267,13 @@ namespace RockWeb.Blocks.Reporting
             public const string PageTitleLava = "PageTitleLava";
             public const string PaneledGrid = "PaneledGrid";
             public const string ShowGridFilter = "ShowGridFilter";
+            public const string EnableStickyHeaderOnGrid = "EnableStickyHeaderOnGrid";
             public const string WrapInPanel = "WrapInPanel";
             public const string PanelTitle = "PanelTitle";
             public const string PanelTitleCssClass = "PanelTitleCssClass";
             public const string ShowLaunchWorkflow = "ShowLaunchWorkflow";
+            public const string GridHeaderContent = "GridHeaderContent";
+            public const string GridFooterContent = "GridFooterContent";
             public const string EnableQuickReturn = "EnableQuickReturn";
         }
 
@@ -413,8 +441,10 @@ namespace RockWeb.Blocks.Reporting
             SetAttributeValue( AttributeKey.UrlMask, tbUrlMask.Text );
             SetAttributeValue( AttributeKey.Columns, tbColumns.Text );
             SetAttributeValue( AttributeKey.ShowColumns, ddlHideShow.SelectedValue );
-            SetAttributeValue( AttributeKey.FormattedOutput, ceFormattedOutput.Text );
+            SetAttributeValue( AttributeKey.FormattedOutput, swLavaCustomization.Checked ? ceFormattedOutput.Text : string.Empty );
             SetAttributeValue( AttributeKey.PageTitleLava, cePageTitleLava.Text );
+            SetAttributeValue( AttributeKey.GridHeaderContent, ceGridHeaderLava.Text );
+            SetAttributeValue( AttributeKey.GridFooterContent, ceGridFooterLava.Text );
             SetAttributeValue( AttributeKey.PersonReport, cbPersonReport.Checked.ToString() );
             SetAttributeValue( AttributeKey.CommunicationRecipientPersonIdColumns, tbCommunicationRecipientPersonIdFields.Text );
             SetAttributeValue( AttributeKey.ShowCommunicate, ( cbPersonReport.Checked && cbShowCommunicate.Checked ).ToString() );
@@ -424,11 +454,13 @@ namespace RockWeb.Blocks.Reporting
             SetAttributeValue( AttributeKey.ShowMergeTemplate, cbShowMergeTemplate.Checked.ToString() );
             SetAttributeValue( AttributeKey.ShowLaunchWorkflow, ( cbPersonReport.Checked && cbShowLaunchWorkflow.Checked ).ToString() );
             SetAttributeValue( AttributeKey.ShowGridFilter, cbShowGridFilter.Checked.ToString() );
+            SetAttributeValue( AttributeKey.EnableStickyHeaderOnGrid, cbEnableStickyHeaderOnGrid.Checked.ToString() );
             SetAttributeValue( AttributeKey.MergeFields, tbMergeFields.Text );
             SetAttributeValue( AttributeKey.EncryptedFields, tbEncryptedFields.Text );
             SetAttributeValue( AttributeKey.WrapInPanel, swWrapInPanel.Checked.ToString() );
             SetAttributeValue( AttributeKey.PanelTitleCssClass, tbPanelIcon.Text );
             SetAttributeValue( AttributeKey.PanelTitle, tbPanelTitle.Text );
+
             SaveAttributeValues();
 
             mdEdit.Hide();
@@ -584,6 +616,8 @@ namespace RockWeb.Blocks.Reporting
             tbColumns.Text = GetAttributeValue( AttributeKey.Columns );
             ceFormattedOutput.Text = GetAttributeValue( AttributeKey.FormattedOutput );
             cePageTitleLava.Text = GetAttributeValue( AttributeKey.PageTitleLava );
+            ceGridHeaderLava.Text = GetAttributeValue( AttributeKey.GridHeaderContent );
+            ceGridFooterLava.Text = GetAttributeValue( AttributeKey.GridFooterContent );
             cbPersonReport.Checked = GetAttributeValue( AttributeKey.PersonReport ).AsBoolean();
             tbCommunicationRecipientPersonIdFields.Text = GetAttributeValue( AttributeKey.CommunicationRecipientPersonIdColumns );
             cbShowCommunicate.Checked = GetAttributeValue( AttributeKey.ShowCommunicate ).AsBoolean();
@@ -593,6 +627,7 @@ namespace RockWeb.Blocks.Reporting
             cbShowMergeTemplate.Checked = GetAttributeValue( AttributeKey.ShowMergeTemplate ).AsBoolean();
             cbShowLaunchWorkflow.Checked = GetAttributeValue( AttributeKey.ShowLaunchWorkflow ).AsBoolean();
             cbShowGridFilter.Checked = GetAttributeValue( AttributeKey.ShowGridFilter ).AsBoolean();
+            cbEnableStickyHeaderOnGrid.Checked = GetAttributeValue( AttributeKey.EnableStickyHeaderOnGrid ).AsBoolean();
             tbMergeFields.Text = GetAttributeValue( AttributeKey.MergeFields );
             tbEncryptedFields.Text = GetAttributeValue( AttributeKey.EncryptedFields );
             swWrapInPanel.Checked = GetAttributeValue( AttributeKey.WrapInPanel ).AsBoolean();
@@ -649,10 +684,18 @@ namespace RockWeb.Blocks.Reporting
 
                 if ( dataSetSchema != null )
                 {
-                    string formattedOutput = GetAttributeValue( AttributeKey.FormattedOutput );
+                    var formattedOutput = GetAttributeValue( AttributeKey.FormattedOutput );
+                    var pageTitleLava = GetAttributeValue( AttributeKey.PageTitleLava );
+                    var gridHeaderLava = GetAttributeValue( AttributeKey.GridHeaderContent );
+                    var gridFooterLava = GetAttributeValue( AttributeKey.GridFooterContent );
 
                     // load merge objects if needed by either for formatted output OR page title
-                    if ( !string.IsNullOrWhiteSpace( GetAttributeValue( AttributeKey.PageTitleLava ) ) || !string.IsNullOrWhiteSpace( formattedOutput ) )
+                    var loadGridIntoMergeFields = formattedOutput.IsNotNullOrWhiteSpace()
+                        || pageTitleLava.IsNotNullOrWhiteSpace()
+                        || gridHeaderLava.IsNotNullOrWhiteSpace()
+                        || gridFooterLava.IsNotNullOrWhiteSpace();
+
+                    if ( loadGridIntoMergeFields )
                     {
                         int i = 1;
 
@@ -667,32 +710,60 @@ namespace RockWeb.Blocks.Reporting
                             return;
                         }
 
-                        foreach ( DataTable dataTable in dataSet.Tables )
+                        if ( LavaService.RockLiquidIsEnabled )
                         {
-                            var dropRows = new List<DataRowDrop>();
-                            foreach ( DataRow row in dataTable.Rows )
+                            foreach ( DataTable dataTable in dataSet.Tables )
                             {
-                                dropRows.Add( new DataRowDrop( row ) );
-                            }
+                                var lavaRows = new List<DataRowDrop>();
+                                foreach ( DataRow row in dataTable.Rows )
+                                {
+                                    lavaRows.Add( new DataRowDrop( row ) );
+                                }
 
-                            if ( dataSet.Tables.Count > 1 )
-                            {
-                                var tableField = new Dictionary<string, object>();
-                                tableField.Add( "rows", dropRows );
-                                mergeFields.Add( "table" + i.ToString(), tableField );
+                                if ( dataSet.Tables.Count > 1 )
+                                {
+                                    var tableField = new Dictionary<string, object>();
+                                    tableField.Add( "rows", lavaRows );
+                                    mergeFields.Add( "table" + i.ToString(), tableField );
+                                }
+                                else
+                                {
+                                    mergeFields.Add( "rows", lavaRows );
+                                }
+
+                                i++;
                             }
-                            else
+                        }
+                        else
+                        {
+                            foreach ( DataTable dataTable in dataSet.Tables )
                             {
-                                mergeFields.Add( "rows", dropRows );
+                                var lavaRows = new List<DataRowLavaData>();
+                                foreach ( DataRow row in dataTable.Rows )
+                                {
+                                    lavaRows.Add( new DataRowLavaData( row ) );
+                                }
+
+                                if ( dataSet.Tables.Count > 1 )
+                                {
+                                    var tableField = new Dictionary<string, object>();
+                                    tableField.Add( "rows", lavaRows );
+                                    mergeFields.Add( "table" + i.ToString(), tableField );
+                                }
+                                else
+                                {
+                                    mergeFields.Add( "rows", lavaRows );
+                                }
+
+                                i++;
                             }
-                            i++;
                         }
                     }
 
                     // set page title
-                    if ( !string.IsNullOrWhiteSpace( GetAttributeValue( AttributeKey.PageTitleLava ) ) )
+                    if ( pageTitleLava.IsNotNullOrWhiteSpace() )
                     {
-                        string title = GetAttributeValue( AttributeKey.PageTitleLava ).ResolveMergeFields( mergeFields, enabledLavaCommands );
+                        var title = pageTitleLava.ResolveMergeFields( mergeFields, enabledLavaCommands );
 
                         RockPage.BrowserTitle = title;
                         RockPage.PageTitle = title;
@@ -707,7 +778,7 @@ namespace RockWeb.Blocks.Reporting
                         quickReturnLava.ResolveMergeFields( quickReturnMergeFields );
                     }
 
-                    if ( string.IsNullOrWhiteSpace( formattedOutput ) )
+                    if ( formattedOutput.IsNullOrWhiteSpace() )
                     {
                         bool personReport = GetAttributeValue( AttributeKey.PersonReport ).AsBoolean();
 
@@ -731,9 +802,10 @@ namespace RockWeb.Blocks.Reporting
                         }
 
                         HtmlGenericControl divPanelBody = null;
+                        HtmlGenericControl divPanel = null;
                         if ( GetAttributeValue( AttributeKey.WrapInPanel ).AsBoolean() )
                         {
-                            var divPanel = new HtmlGenericControl( "div" );
+                            divPanel = new HtmlGenericControl( "div" );
                             divPanel.AddCssClass( "panel panel-block" );
 
                             var divPanelHeading = new HtmlGenericControl( "div" );
@@ -765,9 +837,23 @@ namespace RockWeb.Blocks.Reporting
                             divPanelBody.AddCssClass( "panel-body" );
 
                             divPanel.Controls.Add( divPanelHeading );
-                            divPanel.Controls.Add( divPanelBody );
 
                             phContent.Controls.Add( divPanel );
+                        }
+
+                        if ( gridHeaderLava.IsNotNullOrWhiteSpace() )
+                        {
+                            var div = new HtmlGenericControl( "div" );
+                            div.Controls.Add( new LiteralControl( gridHeaderLava.ResolveMergeFields( mergeFields, enabledLavaCommands ) ) );
+                            if ( divPanel == null )
+                            {
+                                phContent.Controls.Add( div );
+                            }
+                            else
+                            {
+                                div.AddCssClass( "panel-heading" );
+                                divPanel.Controls.Add( div );
+                            }
                         }
 
                         foreach ( DataTable dataTable in dataSet.Tables )
@@ -787,6 +873,7 @@ namespace RockWeb.Blocks.Reporting
                             else
                             {
                                 divPanelBody.Controls.Add( div );
+                                divPanel.Controls.Add( divPanelBody );
                             }
 
                             GridFilter = new GridFilter()
@@ -810,6 +897,7 @@ namespace RockWeb.Blocks.Reporting
                             grid.Actions.ShowExcelExport = GetAttributeValue( AttributeKey.ShowExcelExport ).AsBoolean();
                             grid.Actions.ShowMergeTemplate = GetAttributeValue( AttributeKey.ShowMergeTemplate ).AsBoolean();
                             grid.ShowWorkflowOrCustomActionButtons = GetAttributeValue( AttributeKey.ShowLaunchWorkflow ).AsBoolean();
+                            grid.EnableStickyHeaders = GetAttributeValue( AttributeKey.EnableStickyHeaderOnGrid ).AsBoolean();
 
                             grid.GridRebind += gReport_GridRebind;
                             grid.RowSelected += gReport_RowSelected;
@@ -840,6 +928,21 @@ namespace RockWeb.Blocks.Reporting
                                 }
 
                                 grid.DataBind();
+                            }
+                        }
+
+                        if ( gridFooterLava.IsNotNullOrWhiteSpace() )
+                        {
+                            var div = new HtmlGenericControl( "div" );
+                            div.Controls.Add( new LiteralControl( gridFooterLava.ResolveMergeFields( mergeFields, enabledLavaCommands ) ) );
+                            if ( divPanel == null )
+                            {
+                                phContent.Controls.Add( div );
+                            }
+                            else
+                            {
+                                div.AddCssClass( "panel-footer" );
+                                divPanel.Controls.Add( div );
                             }
                         }
                     }
@@ -1131,12 +1234,12 @@ namespace RockWeb.Blocks.Reporting
 
                     if ( minValue.HasValue )
                     {
-                        query.Add( string.Format( "[{0}] >= #{1}#", colName, minValue.Value ) );
+                        query.Add( string.Format( "[{0}] >= #{1}#", colName, minValue.Value.ToISO8601DateString() ) );
                     }
 
                     if ( maxValue.HasValue )
                     {
-                        query.Add( string.Format( "[{0}] < #{1}#", colName, maxValue.Value.AddDays( 1 ) ) );
+                        query.Add( string.Format( "[{0}] < #{1}#", colName, maxValue.Value.AddDays( 1 ).ToISO8601DateString() ) );
                     }
                 }
                 else if ( control is RockDropDownList )
@@ -1214,10 +1317,49 @@ namespace RockWeb.Blocks.Reporting
 
         #endregion
 
+        private class DataRowLavaData : LavaDataObject
+        {
+            private readonly DataRow _dataRow;
+
+            public DataRowLavaData( DataRow dataRow )
+            {
+                _dataRow = dataRow;
+            }
+
+            public override List<string> AvailableKeys
+            {
+                get
+                {
+                    var keys = new List<string>();
+
+                    foreach ( DataColumn column in _dataRow.Table.Columns )
+                    {
+                        keys.Add( column.ColumnName );
+                    }
+
+                    return keys;
+                }
+            }
+
+            protected override bool OnTryGetValue( string key, out object result )
+            {
+                if ( _dataRow.Table.Columns.Contains( key ) )
+                {
+                    result = _dataRow[key];
+                    return true;
+                }
+
+                result = null;
+                return false;
+            }
+        }
+
+        #region RockLiquid Lava implementation
+
         /// <summary>
         ///
         /// </summary>
-        private class DataRowDrop : DotLiquid.Drop
+        private class DataRowDrop : DotLiquid.Drop, ILavaDataDictionary
         {
             private readonly DataRow _dataRow;
 
@@ -1235,6 +1377,39 @@ namespace RockWeb.Blocks.Reporting
 
                 return null;
             }
+
+            #region ILavaDataDictionary
+
+            public List<string> AvailableKeys
+            {
+                get
+                {
+                    var keys = new List<string>();
+                    foreach ( DataColumn column in _dataRow.Table.Columns )
+                    {
+                        keys.Add( column.ColumnName );
+                    }
+                    return keys;
+                }
+            }
+
+            public bool ContainsKey( string key )
+            {
+                return _dataRow.Table.Columns.Contains( key );
+            }
+
+            public object GetValue( string key )
+            {
+                if ( _dataRow.Table.Columns.Contains( key ) )
+                {
+                    return _dataRow[key];
+                }
+                return null;
+            }
+
+            #endregion
         }
+
+        #endregion
     }
 }

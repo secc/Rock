@@ -22,9 +22,12 @@ using System.Linq;
 using System.Linq.Expressions;
 
 using Rock.Attribute;
+using Rock.ClientService.Core.Campus;
+using Rock.ClientService.Core.Campus.Options;
 using Rock.Data;
 using Rock.Model;
 using Rock.Utility;
+using Rock.ViewModel.NonEntities;
 using Rock.Web.Cache;
 
 using Regex = System.Text.RegularExpressions.Regex;
@@ -198,6 +201,13 @@ namespace Rock.Blocks.Types.Mobile.Groups
         Category = "customsetting",
         Key = AttributeKey.GroupTypesLocationType )]
 
+    [AttributeField( "Attribute Filters",
+        EntityTypeGuid = Rock.SystemGuid.EntityType.GROUP,
+        IsRequired = false,
+        AllowMultiple = true,
+        Category = "customsetting",
+        Key = AttributeKey.AttributeFilters )]
+
     #endregion
 
     public partial class GroupFinder : RockMobileBlockType
@@ -249,6 +259,8 @@ namespace Rock.Blocks.Types.Mobile.Groups
             public const string GroupTypes = "GroupTypes";
 
             public const string GroupTypesLocationType = "GroupTypesLocationType";
+
+            public const string AttributeFilters = "AttributeFilters";
 #pragma warning restore CS1591 // Missing XML comment for publicly visible type or member
         }
 
@@ -388,6 +400,14 @@ namespace Rock.Blocks.Types.Mobile.Groups
         /// </value>
         protected Dictionary<int, int> GroupTypesLocationType => GetAttributeValue( AttributeKey.GroupTypesLocationType ).FromJsonOrNull<Dictionary<int, int>>() ?? new Dictionary<int, int>();
 
+        /// <summary>
+        /// Gets the group attribute unique identifiers enabled for this block.
+        /// </summary>
+        /// <value>
+        /// The group attribute unique identifiers enabled for this block.
+        /// </value>
+        protected List<Guid> AttributeFiltersGuids => GetAttributeValue( AttributeKey.AttributeFilters ).SplitDelimitedValues().AsGuidList();
+
         #endregion
 
         #region Page Parameter Keys
@@ -431,6 +451,11 @@ namespace Rock.Blocks.Types.Mobile.Groups
         {
             using ( var rockContext = new RockContext() )
             {
+                var attributes = AttributeFiltersGuids.Select( a => AttributeCache.Get( a ) )
+                    .Where( a => a != null )
+                    .Select( a => ToPublicEditableAttributeValue( a, a.DefaultValue ) )
+                    .ToList();
+
                 return new
                 {
                     Campuses = GetValidCampuses( rockContext ),
@@ -440,11 +465,38 @@ namespace Rock.Blocks.Types.Mobile.Groups
                     ShowTimePeriodFilter,
                     ShowLocationFilter,
                     ResultsTransition,
+                    Attributes = attributes
                 };
             }
         }
 
         #endregion
+
+        /// <summary>
+        /// Converts to an attribute and value into a custom poco that will
+        /// be transmitted to the shell.
+        /// </summary>
+        /// <param name="attribute">The attribute.</param>
+        /// <param name="value">The value.</param>
+        /// <returns>The editable attribute including the value.</returns>
+        private PublicEditableAttributeValueViewModel ToPublicEditableAttributeValue( AttributeCache attribute, string value )
+        {
+            var attr = PublicAttributeHelper.GetPublicAttributeForEdit( attribute );
+
+            return new PublicEditableAttributeValueViewModel
+            {
+                AttributeGuid = attr.AttributeGuid,
+                Categories = attr.Categories,
+                ConfigurationValues = attr.ConfigurationValues,
+                Description = attr.Description,
+                FieldTypeGuid = attr.FieldTypeGuid,
+                IsRequired = attr.IsRequired,
+                Key = attr.Key,
+                Name = attr.Name,
+                Order = attr.Order,
+                Value = PublicAttributeHelper.GetPublicEditValue( attribute, value )
+            };
+        }
 
         #region Methods
 
@@ -465,63 +517,32 @@ namespace Rock.Blocks.Types.Mobile.Groups
         /// </summary>
         /// <param name="rockContext">The rock context.</param>
         /// <returns>A collection of list items.</returns>
-        private List<ListItemViewModel> GetValidCampuses( RockContext rockContext )
+        private List<ViewModel.NonEntities.ListItemViewModel> GetValidCampuses( RockContext rockContext )
         {
-            var options = new
+            var campusClientService = new CampusClientService( rockContext, RequestContext.CurrentPerson );
+
+            // Bypass security because the admin has specified which campuses
+            // they want to show up.
+            campusClientService.EnableSecurity = false;
+
+            return campusClientService.GetCampusesAsListItems( new CampusOptions
             {
-                IncludeInactive = false,
                 LimitCampusTypes = CampusTypeGuids,
                 LimitCampusStatuses = CampusStatusGuids
-            };
+            } );
+        }
 
-            IEnumerable<CampusCache> source = CampusCache.All( rockContext );
-
-            // Exclude inactive campuses unless we were asked to include them.
-            if ( !options.IncludeInactive )
-            {
-                source = source.Where( c => c.IsActive == true );
-            }
-
-            // If they specified any campus types then limit the results to
-            // only those campuses that fit the criteria.
-            if ( options.LimitCampusTypes != null && options.LimitCampusTypes.Count > 0 )
-            {
-                source = source.Where( c =>
-                {
-                    if ( !c.CampusTypeValueId.HasValue )
-                    {
-                        return false;
-                    }
-
-                    var definedValueCache = DefinedValueCache.Get( c.CampusTypeValueId.Value );
-
-                    return definedValueCache != null && options.LimitCampusTypes.Contains( definedValueCache.Guid );
-                } );
-            }
-
-            // If they specified any campus status then limit the results to
-            // only those campuses taht fit the criteria.
-            if ( options.LimitCampusStatuses != null && options.LimitCampusStatuses.Count > 0 )
-            {
-                source = source.Where( c =>
-                {
-                    if ( !c.CampusStatusValueId.HasValue )
-                    {
-                        return false;
-                    }
-
-                    var definedValueCache = DefinedValueCache.Get( c.CampusStatusValueId.Value );
-
-                    return definedValueCache != null && options.LimitCampusStatuses.Contains( definedValueCache.Guid );
-                } );
-            }
-
-            return source.OrderBy( c => c.Order )
-                .Select( c => new ListItemViewModel()
-                {
-                    Value = c.Guid.ToString(),
-                    Text = c.Name
-                } ).ToList();
+        /// <summary>
+        /// Gets the valid group attributes defined for this block instance.
+        /// </summary>
+        /// <param name="rockContext">The rock database context.</param>
+        /// <returns>A list of <see cref="AttributeCache"/> objects which can be used for filtering groups.</returns>
+        private List<AttributeCache> GetValidGroupAttributes( RockContext rockContext )
+        {
+            return AttributeFiltersGuids
+                .Select( g => AttributeCache.Get( g, rockContext ) )
+                .Where( a => a != null )
+                .ToList();
         }
 
         /// <summary>
@@ -578,9 +599,25 @@ namespace Rock.Blocks.Types.Mobile.Groups
         /// <returns>The default filter information.</returns>
         private GroupFinderFilter GetInitialFilter( RockContext rockContext )
         {
+            var validAttributes = GetValidGroupAttributes( rockContext );
+
+            // Get all the page parameters and filter it down to just those that
+            // match a valid group attribute and then build a list of those as
+            // the initial attribute values.
+            var attributeValues = RequestContext.GetPageParameters()
+                .Select( p => new
+                {
+                    Attribute = validAttributes.FirstOrDefault( a => a.Key.Equals( p.Key, StringComparison.OrdinalIgnoreCase ) ),
+                    Value = new List<string> { string.Empty, p.Value }
+                } )
+                .Where( a => a.Attribute != null )
+                .ToDictionary( a => a.Attribute.Key, a => a.Value );
+
+            
             return new GroupFinderFilter
             {
                 CampusGuid = CampusContextEnabled ? RequestContext.GetContextEntity<Campus>()?.Guid : null,
+                Attributes = attributeValues
             };
         }
 
@@ -593,6 +630,7 @@ namespace Rock.Blocks.Types.Mobile.Groups
         private IQueryable<Group> GetGroups( RockContext rockContext, GroupFinderFilter filter )
         {
             var groupService = new GroupService( rockContext );
+            var validAttributes = GetValidGroupAttributes( rockContext );
 
             if ( !GroupTypeGuids.Any() )
             {
@@ -604,6 +642,14 @@ namespace Rock.Blocks.Types.Mobile.Groups
             var timePeriodsOfDay = filter.TimePeriodOfDay.HasValue ? new List<TimePeriodOfDay> { filter.TimePeriodOfDay.Value } : null;
             var campuses = filter.CampusGuid.HasValue ? new List<Guid> { filter.CampusGuid.Value } : null;
             var requiredSpotsAvailable = HideOvercapacityGroups ? ( int? ) 1 : null;
+            var attributeFilters = filter.Attributes
+                .Select( f => new
+                {
+                    Attribute = validAttributes.FirstOrDefault( a => a.Key == f.Key ),
+                    f.Value
+                } )
+                .Where( a => a.Attribute != null && a.Value != null )
+                .ToDictionary( a => a.Attribute, a => a.Value );
 
             // -- Everything below this line is common logic that can be moved to
             // the service layer.
@@ -659,6 +705,72 @@ namespace Rock.Blocks.Types.Mobile.Groups
                     || g.GroupType.DefaultGroupRole == null
                     || g.GroupType.DefaultGroupRole.MaxCount == null
                     || ( g.Members.Where( m => m.GroupRoleId == g.GroupType.DefaultGroupRoleId && m.GroupMemberStatus == GroupMemberStatus.Active ).Count() + requiredSpotsAvailable.Value ) <= g.GroupType.DefaultGroupRole.MaxCount );
+            }
+
+            // Filter query by any configured attribute filters
+            if ( attributeFilters != null && attributeFilters.Any() )
+            {
+                var processedAttributes = new HashSet<string>();
+                /*
+                    07/01/2021 - MSB
+
+                    This section of code creates an expression for each attribute in the search. The attributes from the same
+                    Group Type get grouped and &&'d together. Then the grouped Expressions will get ||'d together so that results
+                    will be returned across Group Types.
+
+                    If we don't do this, when the Admin adds attributes from two different Group Types and then the user enters data
+                    for both attributes they would get no results because Attribute A from Group Type A doesn't exists in Group Type B.
+                    
+                    Reason: Queries across Group Types
+                */
+                var filters = new Dictionary<string, Expression>();
+                var parameterExpression = groupService.ParameterExpression;
+
+                foreach ( var attributeFilter in attributeFilters )
+                {
+                    var attribute = attributeFilter.Key;
+                    var values = attributeFilter.Value;
+                    var queryKey = $"{attribute.EntityTypeQualifierColumn}_{attribute.EntityTypeQualifierValue}";
+
+                    Expression leftExpression = null;
+                    if ( filters.ContainsKey( queryKey ) )
+                    {
+                        leftExpression = filters[queryKey];
+                    }
+
+                    var expression = Rock.Utility.ExpressionHelper.BuildExpressionFromFieldType<Group>( values.ToList(), attribute, groupService, parameterExpression );
+                    if ( expression != null )
+                    {
+                        if ( leftExpression == null )
+                        {
+                            filters[queryKey] = expression;
+                        }
+                        else
+                        {
+                            filters[queryKey] = Expression.And( leftExpression, expression );
+                        }
+                    }
+                }
+
+                // If we have a single filter group then just filter by the
+                // expression. If we have more than one then OR each group
+                // together and apply the resulting expression.
+                if ( filters.Count == 1 )
+                {
+                    groupQry = groupQry.Where( parameterExpression, filters.FirstOrDefault().Value );
+                }
+                else if ( filters.Count > 1 )
+                {
+                    var keys = filters.Keys.ToList();
+                    var expression = filters[keys[0]];
+
+                    for ( var i = 1; i < filters.Count; i++ )
+                    {
+                        expression = Expression.Or( expression, filters[keys[i]] );
+                    }
+
+                    groupQry = groupQry.Where( parameterExpression, expression );
+                }
             }
 
             return groupQry;
@@ -848,6 +960,14 @@ namespace Rock.Blocks.Types.Mobile.Groups
             /// The location to use for distance calculation.
             /// </value>
             public GroupFinderLocation Location { get; set; }
+
+            /// <summary>
+            /// Gets or sets the attribute values.
+            /// </summary>
+            /// <value>
+            /// The attribute values.
+            /// </value>
+            public Dictionary<string, List<string>> Attributes { get; set; }
         }
 
         /// <summary>
@@ -926,13 +1046,6 @@ namespace Rock.Blocks.Types.Mobile.Groups
             public GroupFinderLocation Location { get; set; }
         }
 
-        private class ListItemViewModel
-        {
-            public string Value { get; set; }
-
-            public string Text { get; set; }
-        }
-
         /// <summary>
         /// The type of transition to use in the Group Finder.
         /// </summary>
@@ -960,5 +1073,18 @@ namespace Rock.Blocks.Types.Mobile.Groups
         }
 
         #endregion
+
+        /// <summary>
+        /// Custom class to store the value along with the attribute. This is for
+        /// backwards compatibility with Mobile Shell.
+        /// </summary>
+        private class PublicEditableAttributeValueViewModel : PublicAttributeViewModel
+        {
+            /// <summary>
+            /// Gets or sets the value.
+            /// </summary>
+            /// <value>The value.</value>
+            public string Value { get; set; }
+        }
     }
 }

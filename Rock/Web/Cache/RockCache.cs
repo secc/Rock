@@ -72,9 +72,12 @@ namespace Rock.Web.Cache
                 return;
             }
 
-            foreach ( var cacheManager in _allManagers )
+            lock ( Obj )
             {
-                cacheManager?.Clear();
+                foreach ( var cacheManager in _allManagers )
+                {
+                    cacheManager?.Clear();
+                }
             }
 
             // Clear object cache keys
@@ -145,7 +148,7 @@ namespace Rock.Web.Cache
         {
             get
             {
-                if ( _objectCacheKeyReferences.IsNull() )
+                if ( _objectCacheKeyReferences == null )
                 {
                     _objectCacheKeyReferences = new List<CacheKeyReference>();
                 }
@@ -172,7 +175,7 @@ namespace Rock.Web.Cache
         {
             get
             {
-                if ( _stringCacheKeyReferences.IsNull() )
+                if ( _stringCacheKeyReferences == null )
                 {
                     _stringCacheKeyReferences = new List<CacheKeyReference>();
                 }

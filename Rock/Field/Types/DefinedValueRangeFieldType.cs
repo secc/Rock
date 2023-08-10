@@ -20,6 +20,7 @@ using System.Linq;
 using System.Web.UI;
 using System.Web.UI.WebControls;
 
+using Rock.Attribute;
 using Rock.Data;
 using Rock.Reporting;
 using Rock.Web.Cache;
@@ -32,12 +33,14 @@ namespace Rock.Field.Types
     /// Stored as a comma-delimited pair of DefinedValue.Guids: lowerGuid,upperGuid
     /// </summary>
     [Serializable]
+    [RockPlatformSupport( Utility.RockPlatform.WebForms )]
     public class DefinedValueRangeFieldType : FieldType
     {
         #region Configuration
 
         private const string DEFINED_TYPE_KEY = "definedtype";
         private const string DISPLAY_DESCRIPTION = "displaydescription";
+        private const string PUBLIC_VALUES = "values";
 
         /// <summary>
         /// Returns a list of the configuration keys
@@ -49,6 +52,39 @@ namespace Rock.Field.Types
             configKeys.Add( DEFINED_TYPE_KEY );
             configKeys.Add( DISPLAY_DESCRIPTION );
             return configKeys;
+        }
+
+        /// <inheritdoc/>
+        public override Dictionary<string, string> GetPublicConfigurationValues( Dictionary<string, string> privateConfigurationValues, ConfigurationValueUsage usage, string privateValue )
+        {
+            var publicConfigurationValues = base.GetPublicConfigurationValues( privateConfigurationValues, usage, privateValue );
+            var definedTypeGuid = publicConfigurationValues.ContainsKey( DEFINED_TYPE_KEY ) ? publicConfigurationValues[DEFINED_TYPE_KEY].AsGuidOrNull() : null;
+
+            if ( definedTypeGuid.HasValue )
+            {
+                var definedType = DefinedTypeCache.Get( definedTypeGuid.Value );
+
+                publicConfigurationValues[PUBLIC_VALUES] = definedType.DefinedValues
+                    .OrderBy( v => v.Order )
+                    .Select( v => new
+                    {
+                        Value = v.Guid,
+                        Text = v.Value,
+                        v.Description
+                    } )
+                    .ToCamelCaseJson( false, true );
+            }
+            else
+            {
+                publicConfigurationValues[PUBLIC_VALUES] = "[]";
+            }
+
+            if ( usage != ConfigurationValueUsage.Configure )
+            {
+                publicConfigurationValues.Remove( DEFINED_TYPE_KEY );
+            }
+
+            return publicConfigurationValues;
         }
 
         /// <summary>
@@ -142,15 +178,26 @@ namespace Rock.Field.Types
 
         #region Formatting
 
+        /// <inheritdoc/>
+        public override string GetTextValue( string value, Dictionary<string, string> configurationValues )
+        {
+            return GetTextValue( value, configurationValues, false );
+        }
+
+        /// <inheritdoc/>
+        public override string GetCondensedTextValue( string value, Dictionary<string, string> configurationValues )
+        {
+            return GetTextValue( value, configurationValues, true );
+        }
+
         /// <summary>
-        /// Returns the field's current value(s)
+        /// Gets the text value.
         /// </summary>
-        /// <param name="parentControl">The parent control.</param>
-        /// <param name="value">Information about the value</param>
+        /// <param name="value">The value.</param>
         /// <param name="configurationValues">The configuration values.</param>
-        /// <param name="condensed">Flag indicating if the value should be condensed (i.e. for use in a grid column)</param>
+        /// <param name="condensed">if set to <c>true</c> the value will be displayed in a condensed space.</param>
         /// <returns></returns>
-        public override string FormatValue( Control parentControl, string value, Dictionary<string, ConfigurationValue> configurationValues, bool condensed )
+        private string GetTextValue( string value, Dictionary<string, string> configurationValues, bool condensed )
         {
             if ( value != null )
             {
@@ -189,13 +236,58 @@ namespace Rock.Field.Types
                 }
             }
 
-            // something unexpected.  Let the base format it
-            return base.FormatValue( parentControl, value, configurationValues, condensed );
+            // Something unexpected. Let the base format it.
+            return base.GetTextValue( value, configurationValues );
+        }
+
+        /// <summary>
+        /// Returns the field's current value(s)
+        /// </summary>
+        /// <param name="parentControl">The parent control.</param>
+        /// <param name="value">Information about the value</param>
+        /// <param name="configurationValues">The configuration values.</param>
+        /// <param name="condensed">Flag indicating if the value should be condensed (i.e. for use in a grid column)</param>
+        /// <returns></returns>
+        public override string FormatValue( Control parentControl, string value, Dictionary<string, ConfigurationValue> configurationValues, bool condensed )
+        {
+            return GetTextValue( value, configurationValues.ToDictionary( k => k.Key, k => k.Value.Value ), condensed );
         }
 
         #endregion
 
         #region Edit Control
+
+        /// <inheritdoc/>
+        public override string GetPublicValue( string privateValue, Dictionary<string, string> privateConfigurationValues )
+        {
+            var guids = privateValue.SplitDelimitedValues().AsGuidOrNullList();
+            bool useDescription = privateConfigurationValues?.ContainsKey( DISPLAY_DESCRIPTION ) ?? false
+                ? privateConfigurationValues[DISPLAY_DESCRIPTION].AsBoolean()
+                : false;
+
+            if ( guids.Count == 2 && guids[0].HasValue && guids[1].HasValue )
+            {
+                var lowerValue = DefinedValueCache.Get( guids[0].Value );
+                var upperValue = DefinedValueCache.Get( guids[1].Value );
+
+                return new PublicValue
+                {
+                    Value = privateValue,
+                    Text = $"{lowerValue.Value} to {upperValue.Value}",
+                    Description = useDescription ? $"{lowerValue.Description} to {upperValue.Description}" : string.Empty
+                }.ToCamelCaseJson( false, true );
+            }
+
+            return new PublicValue().ToCamelCaseJson( false, true );
+        }
+
+        /// <inheritdoc/>
+        public override string GetPrivateEditValue( string publicValue, Dictionary<string, string> privateConfigurationValues )
+        {
+            var value = publicValue.FromJsonOrNull<PublicValue>();
+
+            return value?.Value ?? string.Empty;
+        }
 
         /// <summary>
         /// Creates the control(s) necessary for prompting user for a new value
@@ -339,5 +431,14 @@ namespace Rock.Field.Types
         }
 
         #endregion
+
+        private class PublicValue
+        {
+            public string Value { get; set; }
+
+            public string Text { get; set; }
+
+            public string Description { get; set; }
+        }
     }
 }

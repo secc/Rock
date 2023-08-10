@@ -20,6 +20,7 @@ using System.Linq;
 using System.Web.UI;
 using System.Web.UI.WebControls;
 
+using Rock.Attribute;
 using Rock.Reporting;
 using Rock.Web.UI.Controls;
 
@@ -29,6 +30,9 @@ namespace Rock.Field.Types
     /// Field used to save and display a date/time value
     /// </summary>
     [Serializable]
+    [FieldTypeUsage( FieldTypeUsage.Common )]
+    [RockPlatformSupport( Utility.RockPlatform.WebForms | Utility.RockPlatform.Obsidian )]
+    [IconSvg( @"<svg xmlns=""http://www.w3.org/2000/svg"" viewBox=""0 0 16 16""><g><path d=""M7.91,13.69h-6a.44.44,0,0,1-.44-.44V5.38H12.38V4.06a1.32,1.32,0,0,0-1.32-1.31H9.75V1.44A.44.44,0,0,0,9.31,1H8.44A.44.44,0,0,0,8,1.44V2.75H4.5V1.44A.44.44,0,0,0,4.06,1H3.19a.44.44,0,0,0-.44.44V2.75H1.44A1.32,1.32,0,0,0,.12,4.06v9.63A1.32,1.32,0,0,0,1.44,15H9.18A4.66,4.66,0,0,1,7.91,13.69Z""/><path d=""M11.94,7.12a3.94,3.94,0,1,0,3.94,3.94A3.94,3.94,0,0,0,11.94,7.12Zm0,7.14a3.2,3.2,0,1,1,3.2-3.2A3.2,3.2,0,0,1,11.94,14.26Zm1.57-2.72-1.2-.69V9a.38.38,0,0,0-.37-.37.37.37,0,0,0-.37.37v2.09a.37.37,0,0,0,.18.32l1.39.8a.53.53,0,0,0,.18.05.36.36,0,0,0,.32-.18A.38.38,0,0,0,13.51,11.54Z""/></g></svg>" )]
     public class DateTimeFieldType : DateFieldType
     {
 
@@ -40,7 +44,7 @@ namespace Rock.Field.Types
         /// <returns></returns>
         public override System.Collections.Generic.List<System.Web.UI.Control> ConfigurationControls()
         {
-            // DateFieldType takes care of creating the ConfigurationControls, and 
+            // DateFieldType takes care of creating the ConfigurationControls, and
             return base.ConfigurationControls();
         }
 
@@ -62,15 +66,26 @@ namespace Rock.Field.Types
 
         #region Formatting
 
+        /// <inheritdoc/>
+        public override string GetTextValue( string value, Dictionary<string, string> configurationValues )
+        {
+            return FormatValue( value, configurationValues, false );
+        }
+
+        /// <inheritdoc/>
+        public override string GetCondensedTextValue( string value, Dictionary<string, string> configurationValues )
+        {
+            return FormatValue( value, configurationValues, true );
+        }
+
         /// <summary>
-        /// Formats date display
+        /// Formats the value for display as a date.
         /// </summary>
-        /// <param name="parentControl">The parent control.</param>
         /// <param name="value">Information about the value</param>
         /// <param name="configurationValues">The configuration values.</param>
         /// <param name="condensed">Flag indicating if the value should be condensed (i.e. for use in a grid column)</param>
         /// <returns></returns>
-        public override string FormatValue( System.Web.UI.Control parentControl, string value, Dictionary<string, ConfigurationValue> configurationValues, bool condensed )
+        private string FormatValue( string value, Dictionary<string, string> configurationValues, bool condensed )
         {
             if ( string.IsNullOrWhiteSpace( value ) )
             {
@@ -79,9 +94,8 @@ namespace Rock.Field.Types
 
             if ( value.StartsWith( "CURRENT", StringComparison.OrdinalIgnoreCase ) )
             {
-                DateTime currentDate = RockDateTime.Today;
-
                 var valueParts = value.Split( ':' );
+
                 if ( valueParts.Length > 1 )
                 {
                     int? days = valueParts[1].AsIntegerOrNull();
@@ -112,11 +126,11 @@ namespace Rock.Field.Types
 
                     if ( configurationValues != null &&
                         configurationValues.ContainsKey( "format" ) &&
-                        !String.IsNullOrWhiteSpace( configurationValues["format"].Value ) )
+                        !configurationValues["format"].IsNullOrWhiteSpace() )
                     {
                         try
                         {
-                            formattedValue = dateValue.Value.ToString( configurationValues["format"].Value );
+                            formattedValue = dateValue.Value.ToString( configurationValues["format"] );
                         }
                         catch
                         {
@@ -128,7 +142,7 @@ namespace Rock.Field.Types
                     {
                         if ( configurationValues != null && configurationValues.ContainsKey( "displayDiff" ) )
                         {
-                            bool displayDiff = configurationValues["displayDiff"].Value.AsBooleanOrNull() ?? false;
+                            bool displayDiff = configurationValues["displayDiff"].AsBooleanOrNull() ?? false;
                             if ( displayDiff )
                             {
                                 formattedValue += " (" + dateValue.ToElapsedString( true, true ) + ")";
@@ -139,7 +153,19 @@ namespace Rock.Field.Types
 
                 return formattedValue;
             }
+        }
 
+        /// <summary>
+        /// Formats date display
+        /// </summary>
+        /// <param name="parentControl">The parent control.</param>
+        /// <param name="value">Information about the value</param>
+        /// <param name="configurationValues">The configuration values.</param>
+        /// <param name="condensed">Flag indicating if the value should be condensed (i.e. for use in a grid column)</param>
+        /// <returns></returns>
+        public override string FormatValue( System.Web.UI.Control parentControl, string value, Dictionary<string, ConfigurationValue> configurationValues, bool condensed )
+        {
+            return FormatValue( value, configurationValues.ToDictionary( k => k.Key, k => k.Value.Value ), condensed );
         }
 
         #endregion

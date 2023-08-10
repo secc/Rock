@@ -105,6 +105,12 @@ namespace Rock.SystemKey
         public const string ALWAYS_SHOW_BUSINESS_IN_PERSONPICKER = "core_AlwaysShowBusinessInPersonPicker";
 
         /// <summary>
+        /// The PDF external render endpoint to use for the <see cref="Pdf.PdfGenerator"/> instead of the local chrome engine
+        /// For example: wss://chrome.browserless.io?token=YOUR-API-TOKEN
+        /// </summary>
+        public const string PDF_EXTERNAL_RENDER_ENDPOINT = "core_PDFExternalRenderEndpoint";
+
+        /// <summary>
         /// The day of the week that is considered the 'Start Day' (First Day Of week). This is used to compute 'SundayDate'. Default is Monday.
         /// </summary>
         public const string START_DAY_OF_WEEK = "core_StartDayOfWeek";
@@ -113,13 +119,6 @@ namespace Rock.SystemKey
         /// Enable a redis cache cluster
         /// </summary>
         public const string REDIS_ENABLE_CACHE_CLUSTER = "EnableRedisCacheCluster";
-
-        /// <summary>
-        /// The redis connection string
-        /// </summary>
-        [RockObsolete( "1.8" )]
-        [Obsolete( "Use REDIS_ENDPOINT_LIST, REDIS_PASSWORD, and REDIS_DATABASE_NUMBER instead.", true )]
-        public const string REDIS_CONNECTION_STRING = "RedisConnectionString";
 
         /// <summary>
         /// Comma separated list of Redis endpoints (e.g. server.com:6379)
@@ -169,21 +168,21 @@ namespace Rock.SystemKey
         /// <summary>
         /// Settings for Do Not Disturb Start
         /// </summary>
-        [Obsolete( "This functionality is no longer used." )]
+        [Obsolete( "This functionality is no longer used.", true )]
         [RockObsolete( "1.9" )]
         public const string DO_NOT_DISTURB_START = "core_DoNotDisturbStart";
 
         /// <summary>
         /// Settings for Do Not Disturb End
         /// </summary>
-        [Obsolete( "This functionality is no longer used." )]
+        [Obsolete( "This functionality is no longer used.", true )]
         [RockObsolete( "1.9" )]
         public const string DO_NOT_DISTURB_END = "core_DoNotDisturbEnd";
 
         /// <summary>
         /// Settings for Do Not Disturb Active
         /// </summary>
-        [Obsolete( "This functionality is no longer used." )]
+        [Obsolete( "This functionality is no longer used.", true )]
         [RockObsolete( "1.9" )]
         public const string DO_NOT_DISTURB_ACTIVE = "core_DoNotDisturbActive";
 
@@ -233,13 +232,28 @@ namespace Rock.SystemKey
         public const string ROCK_CLEANUP_LAST_RUN_DATETIME = "core_RockCleanup_LastRunDateTime";
 
         /// <summary>
-        /// Settings for Giving Analytics
+        /// Settings for Giving Automation
         /// </summary>
-        public const string GIVING_ANALYTICS_CONFIGURATION = "core_GivingAnalyticsConfiguration";
+        public const string GIVING_AUTOMATION_CONFIGURATION = "core_GivingAutomationConfiguration";
 
         /// <summary>
         /// The organization currency code
         /// </summary>
         public const string ORGANIZATION_CURRENCY_CODE = "OrganizationStandardCurrencyCode";
+
+        /// <summary>
+        /// Lava Engine Type.
+        /// </summary>
+        public const string LAVA_ENGINE_LIQUID_FRAMEWORK = "core_LavaEngine_LiquidFramework";
+
+        /// <summary>
+        /// The statement generator configuration
+        /// </summary>
+        public const string STATEMENT_GENERATOR_CONFIG = "core_StatementGeneratorConfig";
+
+        /// <summary>
+        /// Security Settings (Account Protection profiles)
+        /// </summary>
+        public const string ROCK_SECURITY_SETTINGS = "core_RockSecuritySettings";
     }
 }

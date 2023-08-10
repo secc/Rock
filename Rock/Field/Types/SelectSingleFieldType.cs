@@ -22,6 +22,7 @@ using System.Linq.Expressions;
 using System.Web.UI;
 using System.Web.UI.WebControls;
 
+using Rock.Attribute;
 using Rock.Data;
 using Rock.Model;
 using Rock.Reporting;
@@ -33,6 +34,9 @@ namespace Rock.Field.Types
     /// Field Type used to display a list of options as checkboxes.  Value is saved as a | delimited list
     /// </summary>
     [Serializable]
+    [FieldTypeUsage( FieldTypeUsage.Common )]
+    [RockPlatformSupport( Utility.RockPlatform.WebForms, Utility.RockPlatform.Obsidian )]
+    [IconSvg( @"<svg xmlns=""http://www.w3.org/2000/svg"" viewBox=""0 0 16 16""><path d=""M8,14a6,6,0,1,1,6-6A6,6,0,0,1,8,14ZM8,3.5A4.5,4.5,0,1,0,12.5,8,4.51,4.51,0,0,0,8,3.5Z""/><circle  cx=""8"" cy=""8"" r=""3""/></svg>" )]
     public class SelectSingleFieldType : FieldType
     {
 
@@ -41,6 +45,8 @@ namespace Rock.Field.Types
         private const string VALUES_KEY = "values";
         private const string FIELDTYPE_KEY = "fieldtype";
         private const string REPEAT_COLUMNS = "repeatColumns";
+
+        private const string CUSTOM_VALUES_PUBLIC_KEY = "customValues";
 
         /// <summary>
         /// Returns a list of the configuration keys
@@ -53,6 +59,62 @@ namespace Rock.Field.Types
             configKeys.Add( FIELDTYPE_KEY );
             configKeys.Add( REPEAT_COLUMNS );
             return configKeys;
+        }
+
+        /// <inheritdoc/>
+        public override Dictionary<string, string> GetPublicConfigurationValues( Dictionary<string, string> privateConfigurationValues, ConfigurationValueUsage usage, string privateValue )
+        {
+            var publicConfigurationValues = base.GetPublicConfigurationValues( privateConfigurationValues, usage, privateValue );
+
+            if ( publicConfigurationValues.ContainsKey( VALUES_KEY ) )
+            {
+                if ( usage == ConfigurationValueUsage.Configure )
+                {
+                    // customValues contains the actual raw string that comprises the values.
+                    // is used while editing the configuration values only.
+                    publicConfigurationValues[CUSTOM_VALUES_PUBLIC_KEY] = publicConfigurationValues[VALUES_KEY];
+                }
+
+                var options = Helper.GetConfiguredValues( privateConfigurationValues )
+                    .Select( kvp => new
+                    {
+                        value = kvp.Key,
+                        text = kvp.Value
+                    } );
+
+                publicConfigurationValues[VALUES_KEY] = options.ToCamelCaseJson( false, true );
+            }
+            else
+            {
+                publicConfigurationValues[VALUES_KEY] = "[]";
+            }
+
+            return publicConfigurationValues;
+        }
+
+        /// <inheritdoc/>
+        public override Dictionary<string, string> GetPrivateConfigurationValues( Dictionary<string, string> publicConfigurationValues )
+        {
+            var privateConfigurationValues = base.GetPrivateConfigurationValues( publicConfigurationValues );
+
+            // Don't allow them to provide the actual value items.
+            if ( privateConfigurationValues.ContainsKey( VALUES_KEY ) )
+            {
+                privateConfigurationValues.Remove( VALUES_KEY );
+            }
+
+            // Convert the custom values string into the values to be stored.
+            if ( privateConfigurationValues.ContainsKey( CUSTOM_VALUES_PUBLIC_KEY ) )
+            {
+                privateConfigurationValues[VALUES_KEY] = privateConfigurationValues[CUSTOM_VALUES_PUBLIC_KEY];
+                privateConfigurationValues.Remove( CUSTOM_VALUES_PUBLIC_KEY );
+            }
+            else
+            {
+                privateConfigurationValues[VALUES_KEY] = "";
+            }
+
+            return privateConfigurationValues;
         }
 
         /// <summary>
@@ -153,6 +215,23 @@ namespace Rock.Field.Types
 
         #region Formatting
 
+        /// <inheritdoc/>
+        public override string GetTextValue( string privateValue, Dictionary<string, string> privateConfigurationValues )
+        {
+            if ( !string.IsNullOrWhiteSpace( privateValue ) && privateConfigurationValues.ContainsKey( VALUES_KEY ) )
+            {
+                var configuredValues = Helper.GetConfiguredValues( privateConfigurationValues );
+                var selectedValues = privateValue.Split( new char[] { ',' }, StringSplitOptions.RemoveEmptyEntries ).ToList();
+                return configuredValues
+                    .Where( v => selectedValues.Contains( v.Key ) )
+                    .Select( v => v.Value )
+                    .ToList()
+                    .AsDelimited( ", " );
+            }
+
+            return base.GetTextValue( privateValue, privateConfigurationValues );
+        }
+
         /// <summary>
         /// Returns the field's current value(s)
         /// </summary>
@@ -163,18 +242,9 @@ namespace Rock.Field.Types
         /// <returns></returns>
         public override string FormatValue( System.Web.UI.Control parentControl, string value, Dictionary<string, ConfigurationValue> configurationValues, bool condensed )
         {
-            if ( !string.IsNullOrWhiteSpace( value ) && configurationValues.ContainsKey( VALUES_KEY ) )
-            {
-                var configuredValues = Helper.GetConfiguredValues( configurationValues );
-                var selectedValues = value.Split( new char[] { ',' }, StringSplitOptions.RemoveEmptyEntries ).ToList();
-                return configuredValues
-                    .Where( v => selectedValues.Contains( v.Key ) )
-                    .Select( v => v.Value )
-                    .ToList()
-                    .AsDelimited( ", " );
-            }
+            var formattedValue = GetTextValue( value, configurationValues.ToDictionary( k => k.Key, k => k.Value.Value ) );
 
-            return base.FormatValue( parentControl, value, configurationValues, condensed );
+            return base.FormatValue( parentControl, formattedValue, configurationValues, condensed );
         }
 
         /// <summary>

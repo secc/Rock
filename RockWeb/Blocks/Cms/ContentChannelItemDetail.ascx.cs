@@ -13,27 +13,26 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 // </copyright>
-//
+
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
+using System.Data.Entity;
 using System.Linq;
 using System.Web.UI;
+using System.Web.UI.WebControls;
 
 using Rock;
 using Rock.Attribute;
+using Rock.Cms.StructuredContent;
 using Rock.Constants;
 using Rock.Data;
 using Rock.Model;
+using Rock.Security;
+using Rock.Web;
 using Rock.Web.Cache;
 using Rock.Web.UI;
 using Rock.Web.UI.Controls;
-using Attribute = Rock.Model.Attribute;
-using System.ComponentModel;
-using Rock.Security;
-using Newtonsoft.Json;
-using Rock.Web;
-using System.Web.UI.WebControls;
-using System.Data.Entity;
 
 namespace RockWeb.Blocks.Cms
 {
@@ -64,7 +63,7 @@ namespace RockWeb.Blocks.Cms
         Key = AttributeKey.ContentChannel )]
 
     #endregion Block Attributes
-    public partial class ContentChannelItemDetail : RockBlock, IDetailBlock
+    public partial class ContentChannelItemDetail : RockBlock
     {
         #region Attribute Keys
 
@@ -206,6 +205,7 @@ namespace RockWeb.Blocks.Cms
                     }}
                     return false;
                 }}";
+
         #endregion
 
         #region Control Methods
@@ -238,7 +238,7 @@ namespace RockWeb.Blocks.Cms
             gParentItems.GridRebind += gParentItems_GridRebind;
             gParentItems.EntityTypeId = EntityTypeCache.Get<ContentChannelItem>().Id;
 
-            string clearScript = string.Format( "clearDirtyBit(event);", hfIsDirty.ClientID ); 
+            string clearScript = string.Format( "clearDirtyBit(event);", hfIsDirty.ClientID );
             lbSave.OnClientClick = clearScript;
             lbCancel.OnClientClick = clearScript;
 
@@ -328,8 +328,11 @@ namespace RockWeb.Blocks.Cms
             ContentChannelItem contentItem = GetContentItem( rockContext );
 
             if ( contentItem != null &&
-                ( IsUserAuthorized( Authorization.EDIT ) || contentItem.IsAuthorized( Authorization.EDIT, CurrentPerson ) ) )
+                contentItem.IsAuthorized( Authorization.EDIT, CurrentPerson ) )
             {
+                StructuredContentHelper structuredContentHelper = null;
+                StructuredContentChanges structuredContentChanges = null;
+
                 contentItem.Title = tbTitle.Text;
                 if ( htmlContent.Visible )
                 {
@@ -337,9 +340,13 @@ namespace RockWeb.Blocks.Cms
                 }
                 else
                 {
-                    contentItem.StructuredContent = sceContent.StructuredContent;
-                    contentItem.Content = sceContent.HtmlContent;
+                    structuredContentHelper = new StructuredContentHelper( sceContent.StructuredContent );
+                    structuredContentChanges = structuredContentHelper.DetectChanges( contentItem.StructuredContent );
+
+                    contentItem.StructuredContent = structuredContentHelper.Content;
+                    contentItem.Content = structuredContentHelper.Render();
                 }
+
                 contentItem.Priority = nbPriority.Text.AsInteger();
                 contentItem.ItemGlobalKey = contentItem.Id != 0 ? lblItemGlobalKey.Text : CreateItemGlobalKey();
 
@@ -417,6 +424,11 @@ namespace RockWeb.Blocks.Cms
                     {
                         var contentChannelItemSlugService = new ContentChannelItemSlugService( rockContext );
                         contentChannelItemSlugService.SaveSlug( contentItem.Id, slugInput, null );
+                    }
+
+                    if ( structuredContentHelper != null )
+                    {
+                        structuredContentHelper.ApplyDatabaseChanges( structuredContentChanges, rockContext );
                     }
 
                     rockContext.SaveChanges();
@@ -794,6 +806,7 @@ namespace RockWeb.Blocks.Cms
                 return contentChannelItemSlugService.GetUniqueContentSlug( tbTitle.Text, null );
             }
         }
+
         /// <summary>
         /// Gets the slug prefix.
         /// </summary>
@@ -810,7 +823,7 @@ namespace RockWeb.Blocks.Cms
 
             if ( itemUrl.EndsWith( "{{Slug}}" ) )
             {
-                return itemUrl.Replace( "{{Slug}}", "" );
+                return itemUrl.Replace( "{{Slug}}", string.Empty );
             }
 
             return string.Empty;
@@ -900,7 +913,6 @@ namespace RockWeb.Blocks.Cms
 
         public void ShowDetail( int contentItemId, int? contentChannelId )
         {
-            bool canEdit = IsUserAuthorized( Authorization.EDIT );
             hfId.Value = contentItemId.ToString();
             hfChannelId.Value = contentChannelId.HasValue ? contentChannelId.Value.ToString() : string.Empty;
 
@@ -935,7 +947,7 @@ namespace RockWeb.Blocks.Cms
             if ( contentItem != null &&
                 contentItem.ContentChannelType != null &&
                 contentItem.ContentChannel != null &&
-                ( canEdit || contentItem.IsAuthorized( Authorization.EDIT, CurrentPerson ) ) )
+                contentItem.IsAuthorized( Authorization.EDIT, CurrentPerson ) )
             {
                 hfIsDirty.Value = "false";
 
@@ -1405,7 +1417,7 @@ namespace RockWeb.Blocks.Cms
         }
 
         /// <summary>
-        /// When navigating to child items of childitems of childitems, the "Hierarchy" will be a list of how to navigate backwards thru the parents
+        /// When navigating to child items of childitems of childitems, the "Hierarchy" will be a list of how to navigate backwards through the parents.
         /// </summary>
         /// <returns></returns>
         private List<string> GetNavHierarchy()

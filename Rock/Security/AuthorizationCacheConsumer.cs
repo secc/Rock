@@ -13,7 +13,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 // </copyright>
-using Rock.Bus;
 using Rock.Bus.Consumer;
 using Rock.Bus.Message;
 using Rock.Bus.Queue;
@@ -39,12 +38,16 @@ namespace Rock.Web.Cache
         /// <param name="message">The message.</param>
         public override void Consume( AuthorizationCacheWasUpdatedMessage message )
         {
-            if ( !RockMessageBus.IsRockStarted )
-            {
-                RockLogger.Log.Debug( RockLogDomains.Bus, $"Ignored Authorization Cache Update message. RockStarted=false" );
-                return;
+            /*  06-07-2022 MP
 
-            }
+            In the case of consuming a AuthorizationCacheWasUpdatedMessage, we don't need to check RockMessageBus.IsRockStarted. The AuthorizationCache Update
+            logic doesn't have a dependency on having Rock fully started.
+
+            Also, we really need to consume these messages regardless of IsRockStarted to prevent the AuthorizationCache from getting stale.
+
+            If we later discover that this isn't OK, we'll revisit this decision and make any updates to make it OK again.
+            
+            */
 
             RockLogger.Log.Debug( RockLogDomains.Bus, $"Consumed Authorization Cache Update message." );
 

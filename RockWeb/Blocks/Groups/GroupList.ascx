@@ -31,6 +31,7 @@
                             <Rock:RockBoundField DataField="GroupTypeName" HeaderText="Group Type" SortExpression="GroupTypeName"/>
                             <Rock:RockBoundField DataField="Description" HeaderText="Description" ColumnPriority="Desktop" SortExpression="Description" />
                             <Rock:RockBoundField DataField="GroupRole" HeaderText="Role" SortExpression="Role" />
+                            <Rock:RockLiteralField ID="lElevatedSecurityLevel" HeaderText="Elevated Security Level" Visible="true" SortExpression="ElevatedSecurityLevel" Text="" />
                             <Rock:RockBoundField DataField="MemberCount" HeaderText="Members" SortExpression="MemberCount" ItemStyle-HorizontalAlign="Right" HeaderStyle-HorizontalAlign="Right" />
                             <Rock:DateTimeField DataField="DateAdded" HeaderText="Added" SortExpression="DateAdded" FormatAsElapsedTime="true" />
                             <Rock:BoolField DataField="IsSystem" HeaderText="System" SortExpression="IsSystem" />
@@ -68,33 +69,37 @@
 
             Sys.Application.add_load(function () {
                 // delete/archive prompt
-                $('table.js-grid-group-list a.grid-delete-button').on('click', function (e) {
-                    var $btn = $(this);
-                    var $row = $btn.closest('tr');
-                    var actionName = 'delete';
-                    var confirmMessage;
 
-                    if ($row.hasClass('js-has-grouphistory')) {
-                        var actionName = 'archive';
-                    }
+                $('#<%=gGroups.ClientID%>').find('a.grid-delete-button')
+                    .on('click', function (e) {
 
-                    var groupListMode = <%=(int)GroupListGridMode%>;
+                        var $btn = $(this);
+                        var $row = $btn.closest('tr');
+                        var actionName = 'delete';
+                        var confirmMessage;
 
-                    if (groupListMode == 0) {
-
-                        confirmMessage = 'Are you sure you want to ' + actionName + ' this person from this group?';
-                    } else {
-                        confirmMessage = 'Are you sure you want to ' + actionName + ' this group?';
-                    }
-
-                    e.preventDefault();
-                    Rock.dialogs.confirm(confirmMessage, function (result) {
-                        if (result) {
-                            window.location = e.target.href ? e.target.href : e.target.parentElement.href;
+                        if ($row.hasClass('js-has-grouphistory')) {
+                            var actionName = 'archive';
                         }
+
+                        var groupListMode = <%=(int)GroupListGridMode%>;
+
+                        if (groupListMode == 0) {
+
+                            confirmMessage = 'Are you sure you want to ' + actionName + ' this person from this group?';
+                        } else {
+                            confirmMessage = 'Are you sure you want to ' + actionName + ' this group?';
+                        }
+
+                        e.preventDefault();
+
+                        Rock.dialogs.confirm(confirmMessage, function (result) {
+                            if (result) {
+                                window.location = e.target.href ? e.target.href : e.target.parentElement.href;
+                            }
+                        });
                     });
                 });
-            });
         </script>
     </ContentTemplate>
 </asp:UpdatePanel>

@@ -400,8 +400,7 @@ namespace Rock.Web.UI.Controls
             set
             {
                 EnsureChildControls();
-
-                this.SetCountryAndState( _ddlCountry.SelectedValue, value );
+                SetCountryAndState( this.Country, value );
             }
         }
 
@@ -666,14 +665,13 @@ namespace Rock.Web.UI.Controls
         {
             base.OnLoad( e );
 
-            string selectedCountry = string.Empty;
-            string selectedState = string.Empty;
+            var selectedCountry = string.Empty;
+            var selectedState = string.Empty;
 
-            // Set default values if this is the first load, or if country selection is not available.
+            // Read the existing control values unless we are setting default values for first load.
             if ( !this.SetDefaultValues )
             {
                 selectedCountry = _ddlCountry.SelectedValue;
-
                 if ( this.HasStateList )
                 {
                     selectedState = _ddlState.SelectedValue;
@@ -687,13 +685,16 @@ namespace Rock.Web.UI.Controls
             if ( string.IsNullOrWhiteSpace( selectedCountry ) )
             {
                 selectedCountry = GetDefaultCountry();
+            }
+            if ( string.IsNullOrWhiteSpace( selectedState ) )
+            { 
                 selectedState = GetDefaultState();
             }
 
             // Reset the default values flag to prevent selected values being overwritten on postback.
             this.SetDefaultValues = false;
 
-            this.SetCountryAndState( selectedCountry, selectedState );
+            SetCountryAndState( selectedCountry, selectedState );
         }
 
         /// <summary>
@@ -936,7 +937,7 @@ namespace Rock.Web.UI.Controls
             }
 
             // Address Fields
-            writer.AddAttribute( "class", "js-addressControl " + this.CssClass );
+            writer.AddAttribute( "class", "address-control js-addressControl " + this.CssClass );
             writer.AddAttribute( "data-required", this.Required.ToTrueFalse().ToLower() );
             writer.AddAttribute( "data-itemlabel", this.Label != string.Empty ? this.Label : "Address" );
             writer.AddAttribute( "id", this.ClientID );
@@ -1338,9 +1339,17 @@ namespace Rock.Web.UI.Controls
         /// </summary>
         private void SetCountryAndState( string selectedCountry = null, string selectedState = null )
         {
+            // After this method has been called, do not overwrite the specified values with default settings.
+            this.SetDefaultValues = false;
+
             if ( selectedCountry == null )
             {
                 selectedCountry = _ddlCountry.SelectedValue;
+            }
+
+            if ( selectedState == null )
+            {
+                selectedState = _ddlState.SelectedValue;
             }
 
             LoadCountryConfiguration( selectedCountry );

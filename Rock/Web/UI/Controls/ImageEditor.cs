@@ -169,6 +169,21 @@ namespace Rock.Web.UI.Controls
         }
 
         /// <summary>
+        /// Gets or sets a value indicating whether the crop button should be displayed
+        /// </summary>
+        [
+        Bindable( true ),
+        Category( "Appearance" ),
+        DefaultValue( "false" ),
+        Description( "Enable crop button" )
+        ]
+        public bool EnableCrop
+        {
+            get { return ViewState["EnableCrop"] as bool? ?? false; }
+            set { ViewState["EnableCrop"] = value; }
+        }
+
+        /// <summary>
         /// Gets or sets the required error message.  If blank, the LabelName name will be used
         /// </summary>
         /// <value>
@@ -349,6 +364,7 @@ namespace Rock.Web.UI.Controls
         private Label _lSaveStatus;
         private LinkButton _lbShowModal;
         private LinkButton _lbUploadImage;
+        private LinkButton _lbCropImage;
 
         private HiddenField _hfCropBinaryFileId;
         private ModalDialog _mdImageDialog;
@@ -607,6 +623,13 @@ namespace Rock.Web.UI.Controls
             _aRemove.InnerHtml = "<i class='fa fa-times'></i>";
             Controls.Add( _aRemove );
 
+            _lbCropImage = new LinkButton();
+            _lbCropImage.ID = this.ID + "_lbCropImage";
+            _lbCropImage.Text = "<i class='fa fa-crop'></i>";
+            _lbCropImage.Click += _lbShowModal_Click;
+            _lbCropImage.CausesValidation = false;
+            Controls.Add( _lbCropImage );
+
             _lbShowModal = new LinkButton();
             _lbShowModal.ID = this.ID + "_lbShowModal";
             _lbShowModal.CssClass = this.ButtonCssClass;
@@ -622,6 +645,7 @@ namespace Rock.Web.UI.Controls
             {
                 _aRemove.Visible = false;
                 _lbShowModal.Visible = false;
+                _lbCropImage.Visible = false;
             }
 
             _lbUploadImage = new LinkButton();
@@ -935,24 +959,18 @@ namespace Rock.Web.UI.Controls
             }
             writer.RenderBeginTag( HtmlTextWriterTag.Div );
 
-            // We only show the Modal/Editor if the delete button is enabled and
-            // we have a file already.
-            if ( ShowDeleteButton && ( BinaryFileId ?? 0 ) > 0 )
-            {
-                _lbShowModal.Style[HtmlTextWriterStyle.Display] = string.Empty;
-                _lbUploadImage.Style[HtmlTextWriterStyle.Display] = "none";
-            }
-            else
-            {
-                _lbShowModal.Style[HtmlTextWriterStyle.Display] = "none";
-                _lbUploadImage.Style[HtmlTextWriterStyle.Display] = string.Empty;
-            }
+            // Always show the UploadImage button so we can pick and edit a new file.
+            _lbShowModal.Style[HtmlTextWriterStyle.Display] = "none";
+            _lbUploadImage.Style[HtmlTextWriterStyle.Display] = string.Empty;
 
             _lbShowModal.RenderControl( writer );
             _lbUploadImage.Text = this.ButtonText;
             _lbUploadImage.CssClass = this.ButtonCssClass;
             _lbUploadImage.Attributes["onclick"] = "return false;";
             _lbUploadImage.RenderControl( writer );
+
+            _lbCropImage.Visible = EnableCrop && ( BinaryFileId ?? 0 ) > 0;
+            _lbCropImage.RenderControl( writer );
 
             // render the circle check status for when save happens
             writer.WriteLine();
@@ -1033,6 +1051,7 @@ Rock.controls.imageUploader.initialize({{
         // toggle the edit/upload buttons
         $('#{8}').hide();
         $('#{9}').show();
+        $('#{13}').show();
 
         // postback to show Modal after uploading new image
         {10}
@@ -1059,6 +1078,7 @@ $('#{8}').on('click', function (e, data) {{
 $('#{5}').on('click', function () {{
     $('#{8}').show();
     $('#{9}').hide();
+    $('#{13}').hide();
     $('#{5}').remove();
 }});
 
@@ -1075,7 +1095,8 @@ $('#{5}').on('click', function () {{
                 _lbShowModal.ClientID, // {9}
                 jsDoneFunction, // {10}
                 this.NoPictureUrl, // {11}
-                maxUploadBytes.HasValue ? maxUploadBytes.Value.ToString() : "null"  // {12}
+                maxUploadBytes.HasValue ? maxUploadBytes.Value.ToString() : "null",  // {12}
+                _lbCropImage.ClientID // {13}
                 );
 
             _lbUploadImage.Enabled = false;

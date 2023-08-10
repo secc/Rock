@@ -69,13 +69,13 @@ namespace RockWeb.Blocks.Cms
         Key = AttributeKey.SearchType )]
 
     [TextField( "Base Field Filters",
-        Description = "These field filters will always be enabled and will not be changeable by the individual. Uses tha same syntax as the lava command.",
+        Description = "These field filters will always be enabled and will not be changeable by the individual. Uses the same syntax as the lava command.",
         IsRequired = false,
         Category = "CustomSetting",
         Key = AttributeKey.BaseFieldFilters )]
 
     [BooleanField( "Show Refined Search",
-        Description = "Determines whether the refinded search should be shown.",
+        Description = "Determines whether the refined search should be shown.",
         DefaultBooleanValue = true,
         Category = "CustomSetting",
         Key = AttributeKey.ShowRefinedSearch )]
@@ -363,9 +363,6 @@ namespace RockWeb.Blocks.Cms
             // get listing of filters to apply
             List<FieldValue> fieldValues = GetFieldFilters( selectedEntities );
 
-            // Get display options
-            var displayOptions = GetDisplayOptions();
-
             SearchFieldCriteria fieldCriteria = new SearchFieldCriteria();
             fieldCriteria.FieldValues = fieldValues;
 
@@ -400,7 +397,7 @@ namespace RockWeb.Blocks.Cms
 
                     foreach ( var result in results )
                     {
-                        var formattedResult = result.FormatSearchResult( CurrentPerson, displayOptions, mergeFields );
+                        var formattedResult = result.FormatSearchResult( CurrentPerson, null, mergeFields );
 
                         if ( formattedResult.IsViewAllowed )
                         {
@@ -482,23 +479,6 @@ namespace RockWeb.Blocks.Cms
                     lPagination.Text = pagination.ToString();
                 }
             }
-        }
-
-        /// <summary>
-        /// Gets the display options.
-        /// </summary>
-        /// <returns></returns>
-        private Dictionary<string, object> GetDisplayOptions()
-        {
-            var displayOptions = new Dictionary<string, object>();
-
-            // Add display options to disable security for those that are configured for that
-            foreach( var key in cblDisabledSecurityModels.SelectedValues )
-            {
-                displayOptions.Add( key + "-IsSecurityDisabled", "true" );
-            }
-
-            return displayOptions;
         }
 
         /// <summary>
@@ -938,18 +918,6 @@ namespace RockWeb.Blocks.Cms
             cblEnabledModels.DataSource = entities.Where( i => i.IsIndexingSupported == true && i.IsIndexingEnabled == true ).ToList();
             cblEnabledModels.DataBind();
             cblEnabledModels.SetValues( enabledModelIds );
-
-            // Create anonymous type of indexable entities that are secured. Right now this is a complete list of entities. In
-            // the future we should change this to only show those that check security. 
-            var securedEntityList = entities.Where( i => i.IsIndexingSupported == true && i.IsIndexingEnabled == true )
-                                            .Select( i => new { Key = i.FriendlyName.Replace( " ", "" ), Value = i.FriendlyName } )
-                                            .ToList();
-
-            cblDisabledSecurityModels.DataValueField = "Key";
-            cblDisabledSecurityModels.DataTextField = "Value";
-            cblDisabledSecurityModels.DataSource = securedEntityList;
-            cblDisabledSecurityModels.DataBind();
-            cblDisabledSecurityModels.SetValues( enabledModelIds );
 
             cbShowRefinedSearch.Checked = GetAttributeValue( AttributeKey.ShowRefinedSearch ).AsBoolean();
             cbShowScores.Checked = GetAttributeValue( AttributeKey.ShowScores ).AsBoolean();

@@ -19,10 +19,13 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.ComponentModel.Composition;
 using System.Linq;
+using System.Web.UI;
+using System.Web.UI.WebControls;
 
 using Rock.Attribute;
 using Rock.Model;
 using Rock.Web.Cache;
+using Rock.Web.UI.Controls;
 
 namespace Rock.Financial
 {
@@ -66,7 +69,32 @@ namespace Rock.Financial
         Key = AttributeKey.PromptForNameOnCard,
         DefaultBooleanValue = false,
         Order = 4 )]
-    public class TestGateway : GatewayComponent, IAutomatedGatewayComponent
+
+    [EnumsField(
+        "Gateway Mode",
+        Description = "Select the gateway mode",
+        Key = AttributeKey.GatewayMode,
+        EnumSourceType = typeof( HostedGatewayMode ),
+        DefaultValue = "Unhosted",
+        Order = 5 )]
+
+    [DecimalField(
+        "Credit Card Fee Coverage Percentage",
+        Key = AttributeKey.CreditCardFeeCoveragePercentage,
+        Description = @"The credit card fee percentage that will be used to determine what to add to the person's donation, if they want to cover the fee.",
+        IsRequired = false,
+        DefaultValue = null,
+        Order = 6 )]
+
+    [CurrencyField(
+        "ACH Transaction Fee Coverage Amount",
+        Key = AttributeKey.ACHTransactionFeeCoverageAmount,
+        Description = "The  dollar amount to add to an ACH transaction, if they want to cover the fee.",
+        IsRequired = false,
+        DefaultValue = null,
+        Order = 7 )]
+
+    public class TestGateway : GatewayComponent, IAutomatedGatewayComponent, IObsidianHostedGatewayComponent, IHostedGatewayComponent, IFeeCoverageGatewayComponent
     {
         #region Attribute Keys
 
@@ -80,9 +108,76 @@ namespace Rock.Financial
             public const string MaxExpirationYears = "MaxExpirationYears";
             public const string DeclinedCVV = "DeclinedCVV";
             public const string PromptForNameOnCard = "PromptForNameOnCard";
+            public const string GatewayMode = "GatewayMode";
+
+            /// <summary>
+            /// The credit card fee coverage percentage
+            /// </summary>
+            public const string CreditCardFeeCoveragePercentage = "CreditCardFeeCoveragePercentage";
+
+            /// <summary>
+            /// The ach transaction fee coverage amount
+            /// </summary>
+            public const string ACHTransactionFeeCoverageAmount = "ACHTransactionFeeCoverageAmount";
         }
 
         #endregion
+
+        #region Obsidian
+
+        /// <summary>
+        /// Creates the customer account using a token received and returns a customer account token that can be used for future transactions.
+        /// </summary>
+        /// <param name="financialGateway">The financial gateway.</param>
+        /// <param name="paymentInfo">The payment information.</param>
+        /// <param name="errorMessage">The error message.</param>
+        /// <returns></returns>
+        public string CreateCustomerAccount( FinancialGateway financialGateway, ReferencePaymentInfo paymentInfo, out string errorMessage )
+        {
+            errorMessage = string.Empty;
+            return Guid.NewGuid().ToString( "N" );
+        }
+
+        /// <summary>
+        /// Gets the obsidian control file URL.
+        /// </summary>
+        /// <param name="financialGateway">The financial gateway.</param>
+        /// <returns></returns>
+        public string GetObsidianControlFileUrl( FinancialGateway financialGateway )
+        {
+            return "/Obsidian/Controls/TestGatewayControl.js";
+        }
+
+        /// <inheritdoc/>
+        public object GetObsidianControlSettings( FinancialGateway financialGateway, HostedPaymentInfoControlOptions options )
+        {
+            return new
+            {
+            };
+        }
+
+        /// <inheritdoc/>
+        public bool TryGetPaymentTokenFromParameters( FinancialGateway financialGateway, IDictionary<string, string> parameters, out string paymentToken )
+        {
+            paymentToken = null;
+
+            return false;
+        }
+
+        /// <inheritdoc/>
+        public bool IsPaymentTokenCharged( FinancialGateway financialGateway, string paymentToken )
+        {
+            return false;
+        }
+
+        /// <inheritdoc/>
+        public FinancialTransaction FetchPaymentTokenTransaction( Data.RockContext rockContext, FinancialGateway financialGateway, int? fundId, string paymentToken )
+        {
+            // This method is not required in our implementation.
+            throw new NotImplementedException();
+        }
+
+        #endregion Obsidian
 
         #region Automated Gateway Component
 
@@ -151,6 +246,18 @@ namespace Rock.Financial
         }
 
         /// <summary>
+        /// Gets the URL that the Gateway Information UI will navigate to when they click the 'Configure' link
+        /// </summary>
+        /// <value>The configure URL.</value>
+        public string ConfigureURL => "";
+
+        /// <summary>
+        /// Gets the URL that the Gateway Information UI will navigate to when they click the 'Learn More' link
+        /// </summary>
+        /// <value>The learn more URL.</value>
+        public string LearnMoreURL => "";
+
+        /// <summary>
         /// Gets a value indicating whether the gateway requires the name on card for CC processing
         /// </summary>
         /// <param name="financialGateway">The financial gateway.</param>
@@ -191,12 +298,42 @@ namespace Rock.Financial
             {
                 var transaction = new FinancialTransaction();
                 transaction.TransactionCode = "T" + RockDateTime.Now.ToString( "yyyyMMddHHmmssFFF" );
+
+                transaction.FinancialPaymentDetail = new FinancialPaymentDetail()
+                {
+                    ExpirationMonth = ( paymentInfo as ReferencePaymentInfo )?.PaymentExpirationDate?.Month,
+                    ExpirationYear = ( paymentInfo as ReferencePaymentInfo )?.PaymentExpirationDate?.Year,
+                    CurrencyTypeValueId = DefinedValueCache.GetId( Rock.SystemGuid.DefinedValue.CURRENCY_TYPE_CREDIT_CARD.AsGuid() ),
+                    AccountNumberMasked = paymentInfo.MaskedNumber,
+                    CreditCardTypeValueId = CreditCardPaymentInfo.GetCreditCardTypeFromCreditCardNumber( paymentInfo.MaskedNumber ?? string.Empty )?.Id ?? DefinedValueCache.GetId( Rock.SystemGuid.DefinedValue.CREDITCARD_TYPE_VISA.AsGuid() )
+                };
+
                 return transaction;
             }
 
             return null;
         }
 
+        /// <summary>
+        /// Authorizes the specified payment information.
+        /// </summary>
+        /// <param name="financialGateway">The financial gateway.</param>
+        /// <param name="paymentInfo">The payment information.</param>
+        /// <param name="errorMessage">The error message.</param>
+        /// <returns></returns>
+        public override FinancialTransaction Authorize( FinancialGateway financialGateway, PaymentInfo paymentInfo, out string errorMessage )
+        {
+            errorMessage = string.Empty;
+
+            if ( ValidateCard( financialGateway, paymentInfo, out errorMessage ) )
+            {
+                var transaction = new FinancialTransaction();
+                transaction.TransactionCode = "T" + RockDateTime.Now.ToString( "yyyyMMddHHmmssFFF" );
+                return transaction;
+            }
+
+            return null;
+        }
         /// <summary>
         /// Credits the specified transaction.
         /// </summary>
@@ -241,7 +378,10 @@ namespace Rock.Financial
                 scheduledTransaction.FinancialPaymentDetail = new FinancialPaymentDetail()
                 {
                     ExpirationMonth = ( paymentInfo as ReferencePaymentInfo )?.PaymentExpirationDate?.Month,
-                    ExpirationYear = ( paymentInfo as ReferencePaymentInfo )?.PaymentExpirationDate?.Year
+                    ExpirationYear = ( paymentInfo as ReferencePaymentInfo )?.PaymentExpirationDate?.Year,
+                    CurrencyTypeValueId = DefinedValueCache.GetId(Rock.SystemGuid.DefinedValue.CURRENCY_TYPE_CREDIT_CARD.AsGuid()),
+                    AccountNumberMasked = paymentInfo.MaskedNumber,
+                    CreditCardTypeValueId = CreditCardPaymentInfo.GetCreditCardTypeFromCreditCardNumber(paymentInfo.MaskedNumber)?.Id ?? DefinedValueCache.GetId(Rock.SystemGuid.DefinedValue.CREDITCARD_TYPE_VISA.AsGuid())
                 };
 
                 return scheduledTransaction;
@@ -305,6 +445,11 @@ namespace Rock.Financial
         public override bool GetScheduledPaymentStatus( FinancialScheduledTransaction transaction, out string errorMessage )
         {
             transaction.LastStatusUpdateDateTime = RockDateTime.Now;
+            if ( !transaction.IsActive )
+            {
+                transaction.NextPaymentDate = null;
+            }
+
             errorMessage = string.Empty;
             return true;
         }
@@ -338,7 +483,7 @@ namespace Rock.Financial
             for ( int paymentNumber = 0; paymentNumber < randomNumberOfPayments; paymentNumber++ )
             {
                 // get a random scheduled Transaction (if any)
-                var scheduledTransaction = scheduledTransactionList.OrderBy( a => a.Guid ).FirstOrDefault();
+                var scheduledTransaction = scheduledTransactionList.OrderBy( a => Guid.NewGuid() ).FirstOrDefault();
                 if ( scheduledTransaction == null )
                 {
                     return new List<Payment>();
@@ -393,7 +538,14 @@ namespace Rock.Financial
         /// <returns></returns>
         public override DateTime? GetNextPaymentDate( FinancialScheduledTransaction scheduledTransaction, DateTime? lastTransactionDate )
         {
-            return CalculateNextPaymentDate( scheduledTransaction, lastTransactionDate );
+            if ( scheduledTransaction.IsActive )
+            {
+                return CalculateNextPaymentDate( scheduledTransaction, lastTransactionDate );
+            }
+            else
+            {
+                return scheduledTransaction.NextPaymentDate;
+            }
         }
 
         #endregion
@@ -466,5 +618,295 @@ namespace Rock.Financial
         }
 
         #endregion
+
+        #region IHostedGatewayComponent
+
+        /// <summary>
+        /// Gets the hosted payment information control which will be used to collect CreditCard, ACH fields
+        /// Note: A HostedPaymentInfoControl can optionally implement <seealso cref="IHostedGatewayPaymentControlTokenEvent" />
+        /// </summary>
+        /// <param name="financialGateway">The financial gateway.</param>
+        /// <param name="controlId">The control identifier.</param>
+        /// <param name="options">The options.</param>
+        /// <returns>Control.</returns>
+        public Control GetHostedPaymentInfoControl( FinancialGateway financialGateway, string controlId, HostedPaymentInfoControlOptions options )
+        {
+            return new TestGatewayPaymentControl
+            {
+                ID = controlId
+            };
+        }
+
+        /// <summary>
+        /// Gets the JavaScript needed to tell the hostedPaymentInfoControl to get send the paymentInfo and get a token.
+        /// Have your 'Next' or 'Submit' call this so that the hostedPaymentInfoControl will fetch the token/response
+        /// </summary>
+        /// <param name="financialGateway">The financial gateway.</param>
+        /// <param name="hostedPaymentInfoControl">The hosted payment information control.</param>
+        /// <returns>System.String.</returns>
+        public string GetHostPaymentInfoSubmitScript( FinancialGateway financialGateway, Control hostedPaymentInfoControl )
+        {
+            return ( hostedPaymentInfoControl as TestGatewayPaymentControl ).PostbackJS;
+        }
+
+        /// <summary>
+        /// Populates the properties of the referencePaymentInfo from this gateway's <seealso cref="M:Rock.Financial.IHostedGatewayComponent.GetHostedPaymentInfoControl(Rock.Model.FinancialGateway,System.String)">hostedPaymentInfoControl</seealso>
+        /// This includes the ReferenceNumber, plus any other fields that the gateway wants to set
+        /// </summary>
+        /// <param name="financialGateway">The financial gateway.</param>
+        /// <param name="hostedPaymentInfoControl">The hosted payment information control.</param>
+        /// <param name="referencePaymentInfo">The reference payment information.</param>
+        /// <param name="errorMessage">The error message.</param>
+        public void UpdatePaymentInfoFromPaymentControl( FinancialGateway financialGateway, Control hostedPaymentInfoControl, ReferencePaymentInfo referencePaymentInfo, out string errorMessage )
+        {
+            TestGatewayPaymentControl testGatewayPaymentControl = hostedPaymentInfoControl as TestGatewayPaymentControl;
+            referencePaymentInfo.ReferenceNumber = testGatewayPaymentControl.PaymentInfoToken;
+            referencePaymentInfo.PaymentExpirationDate = testGatewayPaymentControl.PaymentExpirationDate;
+            referencePaymentInfo.MaskedAccountNumber = testGatewayPaymentControl.CreditCardNumber.Masked();
+            referencePaymentInfo.GatewayPersonIdentifier = "person_" + Guid.NewGuid().ToString( "N" );
+            errorMessage = null;
+        }
+
+        /// <summary>
+        /// Gets the earliest scheduled start date that the gateway will accept for the start date, based on the current local time.
+        /// </summary>
+        /// <param name="financialGateway">The financial gateway.</param>
+        /// <returns>DateTime.</returns>
+        public DateTime GetEarliestScheduledStartDate( FinancialGateway financialGateway )
+        {
+            return RockDateTime.Today;
+        }
+
+        /// <summary>
+        /// Gets the hosted gateway modes that this gateway has configured/supports. Use this to determine which mode to use (in cases where both are supported, like Scheduled Payments lists ).
+        /// If the Gateway supports both hosted and unhosted (and has Hosted mode configured), hosted mode should be preferred.
+        /// </summary>
+        /// <param name="financialGateway">The financial gateway.</param>
+        /// <returns>HostedGatewayMode[].</returns>
+        /// <value>
+        /// The hosted gateway modes that this gateway supports
+        /// </value>
+        public HostedGatewayMode[] GetSupportedHostedGatewayModes( FinancialGateway financialGateway )
+        {
+            return  this.GetAttributeValue( financialGateway, AttributeKey.GatewayMode )
+                .SplitDelimitedValues()
+                .Select( a => a.ConvertToEnum<HostedGatewayMode>() )?
+                .ToArray()
+                ?? new HostedGatewayMode[1] { HostedGatewayMode.Unhosted };
+        }
+
+        #endregion IHostedGatewayComponent
+
+        #region IFeeCoverageGatewayComponent
+
+        /// <inheritdoc/>
+        public decimal? GetCreditCardFeeCoveragePercentage( FinancialGateway financialGateway )
+        {
+            return this.GetAttributeValue( financialGateway, AttributeKey.CreditCardFeeCoveragePercentage )?.AsDecimalOrNull();
+        }
+
+        /// <inheritdoc/>
+        public decimal? GetACHFeeCoverageAmount( FinancialGateway financialGateway )
+        {
+            return this.GetAttributeValue( financialGateway, AttributeKey.ACHTransactionFeeCoverageAmount )?.AsDecimalOrNull();
+        }
+
+        #endregion IFeeCoverageGatewayComponent
+    }
+
+    /// <summary>
+    /// Class TestGatewayPaymentControl.
+    /// Implements the <see cref="System.Web.UI.WebControls.CompositeControl" />
+    /// Implements the <see cref="System.Web.UI.INamingContainer" />
+    /// Implements the <see cref="Rock.Financial.IHostedGatewayPaymentControlTokenEvent" />
+    /// Implements the <see cref="Rock.Financial.IHostedGatewayPaymentControlCurrencyTypeEvent" />
+    /// </summary>
+    /// <seealso cref="System.Web.UI.WebControls.CompositeControl" />
+    /// <seealso cref="System.Web.UI.INamingContainer" />
+    /// <seealso cref="Rock.Financial.IHostedGatewayPaymentControlTokenEvent" />
+    /// <seealso cref="Rock.Financial.IHostedGatewayPaymentControlCurrencyTypeEvent" />
+    public class TestGatewayPaymentControl : CompositeControl,
+       INamingContainer,
+       Rock.Financial.IHostedGatewayPaymentControlTokenEvent,
+       Rock.Financial.IHostedGatewayPaymentControlCurrencyTypeEvent
+    {
+
+        private RockTextBox _tbCreditCardNumber;
+        private RockTextBox _mypExpDate;
+        private RockTextBox _nbCVV;
+        private LinkButton _lbSubmit;
+
+        /// <summary>
+        /// Gets the credit card number.
+        /// </summary>
+        /// <value>The credit card number.</value>
+        public string CreditCardNumber
+        {
+            get
+            {
+                EnsureChildControls();
+                return _tbCreditCardNumber.Text;
+            }
+        }
+
+        /// <summary>
+        /// Gets the expiration mmyy from the textbox. Returns null if the textbox is null or empty.
+        /// </summary>
+        /// <value>The expiration mmyy.</value>
+        public string ExpirationMMYY
+        {
+            get
+            {
+                EnsureChildControls();
+
+                return _mypExpDate.Text.IsNotNullOrWhiteSpace() ? _mypExpDate.Text.AsNumeric().PadLeft( 4, '0' ) : null;
+            }
+        }
+
+        /// <summary>
+        /// Gets the CVV.
+        /// </summary>
+        /// <value>The CVV.</value>
+        public string CVV
+        {
+            get
+            {
+                EnsureChildControls();
+                return _nbCVV.Text;
+            }
+        }
+
+        /// <summary>
+        /// Gets the currency type value.
+        /// </summary>
+        /// <value>The currency type value.</value>
+        public DefinedValueCache CurrencyTypeValue => DefinedValueCache.Get( Rock.SystemGuid.DefinedValue.CURRENCY_TYPE_CREDIT_CARD );
+
+        /// <summary>
+        /// Occurs when [token received].
+        /// </summary>
+        public event EventHandler<HostedGatewayPaymentControlTokenEventArgs> TokenReceived;
+
+        /// <summary>
+        /// Occurs when [currency type change].
+        /// </summary>
+        public event EventHandler<HostedGatewayPaymentControlCurrencyTypeEventArgs> CurrencyTypeChange;
+
+        /// <summary>
+        /// Creates the child controls.
+        /// </summary>
+        protected override void CreateChildControls()
+        {
+            base.CreateChildControls();
+
+            var pnlRow1 = new Panel { CssClass = "row margin-t-md margin-b-lg" };
+            this.Controls.Add( pnlRow1 );
+
+            var pnlRow1Col1 = new Panel { CssClass = "col-md-6" };
+            var pnlRow1Col2 = new Panel { CssClass = "col-md-3" };
+            var pnlRow1Col3 = new Panel { CssClass = "col-md-3" };
+
+            pnlRow1.Controls.Add( pnlRow1Col1 );
+            pnlRow1.Controls.Add( pnlRow1Col2 );
+            pnlRow1.Controls.Add( pnlRow1Col3 );
+
+            _tbCreditCardNumber = new RockTextBox
+            {
+                ID = "_tbCreditCardNumber",
+                MaxLength = 16,
+                Placeholder = "Credit Card Number"
+            };
+
+            _mypExpDate = new RockTextBox
+            {
+                ID = "_mypExpDate",
+                Placeholder = "mm/yy",
+                MaxLength = 5
+            };
+
+            _nbCVV = new RockTextBox
+            {
+                ID = "_nbCVV",
+                Placeholder = "CVV",
+                MaxLength = 3
+            };
+
+            _lbSubmit = new LinkButton
+            {
+                ID = "_lbSubmit",
+                CssClass = "btn btn-primary btn-xs",
+                Text = "Submit"
+            };
+
+            // have it rendeed, but don't display. We are just using to to send the PostBack
+            _lbSubmit.Style[HtmlTextWriterStyle.Display] = "none";
+
+            _lbSubmit.Click += _lbSubmit_Click;
+
+            pnlRow1Col1.Controls.Add( _tbCreditCardNumber );
+            pnlRow1Col2.Controls.Add( _mypExpDate );
+            pnlRow1Col3.Controls.Add( _nbCVV );
+
+            Controls.Add( _lbSubmit );
+
+            if ( CurrencyTypeChange != null)
+            {
+                // do nothing
+            }
+        }
+
+        /// <summary>
+        /// Gets the token.
+        /// </summary>
+        /// <value>The token.</value>
+        public string PaymentInfoToken { get; private set; }
+
+        /// <summary>
+        /// Gets the payment expiration date.
+        /// </summary>
+        /// <value>The payment expiration date.</value>
+        public DateTime? PaymentExpirationDate
+        {
+            get
+            {
+                EnsureChildControls();
+
+                var expirationMonth = ExpirationMMYY?.Substring( 0, 2 ).AsIntegerOrNull() ?? 12;
+                var expirationYear = 2000 + ( ExpirationMMYY?.Substring( 2, 2 ).AsIntegerOrNull() ) ?? RockDateTime.Today.AddYears( 1 ).Year;
+
+                return new DateTime( expirationYear, expirationMonth, 1 );
+            }
+        }
+
+        /// <summary>
+        /// Gets the postback js.
+        /// </summary>
+        /// <value>The postback js.</value>
+        public string PostbackJS
+        {
+            get
+            {
+                EnsureChildControls();
+                var postbackJS = this.Page.ClientScript.GetPostBackEventReference( _lbSubmit, "" );
+                return postbackJS;
+            }
+        }
+
+        /// <summary>
+        /// Lbs the submit click.
+        /// </summary>
+        /// <param name="sender">The sender.</param>
+        /// <param name="e">The <see cref="System.EventArgs"/> instance containing the event data.</param>
+        private void _lbSubmit_Click( object sender, EventArgs e )
+        {
+            PaymentInfoToken = "token_" + Guid.NewGuid().ToString( "N" );
+            Rock.Financial.HostedGatewayPaymentControlTokenEventArgs hostedGatewayPaymentControlTokenEventArgs = new Financial.HostedGatewayPaymentControlTokenEventArgs
+            {
+                Token = this.PaymentInfoToken,
+                IsValid = true
+            };
+
+            TokenReceived?.Invoke( this, hostedGatewayPaymentControlTokenEventArgs );
+        }
     }
 }
