@@ -37,6 +37,7 @@ RockWeb/Obsidian/
 .localhistory/
 .vshistory/
 TestResults/
+RockPlugins/
 
 Packages/*
 

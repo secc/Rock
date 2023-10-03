@@ -96,95 +96,95 @@ Project("{E24C65DC-7377-472B-9ABA-BC803B73C61A}") = "RockWeb", "RockWeb\", "{E43
 		SlnRelativePath = "RockWeb\"
 	EndProjectSection
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "org.secc.Attributes", "..\RockPlugins\Plugins\org.secc.Attributes\org.secc.Attributes.csproj", "{26E16F57-E8A5-4DD0-AFCD-8537150B002B}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "org.secc.Attributes", "RockPlugins\Plugins\org.secc.Attributes\org.secc.Attributes.csproj", "{26E16F57-E8A5-4DD0-AFCD-8537150B002B}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "org.secc.Authentication", "..\RockPlugins\Plugins\org.secc.Authentication\org.secc.Authentication.csproj", "{A480481F-1735-4CFF-BAF5-207AEA57E425}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "org.secc.Authentication", "RockPlugins\Plugins\org.secc.Authentication\org.secc.Authentication.csproj", "{A480481F-1735-4CFF-BAF5-207AEA57E425}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "org.secc.ChangeManager", "..\RockPlugins\Plugins\org.secc.ChangeManager\org.secc.ChangeManager.csproj", "{F716C74C-D507-457A-A3CA-9F792DA8524B}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "org.secc.ChangeManager", "RockPlugins\Plugins\org.secc.ChangeManager\org.secc.ChangeManager.csproj", "{F716C74C-D507-457A-A3CA-9F792DA8524B}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "org.secc.Cms", "..\RockPlugins\Plugins\org.secc.Cms\org.secc.Cms.csproj", "{9888DDD0-463D-40A5-A8C8-7B91248F72B5}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "org.secc.Cms", "RockPlugins\Plugins\org.secc.Cms\org.secc.Cms.csproj", "{9888DDD0-463D-40A5-A8C8-7B91248F72B5}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "org.secc.Communication", "..\RockPlugins\Plugins\org.secc.Communication\org.secc.Communication.csproj", "{D143EC52-46C8-4DE6-A531-013BEA80F549}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "org.secc.Communication", "RockPlugins\Plugins\org.secc.Communication\org.secc.Communication.csproj", "{D143EC52-46C8-4DE6-A531-013BEA80F549}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "org.secc.ConnectionCards", "..\RockPlugins\Plugins\org.secc.ConnectionCards\org.secc.ConnectionCards.csproj", "{ABCF176C-3BD3-491C-B02F-E9AAC42F1889}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "org.secc.ConnectionCards", "RockPlugins\Plugins\org.secc.ConnectionCards\org.secc.ConnectionCards.csproj", "{ABCF176C-3BD3-491C-B02F-E9AAC42F1889}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "org.secc.ConnectionsDigest", "..\RockPlugins\Plugins\org.secc.ConnectionsDigest\org.secc.ConnectionsDigest.csproj", "{40881F39-F828-47C8-9789-A619EA2CC344}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "org.secc.ConnectionsDigest", "RockPlugins\Plugins\org.secc.ConnectionsDigest\org.secc.ConnectionsDigest.csproj", "{40881F39-F828-47C8-9789-A619EA2CC344}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "org.secc.CustomIcons", "..\RockPlugins\Plugins\org.secc.CustomIcons\org.secc.CustomIcons.csproj", "{9888DDD0-463D-40A5-A8C8-7B91248F72B6}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "org.secc.CustomIcons", "RockPlugins\Plugins\org.secc.CustomIcons\org.secc.CustomIcons.csproj", "{9888DDD0-463D-40A5-A8C8-7B91248F72B6}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "org.secc.DevLib", "..\RockPlugins\Plugins\org.secc.DevLib\org.secc.DevLib.csproj", "{A6E9C252-AF5B-4FA6-BCE1-91A5540CBFB4}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "org.secc.DevLib", "RockPlugins\Plugins\org.secc.DevLib\org.secc.DevLib.csproj", "{A6E9C252-AF5B-4FA6-BCE1-91A5540CBFB4}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "org.secc.EMS", "..\RockPlugins\Plugins\org.secc.EMS\org.secc.EMS.csproj", "{0278A4FE-C9E7-459F-9339-33E302F9CF7C}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "org.secc.EMS", "RockPlugins\Plugins\org.secc.EMS\org.secc.EMS.csproj", "{0278A4FE-C9E7-459F-9339-33E302F9CF7C}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "org.secc.Equip", "..\RockPlugins\Plugins\org.secc.Equip\org.secc.Equip.csproj", "{11AC9F5A-FE1D-433E-A680-20BB931A559D}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "org.secc.Equip", "RockPlugins\Plugins\org.secc.Equip\org.secc.Equip.csproj", "{11AC9F5A-FE1D-433E-A680-20BB931A559D}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "org.secc.FamilyCheckin", "..\RockPlugins\Plugins\org.secc.FamilyCheckin\org.secc.FamilyCheckin.csproj", "{3E94706B-C20E-413F-AAFB-38AF995FE033}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "org.secc.FamilyCheckin", "RockPlugins\Plugins\org.secc.FamilyCheckin\org.secc.FamilyCheckin.csproj", "{3E94706B-C20E-413F-AAFB-38AF995FE033}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "org.secc.Finance", "..\RockPlugins\Plugins\org.secc.Finance\org.secc.Finance.csproj", "{B4CB1348-F522-466B-95D4-3D3934B2CF92}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "org.secc.Finance", "RockPlugins\Plugins\org.secc.Finance\org.secc.Finance.csproj", "{B4CB1348-F522-466B-95D4-3D3934B2CF92}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "org.secc.GroupManager", "..\RockPlugins\Plugins\org.secc.GroupManager\org.secc.GroupManager.csproj", "{8363043F-5C7E-4924-A8EE-D0D54E70AEC4}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "org.secc.GroupManager", "RockPlugins\Plugins\org.secc.GroupManager\org.secc.GroupManager.csproj", "{8363043F-5C7E-4924-A8EE-D0D54E70AEC4}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "org.secc.Imaging", "..\RockPlugins\Plugins\org.secc.Imaging\org.secc.Imaging.csproj", "{C29F6616-7878-42D1-A7C5-DDAF08F203A7}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "org.secc.Imaging", "RockPlugins\Plugins\org.secc.Imaging\org.secc.Imaging.csproj", "{C29F6616-7878-42D1-A7C5-DDAF08F203A7}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "org.secc.Jobs", "..\RockPlugins\Plugins\org.secc.Jobs\org.secc.Jobs.csproj", "{ABB08976-24F0-4DA8-9B59-4659E23C597D}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "org.secc.Jobs", "RockPlugins\Plugins\org.secc.Jobs\org.secc.Jobs.csproj", "{ABB08976-24F0-4DA8-9B59-4659E23C597D}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "org.secc.LeagueApps", "..\RockPlugins\Plugins\org.secc.LeagueApps\org.secc.LeagueApps.csproj", "{6FFAF0FE-3C58-4AED-9B15-7F50DE8F15A3}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "org.secc.LeagueApps", "RockPlugins\Plugins\org.secc.LeagueApps\org.secc.LeagueApps.csproj", "{6FFAF0FE-3C58-4AED-9B15-7F50DE8F15A3}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "org.secc.LessInclude", "..\RockPlugins\Plugins\org.secc.LessInclude\org.secc.LessInclude.csproj", "{52C15888-6AFC-4A35-AC59-2241E62A5B04}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "org.secc.LessInclude", "RockPlugins\Plugins\org.secc.LessInclude\org.secc.LessInclude.csproj", "{52C15888-6AFC-4A35-AC59-2241E62A5B04}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "org.secc.Mapping", "..\RockPlugins\Plugins\org.secc.Mapping\org.secc.Mapping.csproj", "{749EB2A1-5240-4A1F-A0A1-110EA282FF7E}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "org.secc.Mapping", "RockPlugins\Plugins\org.secc.Mapping\org.secc.Mapping.csproj", "{749EB2A1-5240-4A1F-A0A1-110EA282FF7E}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "org.secc.MetricsDigest", "..\RockPlugins\Plugins\org.secc.MetricsDigest\org.secc.MetricsDigest.csproj", "{FF4F86EA-07EC-4271-B00D-BCB29FF42752}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "org.secc.MetricsDigest", "RockPlugins\Plugins\org.secc.MetricsDigest\org.secc.MetricsDigest.csproj", "{FF4F86EA-07EC-4271-B00D-BCB29FF42752}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "org.secc.Microframe", "..\RockPlugins\Plugins\org.secc.Microframe\org.secc.Microframe.csproj", "{7DC4D600-45C7-47D4-8D00-70982CFFE9DE}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "org.secc.Microframe", "RockPlugins\Plugins\org.secc.Microframe\org.secc.Microframe.csproj", "{7DC4D600-45C7-47D4-8D00-70982CFFE9DE}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "org.secc.Migrations", "..\RockPlugins\Plugins\org.secc.Migrations\org.secc.Migrations.csproj", "{01A0BF68-19EC-4939-AF26-A685DC99CEC9}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "org.secc.Migrations", "RockPlugins\Plugins\org.secc.Migrations\org.secc.Migrations.csproj", "{01A0BF68-19EC-4939-AF26-A685DC99CEC9}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "org.secc.OAuth", "..\RockPlugins\Plugins\org.secc.OAuth\org.secc.OAuth.csproj", "{E43836AD-ABCD-4347-ACA1-DC30BC410350}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "org.secc.OAuth", "RockPlugins\Plugins\org.secc.OAuth\org.secc.OAuth.csproj", "{E43836AD-ABCD-4347-ACA1-DC30BC410350}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "org.secc.PastoralCare", "..\RockPlugins\Plugins\org.secc.PastoralCare\org.secc.PastoralCare.csproj", "{ABCF176C-3BD3-491C-B02F-E9AAC42F1890}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "org.secc.PastoralCare", "RockPlugins\Plugins\org.secc.PastoralCare\org.secc.PastoralCare.csproj", "{ABCF176C-3BD3-491C-B02F-E9AAC42F1890}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "org.secc.PayFlowPro", "..\RockPlugins\Plugins\org.secc.PayFlowPro\org.secc.PayFlowPro.csproj", "{2FA9D879-5518-4F53-88B5-BA22F0513A9B}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "org.secc.PayFlowPro", "RockPlugins\Plugins\org.secc.PayFlowPro\org.secc.PayFlowPro.csproj", "{2FA9D879-5518-4F53-88B5-BA22F0513A9B}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "org.secc.PayPalExpress", "..\RockPlugins\Plugins\org.secc.PayPalExpress\org.secc.PayPalExpress.csproj", "{30BE037A-74BC-4764-A780-B17EC0702209}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "org.secc.PayPalExpress", "RockPlugins\Plugins\org.secc.PayPalExpress\org.secc.PayPalExpress.csproj", "{30BE037A-74BC-4764-A780-B17EC0702209}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "org.secc.PDF", "..\RockPlugins\Plugins\org.secc.PDF\org.secc.PDF.csproj", "{87D417B5-72E9-4B80-875B-3AAE79859C2A}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "org.secc.PDF", "RockPlugins\Plugins\org.secc.PDF\org.secc.PDF.csproj", "{87D417B5-72E9-4B80-875B-3AAE79859C2A}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "org.secc.PersonMatch", "..\RockPlugins\Plugins\org.secc.PersonMatch\org.secc.PersonMatch.csproj", "{26CC0BA6-968B-4464-9992-D1D3510AF9AB}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "org.secc.PersonMatch", "RockPlugins\Plugins\org.secc.PersonMatch\org.secc.PersonMatch.csproj", "{26CC0BA6-968B-4464-9992-D1D3510AF9AB}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "org.secc.Purchasing", "..\RockPlugins\Plugins\org.secc.Purchasing\org.secc.Purchasing.csproj", "{3F4DAD0D-96AD-4426-8752-4765199C6F6E}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "org.secc.Purchasing", "RockPlugins\Plugins\org.secc.Purchasing\org.secc.Purchasing.csproj", "{3F4DAD0D-96AD-4426-8752-4765199C6F6E}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "org.secc.QRManager", "..\RockPlugins\Plugins\org.secc.QRManager\org.secc.QRManager.csproj", "{95F034B1-4563-49AE-838F-3630DCECCA22}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "org.secc.QRManager", "RockPlugins\Plugins\org.secc.QRManager\org.secc.QRManager.csproj", "{95F034B1-4563-49AE-838F-3630DCECCA22}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "org.secc.RecurringCommunications", "..\RockPlugins\Plugins\org.secc.RecurringCommunications\org.secc.RecurringCommunications.csproj", "{13BE8167-EFA3-45DF-924D-469630047717}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "org.secc.RecurringCommunications", "RockPlugins\Plugins\org.secc.RecurringCommunications\org.secc.RecurringCommunications.csproj", "{13BE8167-EFA3-45DF-924D-469630047717}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "org.secc.Reporting", "..\RockPlugins\Plugins\org.secc.Reporting\org.secc.Reporting.csproj", "{0B07768D-003F-4EEF-AF53-168CC863FF59}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "org.secc.Reporting", "RockPlugins\Plugins\org.secc.Reporting\org.secc.Reporting.csproj", "{0B07768D-003F-4EEF-AF53-168CC863FF59}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "org.secc.Rest", "..\RockPlugins\Plugins\org.secc.Rest\org.secc.Rest.csproj", "{4858B8BD-14B9-4C80-BA9D-FF593DB8BFFE}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "org.secc.Rest", "RockPlugins\Plugins\org.secc.Rest\org.secc.Rest.csproj", "{4858B8BD-14B9-4C80-BA9D-FF593DB8BFFE}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "org.secc.RoomScanner", "..\RockPlugins\Plugins\org.secc.RoomScanner\org.secc.RoomScanner.csproj", "{1BC54C65-DA53-4438-8C1F-15D0727C7102}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "org.secc.RoomScanner", "RockPlugins\Plugins\org.secc.RoomScanner\org.secc.RoomScanner.csproj", "{1BC54C65-DA53-4438-8C1F-15D0727C7102}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "org.secc.SafetyAndSecurity", "..\RockPlugins\Plugins\org.secc.SafetyAndSecurity\org.secc.SafetyAndSecurity.csproj", "{D4460607-0543-4B74-9168-CCB634963886}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "org.secc.SafetyAndSecurity", "RockPlugins\Plugins\org.secc.SafetyAndSecurity\org.secc.SafetyAndSecurity.csproj", "{D4460607-0543-4B74-9168-CCB634963886}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "org.secc.Sass", "..\RockPlugins\Plugins\org.secc.Sass\org.secc.Sass.csproj", "{99077097-E37E-464B-8CF6-1945B8161862}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "org.secc.Sass", "RockPlugins\Plugins\org.secc.Sass\org.secc.Sass.csproj", "{99077097-E37E-464B-8CF6-1945B8161862}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "org.secc.Search", "..\RockPlugins\Plugins\org.secc.Search\org.secc.Search.csproj", "{B4CB1348-F522-466B-95D4-3D3934B2CF90}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "org.secc.Search", "RockPlugins\Plugins\org.secc.Search\org.secc.Search.csproj", "{B4CB1348-F522-466B-95D4-3D3934B2CF90}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "org.secc.Security", "..\RockPlugins\Plugins\org.secc.Security\org.secc.Security.csproj", "{BF93584E-0EE3-4087-BE0E-2A8F62225375}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "org.secc.Security", "RockPlugins\Plugins\org.secc.Security\org.secc.Security.csproj", "{BF93584E-0EE3-4087-BE0E-2A8F62225375}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "org.secc.ServiceReef", "..\RockPlugins\Plugins\org.secc.ServiceReef\org.secc.ServiceReef.csproj", "{44B97D7D-5463-41EA-BAD4-A70AA9066E5A}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "org.secc.ServiceReef", "RockPlugins\Plugins\org.secc.ServiceReef\org.secc.ServiceReef.csproj", "{44B97D7D-5463-41EA-BAD4-A70AA9066E5A}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "org.secc.SignNowWorkflow", "..\RockPlugins\Plugins\org.secc.SignNowWorkflow\org.secc.SignNowWorkflow.csproj", "{82A73C52-92CF-467C-B884-B771A3005FF2}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "org.secc.SignNowWorkflow", "RockPlugins\Plugins\org.secc.SignNowWorkflow\org.secc.SignNowWorkflow.csproj", "{82A73C52-92CF-467C-B884-B771A3005FF2}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "org.secc.SportsAndFitness", "..\RockPlugins\Plugins\org.secc.SportsAndFitness\org.secc.SportsAndFitness.csproj", "{C79611E9-E2A1-4E4A-A0B9-884AE24D5727}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "org.secc.SportsAndFitness", "RockPlugins\Plugins\org.secc.SportsAndFitness\org.secc.SportsAndFitness.csproj", "{C79611E9-E2A1-4E4A-A0B9-884AE24D5727}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "org.secc.Trak1", "..\RockPlugins\Plugins\org.secc.Trak1\org.secc.Trak1.csproj", "{73BFD8C5-F4EE-454C-A932-6763E0F54270}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "org.secc.Trak1", "RockPlugins\Plugins\org.secc.Trak1\org.secc.Trak1.csproj", "{73BFD8C5-F4EE-454C-A932-6763E0F54270}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "org.secc.Widgities", "..\RockPlugins\Plugins\org.secc.Widgities\org.secc.Widgities.csproj", "{6DC19FD1-3DD5-45F1-916A-AA7797E886AB}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "org.secc.Widgities", "RockPlugins\Plugins\org.secc.Widgities\org.secc.Widgities.csproj", "{6DC19FD1-3DD5-45F1-916A-AA7797E886AB}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "org.secc.Workflow", "..\RockPlugins\Plugins\org.secc.Workflow\org.secc.Workflow.csproj", "{73BFD8C5-F4EE-454C-A932-6763E0F54271}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "org.secc.Workflow", "RockPlugins\Plugins\org.secc.Workflow\org.secc.Workflow.csproj", "{73BFD8C5-F4EE-454C-A932-6763E0F54271}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "org.secc.WorkflowLauncher", "..\RockPlugins\Plugins\org.secc.WorkflowLauncher\org.secc.WorkflowLauncher.csproj", "{308D10EB-C12E-478C-B472-ADE08FA16086}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "org.secc.WorkflowLauncher", "RockPlugins\Plugins\org.secc.WorkflowLauncher\org.secc.WorkflowLauncher.csproj", "{308D10EB-C12E-478C-B472-ADE08FA16086}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
