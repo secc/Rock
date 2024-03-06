@@ -58,10 +58,10 @@ namespace Rock.Model
         /// A list of <see cref="System.String"/> values that are not allowable as attendance codes.
         /// </summary>
         public static readonly List<string> NoGood = new List<string> {
-            "4NL", "4SS", "5CK", "5HT", "5LT", "5NM", "5TD", "5XX", "666", "BCH", "CLT", "CNT", "D4M", "D5H", "DCK", "DMN", "DSH", "F4G", "FCK", "FGT", "G4Y", "GZZ", "H8R",
+            "4NL", "4SS", "5CK", "5HT", "5LT", "5NM", "5TD", "5XX", "666", "BCH", "BLM", "CLT", "CNT", "D4M", "D5H", "DCK", "DMN", "DSH", "F4G", "FCK", "FGT","FKN", "G4Y", "GZZ", "H8R",
             "JNK", "JZZ", "KKK", "KLT", "KNT", "L5D", "LCK", "LSD", "MFF", "MLF", "ND5", "NDS", "NDZ", "NGR", "P55", "PCP", "PHC", "PHK", "PHQ", "PM5", "PMS", "PN5", "PNS",
             "PRC", "PRK", "PRN", "PRQ", "PSS", "RCK", "SCK", "S3X", "SHT", "SLT", "SNM", "STD", "SXX", "THC", "V4G", "WCK", "XTC", "XXX", "911", "1XL", "2XL", "3XL", "4XL",
-            "5XL", "6XL", "7XL", "8XL", "9XL", "XXL", "F4T", "FRT", "DHR", "MFR", "FKR"
+            "5XL", "6XL", "7XL", "8XL", "9XL", "XXL", "F4T", "FRT", "DHR", "MFR", "FKR", "8LM"
         };
 
         /// <summary>
