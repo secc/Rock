@@ -1235,6 +1235,12 @@ function(item) {
                         personInfo.IsChild = (bool)row["IsChild"];
                     }
 
+                    if (dt.Columns.Contains("PrimaryFamilyId") && !DBNull.Value.Equals(row["PrimaryFamilyId"]))
+                    {
+                        personInfo.PrimaryFamilyId = (int?)row["PrimaryFamilyId"];
+                    }
+                       
+
                     personInfoList.Add( personInfo );
                 }
 
@@ -1513,6 +1519,15 @@ function(item) {
                     {
                         DataField = "HomePhone",
                         HeaderText = "Home Phone",
+                        Visible = false,
+                        ExcelExportBehavior = ExcelExportBehavior.AlwaysInclude
+                    } );
+
+                gGiversGifts.Columns.Add(
+                    new RockBoundField
+                    {
+                        DataField = "PrimaryFamilyId",
+                        HeaderText = "Family Id",
                         Visible = false,
                         ExcelExportBehavior = ExcelExportBehavior.AlwaysInclude
                     } );
@@ -1931,6 +1946,7 @@ function(item) {
         public string HomePhone { get; set; }
         public string CellPhone { get; set; }
         public string HomeAddress { get; set; }
+        public int? PrimaryFamilyId { get; set; }
 
         public string PersonName
         {
