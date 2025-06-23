@@ -1270,6 +1270,11 @@ function(item) {
                         personInfo.IsChild = ( bool ) row["IsChild"];
                     }
 
+                    if (!DBNull.Value.Equals(row["PrimaryFamilyId"]))
+                    {
+                        personInfo.PrimaryFamilyId = (int?)row["PrimaryFamilyId"];
+                    }
+
                     personInfoList.Add( personInfo );
                 }
 
@@ -1543,6 +1548,15 @@ function(item) {
                         Visible = false,
                         ExcelExportBehavior = ExcelExportBehavior.AlwaysInclude
                     } );
+
+                gGiversGifts.Columns.Add(
+                    new RockBoundField
+                    {
+                        DataField = "PrimaryFamilyId",
+                        HeaderText = "Family Id",
+                        Visible = false,
+                        ExcelExportBehavior = ExcelExportBehavior.AlwaysInclude
+                    });
 
                 ti.end = RockDateTime.Now;
             } ) );
@@ -2014,6 +2028,8 @@ function(item) {
                 return false;
             }
         }
+
+        public int? PrimaryFamilyId { get; set; }
     }
 
     public class TransactionInfo
