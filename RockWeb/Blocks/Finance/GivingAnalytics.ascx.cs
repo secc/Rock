@@ -1357,6 +1357,11 @@ var headerText = dp.label;
                         personInfo.IsChild = ( bool ) row["IsChild"];
                     }
 
+                    if (!DBNull.Value.Equals(row["PrimaryFamilyId"]))
+                    {
+                        personInfo.PrimaryFamilyId = (int?)row["PrimaryFamilyId"];
+                    }
+
                     personInfoList.Add( personInfo );
                 }
 
@@ -1630,6 +1635,15 @@ var headerText = dp.label;
                         Visible = false,
                         ExcelExportBehavior = ExcelExportBehavior.AlwaysInclude
                     } );
+
+                gGiversGifts.Columns.Add(
+                    new RockBoundField
+                    {
+                        DataField = "PrimaryFamilyId",
+                        HeaderText = "Family Id",
+                        Visible = false,
+                        ExcelExportBehavior = ExcelExportBehavior.AlwaysInclude
+                    });
 
                 ti.end = RockDateTime.Now;
             } ) );
@@ -2101,6 +2115,8 @@ var headerText = dp.label;
                 return false;
             }
         }
+
+        public int? PrimaryFamilyId { get; set; }
     }
 
     public class TransactionInfo
