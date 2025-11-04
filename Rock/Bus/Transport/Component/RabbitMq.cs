@@ -101,8 +101,12 @@ namespace Rock.Bus.Transport
                  known-working configuration for the moment.
 
             */
-
-            var url = $"rabbitmq://{GetHost()}:5671/{GetUser()}/{queueName}";
+            var host = GetHost();
+            if (!host.Contains(":"))
+            {
+                host = host + ":" + 5671;
+            }
+            var url = $"rabbitmq://{host}/{GetUser()}/{queueName}";
             return bus.GetSendEndpoint( new Uri( url ) ).Result;
         }
 
