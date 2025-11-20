@@ -395,7 +395,12 @@ namespace Rock.Model
                     PlacementGroupId = cr.AssignedGroupId,
                     PlacementGroupRoleId = cr.AssignedGroupMemberRoleId,
                     PlacementGroupMemberStatus = cr.AssignedGroupMemberStatus,
-                    PlacementGroupRoleName = cr.AssignedGroup.GroupType.DefaultGroupRole.Name,
+                    PlacementGroupRoleName = cr.AssignedGroupMemberRoleId.HasValue
+                        ? cr.AssignedGroup.GroupType.Roles
+                            .Where( r => r.Id == cr.AssignedGroupMemberRoleId.Value )
+                            .Select( r => r.Name )
+                            .FirstOrDefault() ?? cr.AssignedGroup.GroupType.DefaultGroupRole.Name
+                        : cr.AssignedGroup.GroupType.DefaultGroupRole.Name,
                     Comments = cr.Comments,
                     StatusId = cr.ConnectionStatusId,
                     PersonId = cr.PersonAlias.PersonId,
@@ -902,7 +907,7 @@ namespace Rock.Model
             }
 
             // 3) The person is assigned to the request or the request security allows it and the connection type has EnableRequestSecurity
-            return (connectionRequest.ConnectorPersonAlias != null && connectionRequest.ConnectorPersonAlias.PersonId == currentPerson.Id )
+            return ( connectionRequest.ConnectorPersonAlias != null && connectionRequest.ConnectorPersonAlias.PersonId == currentPerson.Id )
                     || connectionRequest.IsAuthorized( Authorization.EDIT, currentPerson );
         }
 
