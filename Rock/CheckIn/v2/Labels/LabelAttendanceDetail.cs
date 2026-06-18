@@ -17,6 +17,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 
 using Rock.Data;
 using Rock.Model;
@@ -147,7 +148,13 @@ namespace Rock.CheckIn.v2.Labels
             Area = areaCache;
             EndDateTime = attendance.EndDateTime;
             Group = groupCache;
-            GroupMembers = new List<GroupMember>(); // TODO: Need to fill this in, probably via lazy load.
+            GroupMembers = attendance.PersonAlias == null
+                ? new List<GroupMember>()
+                : new GroupMemberService( rockContext ).Queryable()
+                    .Where( gm => gm.GroupId == attendance.Occurrence.GroupId
+                        && gm.PersonId == attendance.PersonAlias.PersonId
+                        && gm.GroupMemberStatus != GroupMemberStatus.Inactive )
+                    .ToList();
             InProgressAchievements = attendanceBag?.InProgressAchievements ?? new List<AchievementBag>();
             IsFirstTime = attendance.IsFirstTime ?? false;
             JustCompletedAchievements = attendanceBag?.JustCompletedAchievements ?? new List<AchievementBag>();
