@@ -157,6 +157,13 @@ namespace RockWeb.Blocks.Connection
         Order = 15,
         Key = AttributeKey.ConnectionRequestHistoryPage )]
 
+    [SecurityRoleField(
+        "Safety & Security Role",
+        Description = "If set, only members of this security role (plus Rock Administrators) can use the Connect button on opportunities that require security to connect.",
+        IsRequired = false,
+        Order = 30,
+        Key = AttributeKey.SafetySecurityRole )]
+
     #endregion Block Attributes
 
     [ContextAware( typeof( Person ), IsConfigurable = false )]
@@ -250,6 +257,7 @@ namespace RockWeb.Blocks.Connection
             public const string WorkflowEntryPage = "WorkflowEntryPage";
             public const string StatusTemplate = "StatusTemplate";
             public const string ConnectionRequestHistoryPage = "ConnectionRequestHistoryPage";
+            public const string SafetySecurityRole = "SafetySecurityRole";
         }
 
         /// <summary>
@@ -2466,6 +2474,12 @@ namespace RockWeb.Blocks.Connection
                 return true;
             }
 
+            // ROCK-8640: enforce S&S role gate before the empty-status short-circuit
+            if (!UserIsAuthorizedToConnect())
+            {
+                return false;
+            }
+
             var connectableStatuses = connectionOpportunity.GetAttributeValue( "ConnectableStatuses" ).SplitDelimitedValues()
                 .Select( v => v.AsIntegerOrNull() )
                 .Where( v => v.HasValue )
@@ -2480,9 +2494,34 @@ namespace RockWeb.Blocks.Connection
             var connectionRequest = GetConnectionRequest();
 
             return connectableStatuses.Contains( connectionRequest.ConnectionStatusId ) || connectionRequest.ConnectionState == ConnectionState.Connected;
+        }
 
+        /// <summary>
+        /// True if the current person may bypass or satisfy the S&S connect gate:
+        /// Rock Administrators always may; otherwise the person must be in the configured S&S role.
+        /// If no S&S role is configured, only Rock Administrators pass.
+        /// </summary>
+        private bool UserIsAuthorizedToConnect()
+        {
+            if ( CurrentPerson == null )
+            {
+                return false;
+            }
 
+            var adminRole = RoleCache.Get( Rock.SystemGuid.Group.GROUP_ADMINISTRATORS.AsGuid() );
+            if ( adminRole != null && adminRole.IsPersonInRole( CurrentPerson.Guid ) )
+            {
+                return true;
+            }
 
+            var roleGuid = GetAttributeValue( AttributeKey.SafetySecurityRole ).AsGuidOrNull();
+            if ( !roleGuid.HasValue )
+            {
+                return false;
+            }
+
+            var ssRole = RoleCache.Get( roleGuid.Value );
+            return ssRole != null && ssRole.IsPersonInRole( CurrentPerson.Guid );
         }
 
         private bool CanUserEditConnectionRequest()
