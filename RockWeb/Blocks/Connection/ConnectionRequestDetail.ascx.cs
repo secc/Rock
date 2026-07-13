@@ -99,6 +99,13 @@ namespace RockWeb.Blocks.Connection
         IsRequired = false,
         Order = 8 )]
 
+    [SecurityRoleField(
+        "Safety & Security Role",
+        Description = "If set, only members of this security role (plus Rock Administrators) can use the Connect button on opportunities that require security to connect.",
+        IsRequired = false,
+        Order = 9,
+        Key = AttributeKeys.SafetySecurityRole )]
+
     #endregion Block Attributes
 
     public partial class ConnectionRequestDetail : PersonBlock
@@ -116,6 +123,7 @@ namespace RockWeb.Blocks.Connection
             public const string LavaBadgeBar = "LavaBadgeBar";
             public const string LavaHeadingTemplate = "LavaHeadingTemplate";
             public const string ActivityLavaTemplate = "Activity Lava Template";
+            public const string SafetySecurityRole = "SafetySecurityRole";
         }
 
         #endregion Attribute Keys
@@ -2069,6 +2077,67 @@ namespace RockWeb.Blocks.Connection
         /// Shows the readonly details.
         /// </summary>
         /// <param name="connectionRequest">The connection request.</param>
+        /// <summary>
+        /// Returns true if the current request satisfies the S&S connect gate for the opportunity.
+        /// </summary>
+        private bool CanUserConnect( ConnectionRequest connectionRequest )
+        {
+            var opportunity = connectionRequest.ConnectionOpportunity;
+            opportunity.LoadAttributes();
+            var requiresSecurityToConnect = opportunity.GetAttributeValue( "SecurityToConnect" ).AsBooleanOrNull();
+
+            if ( !requiresSecurityToConnect.HasValue || !requiresSecurityToConnect.Value )
+            {
+                return true;
+            }
+
+            if ( !UserIsAuthorizedToConnect() )
+            {
+                return false;
+            }
+
+            var connectableStatuses = opportunity.GetAttributeValue( "ConnectableStatuses" ).SplitDelimitedValues()
+                .Select( v => v.AsIntegerOrNull() )
+                .Where( v => v.HasValue )
+                .ToList();
+
+            if ( connectableStatuses.Count == 0 )
+            {
+                return true;
+            }
+
+            return connectableStatuses.Contains( connectionRequest.ConnectionStatusId )
+                || connectionRequest.ConnectionState == ConnectionState.Connected;
+        }
+
+        /// <summary>
+        /// True if the current person may bypass or satisfy the S&S connect gate:
+        /// Rock Administrators always may; otherwise the person must be in the configured S&S role.
+        /// If no S&S role is configured, only Rock Administrators pass.
+        /// </summary>
+        private bool UserIsAuthorizedToConnect()
+        {
+            if ( CurrentPerson == null )
+            {
+                return false;
+            }
+
+            var adminRole = RoleCache.Get( Rock.SystemGuid.Group.GROUP_ADMINISTRATORS.AsGuid() );
+            if ( adminRole != null && adminRole.IsPersonInRole( CurrentPerson.Guid ) )
+            {
+                return true;
+            }
+
+            var roleGuid = GetAttributeValue( AttributeKeys.SafetySecurityRole ).AsGuidOrNull();
+            if ( !roleGuid.HasValue )
+            {
+                return false;
+            }
+
+            var ssRole = RoleCache.Get( roleGuid.Value );
+            return ssRole != null && ssRole.IsPersonInRole( CurrentPerson.Guid );
+        }
+
         private void ShowReadonlyDetails( ConnectionRequest connectionRequest )
         {
             pdAuditDetails.SetEntity( connectionRequest, ResolveRockUrl( "~" ) );
@@ -2091,6 +2160,12 @@ namespace RockWeb.Blocks.Connection
             }
 
             if ( !connectionRequest.ConnectionOpportunity.ShowConnectButton )
+            {
+                lbConnect.Visible = false;
+            }
+
+            // ROCK-8640: enforce S&S connect gate on the standalone detail screen
+            if ( !CanUserConnect( connectionRequest ) )
             {
                 lbConnect.Visible = false;
             }
