@@ -2074,17 +2074,20 @@ namespace RockWeb.Blocks.Connection
         }
 
         /// <summary>
-        /// Shows the readonly details.
-        /// </summary>
-        /// <param name="connectionRequest">The connection request.</param>
-        /// <summary>
-        /// Returns true if the current request satisfies the S&S connect gate for the opportunity.
+        /// SECC: Returns true if the current request satisfies the S&amp;S connect gate for the opportunity.
+        /// Fails closed: returns false if the opportunity cannot be resolved.
         /// </summary>
         private bool CanUserConnect( ConnectionRequest connectionRequest )
         {
             var opportunity = connectionRequest.ConnectionOpportunity;
+
+            if ( opportunity == null )
+            {
+                return false;
+            }
+
             opportunity.LoadAttributes();
-            var requiresSecurityToConnect = opportunity.GetAttributeValue( "SecurityToConnect" ).AsBooleanOrNull();
+            var requiresSecurityToConnect = GetRequiresSecurityToConnect( opportunity );
 
             if ( !requiresSecurityToConnect.HasValue || !requiresSecurityToConnect.Value )
             {
@@ -2108,6 +2111,31 @@ namespace RockWeb.Blocks.Connection
 
             return connectableStatuses.Contains( connectionRequest.ConnectionStatusId )
                 || connectionRequest.ConnectionState == ConnectionState.Connected;
+        }
+
+        // ROCK-8640: attribute keys for the SecurityToConnect flag across all opportunity types.
+        private static readonly string[] SecurityToConnectAttributeKeys =
+        {
+            "SecurityToConnect",
+            "RequireSafetySecuritytoConnect",      // RISE
+            "RequireSafetyandSecuritytoConnect"    // Lightning Lane
+        };
+
+        /// <summary>
+        /// SECC: Returns the first non-null SecurityToConnect value found across all known attribute keys.
+        /// </summary>
+        private static bool? GetRequiresSecurityToConnect( ConnectionOpportunity opportunity )
+        {
+            foreach ( var key in SecurityToConnectAttributeKeys )
+            {
+                var value = opportunity.GetAttributeValue( key ).AsBooleanOrNull();
+                if ( value.HasValue )
+                {
+                    return value;
+                }
+            }
+
+            return null;
         }
 
         /// <summary>
@@ -2138,6 +2166,10 @@ namespace RockWeb.Blocks.Connection
             return ssRole != null && ssRole.IsPersonInRole( CurrentPerson.Guid );
         }
 
+        /// <summary>
+        /// Shows the readonly details.
+        /// </summary>
+        /// <param name="connectionRequest">The connection request.</param>
         private void ShowReadonlyDetails( ConnectionRequest connectionRequest )
         {
             pdAuditDetails.SetEntity( connectionRequest, ResolveRockUrl( "~" ) );
