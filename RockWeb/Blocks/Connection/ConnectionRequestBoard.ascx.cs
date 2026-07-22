@@ -168,6 +168,13 @@ namespace RockWeb.Blocks.Connection
         Order = 16,
         Key = AttributeKey.BulkUpdateRequestsPage )]
 
+    [SecurityRoleField(
+        "Safety & Security Role",
+        Description = "Members of this security role (plus Rock Administrators) can use the Connect button on opportunities that require security to connect. If an opportunity requires security to connect and no role is set here, only Rock Administrators can connect.",
+        IsRequired = false,
+        Order = 30,
+        Key = AttributeKey.SafetySecurityRole )]
+
     #endregion Block Attributes
 
     [ContextAware( typeof( Person ), IsConfigurable = false )]
@@ -284,6 +291,7 @@ namespace RockWeb.Blocks.Connection
             public const string StatusTemplate = "StatusTemplate";
             public const string ConnectionRequestHistoryPage = "ConnectionRequestHistoryPage";
             public const string BulkUpdateRequestsPage = "BulkUpdateRequestsPage";
+            public const string SafetySecurityRole = "SafetySecurityRole";
         }
 
         /// <summary>
@@ -843,8 +851,13 @@ namespace RockWeb.Blocks.Connection
 
             if ( action == "connect" )
             {
-                MarkRequestConnected();
-                RefreshRequestCard();
+                // ROCK-8640: enforce edit rights and the S&S connect gate on the card-menu connect action.
+                if ( CanUserEditConnectionRequest() && CanUserConnect() )
+                {
+                    MarkRequestConnected();
+                    RefreshRequestCard();
+                }
+
                 return;
             }
 
@@ -1088,7 +1101,8 @@ namespace RockWeb.Blocks.Connection
                 viewModel.ConnectionState != ConnectionState.Inactive &&
                 viewModel.ConnectionState != ConnectionState.Connected &&
                 connectionRequest.ConnectionOpportunity.ShowConnectButton &&
-                CanUserEditConnectionRequest();
+                CanUserEditConnectionRequest() &&
+                CanUserConnect();
             btnRequestModalViewModeEdit.Visible = CanUserEditConnectionRequest();
             lbRequestModalViewModeAddActivity.Visible = CanUserEditConnectionRequest();
             rRequestModalViewModeConnectorSelect.Visible = CanUserEditConnectionRequest();
@@ -1489,11 +1503,18 @@ namespace RockWeb.Blocks.Connection
 
             var state = rblRequestModalAddEditModeState.SelectedValueAsEnumOrNull<ConnectionState>();
 
+            // ROCK-8640: prevent unauthorized users from transitioning a request into Connected state.
+            // If the selected state is Connected but the user isn't authorized, preserve the existing state.
+            if ( state == ConnectionState.Connected && !CanUserConnect() )
+            {
+                state = connectionRequest.ConnectionState;
+            }
+
             // If a value is selected in the radio button list, use it, otherwise use "Active".
             // This prevents the "FutureFollowUp" State from remaining on a Connection Request if the Connection Type's "Enable Future Follow-up" was unchecked.
             if ( state.HasValue )
             {
-                connectionRequest.ConnectionState = rblRequestModalAddEditModeState.SelectedValueAsEnum<ConnectionState>();
+                connectionRequest.ConnectionState = state.Value;
             }
             else
             {
@@ -2838,6 +2859,21 @@ namespace RockWeb.Blocks.Connection
         }
 
         /// <summary>
+        /// SECC (ROCK-8640): Returns true if the current user may connect the request, based on the
+        /// opportunity's SecurityToConnect flag and the configured Safety &amp; Security role.
+        /// Shared gate logic lives in <see cref="SeccConnectGateHelper"/> (also used by ConnectionRequestDetail).
+        /// Fails closed: returns false if the opportunity cannot be resolved.
+        /// </summary>
+        private bool CanUserConnect()
+        {
+            return SeccConnectGateHelper.CanConnect(
+                GetConnectionRequest(),
+                GetConnectionOpportunity(),
+                CurrentPerson,
+                GetAttributeValue( AttributeKey.SafetySecurityRole ).AsGuidOrNull() );
+        }
+
+        /// <summary>
         /// Binds the modal activities grid.
         /// </summary>
         private void BindRequestModalViewModeActivitiesGrid()
@@ -3448,7 +3484,8 @@ namespace RockWeb.Blocks.Connection
         /// <param name="e">The <see cref="EventArgs"/> instance containing the event data.</param>
         protected void btnRequestModalViewModeConnect_Click( object sender, EventArgs e )
         {
-            if ( !CanUserEditConnectionRequest() )
+            // ROCK-8640: also enforce the S&S connect gate server-side.
+            if ( !CanUserEditConnectionRequest() || !CanUserConnect() )
             {
                 return;
             }

@@ -101,6 +101,13 @@ namespace RockWeb.Blocks.Connection
         IsRequired = false,
         Order = 8 )]
 
+    [SecurityRoleField(
+        "Safety & Security Role",
+        Description = "Members of this security role (plus Rock Administrators) can use the Connect button on opportunities that require security to connect. If an opportunity requires security to connect and no role is set here, only Rock Administrators can connect.",
+        IsRequired = false,
+        Order = 9,
+        Key = AttributeKeys.SafetySecurityRole )]
+
     #endregion Block Attributes
 
     [Rock.SystemGuid.BlockTypeGuid( "A7961C9C-2EF5-44DF-BEA5-C334B42A90E2" )]
@@ -119,6 +126,7 @@ namespace RockWeb.Blocks.Connection
             public const string LavaBadgeBar = "LavaBadgeBar";
             public const string LavaHeadingTemplate = "LavaHeadingTemplate";
             public const string ActivityLavaTemplate = "Activity Lava Template";
+            public const string SafetySecurityRole = "SafetySecurityRole";
         }
 
         #endregion Attribute Keys
@@ -781,6 +789,12 @@ namespace RockWeb.Blocks.Connection
                     .FirstOrDefault( cr => cr.Id == connectionRequestId );
 
                 if ( connectionRequest == null || connectionRequest.PersonAlias == null || connectionRequest.ConnectionOpportunity == null )
+                {
+                    return;
+                }
+
+                // ROCK-8640: enforce the S&S connect gate server-side.
+                if ( !CanUserConnect( connectionRequest ) )
                 {
                     return;
                 }
@@ -2126,6 +2140,20 @@ namespace RockWeb.Blocks.Connection
         }
 
         /// <summary>
+        /// SECC (ROCK-8640): Returns true if the current request satisfies the S&amp;S connect gate for the opportunity.
+        /// Shared gate logic lives in <see cref="SeccConnectGateHelper"/> (also used by ConnectionRequestBoard).
+        /// Fails closed: returns false if the opportunity cannot be resolved.
+        /// </summary>
+        private bool CanUserConnect( ConnectionRequest connectionRequest )
+        {
+            return SeccConnectGateHelper.CanConnect(
+                connectionRequest,
+                connectionRequest?.ConnectionOpportunity,
+                CurrentPerson,
+                GetAttributeValue( AttributeKeys.SafetySecurityRole ).AsGuidOrNull() );
+        }
+
+        /// <summary>
         /// Shows the readonly details.
         /// </summary>
         /// <param name="connectionRequest">The connection request.</param>
@@ -2151,6 +2179,12 @@ namespace RockWeb.Blocks.Connection
             }
 
             if ( !connectionRequest.ConnectionOpportunity.ShowConnectButton )
+            {
+                lbConnect.Visible = false;
+            }
+
+            // ROCK-8640: enforce S&S connect gate on the standalone detail screen
+            if ( !CanUserConnect( connectionRequest ) )
             {
                 lbConnect.Visible = false;
             }
