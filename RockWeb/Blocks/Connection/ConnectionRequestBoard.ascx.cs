@@ -2526,6 +2526,25 @@ namespace RockWeb.Blocks.Connection
         /// </summary>
         private bool CanUserConnect()
         {
+            var connectionRequest = GetConnectionRequest();
+
+            // Add mode: no request yet - don't block modal rendering.
+            if ( connectionRequest == null )
+            {
+                return CanUserConnect( null, null );
+            }
+
+            return CanUserConnect( connectionRequest.ConnectionStatusId, connectionRequest.ConnectionState );
+        }
+
+        /// <summary>
+        /// SECC: The single implementation of the connect gate. The status and state are parameters so the
+        /// same rule can be evaluated for the request in context (the modal's Connect button) and for an
+        /// arbitrary status (the board card action menu), without a second copy of the logic.
+        /// A null status means there is no request in context.
+        /// </summary>
+        private bool CanUserConnect( int? connectionStatusId, ConnectionState? connectionState )
+        {
             var connectionOpportunity = GetConnectionOpportunity();
 
             if ( connectionOpportunity == null )
@@ -2556,16 +2575,43 @@ namespace RockWeb.Blocks.Connection
                 return true;
             }
 
-            var connectionRequest = GetConnectionRequest();
-
-            // Add mode: no request yet — don't block modal rendering.
-            if ( connectionRequest == null )
+            // No request in context: don't block modal rendering.
+            if ( !connectionStatusId.HasValue )
             {
                 return true;
             }
 
-            return connectableStatuses.Contains( connectionRequest.ConnectionStatusId )
-                || connectionRequest.ConnectionState == ConnectionState.Connected;
+            return connectableStatuses.Contains( connectionStatusId.Value )
+                || connectionState == ConnectionState.Connected;
+        }
+
+        /// <summary>
+        /// SECC: Runs the gate above against every status on the selected opportunity, so the board card
+        /// action menu can hide its Connect item using exactly the same rule that hides the Connect button
+        /// on the request modal. Presentation only - the card menu still posts back to the server.
+        /// </summary>
+        private List<int> GetUserConnectableStatusIds()
+        {
+            var statusIds = new List<int>();
+            var connectionOpportunity = GetConnectionOpportunity();
+
+            if ( connectionOpportunity == null
+                || connectionOpportunity.ConnectionType == null
+                || connectionOpportunity.ConnectionType.ConnectionStatuses == null )
+            {
+                return statusIds;
+            }
+
+            foreach ( var connectionStatus in connectionOpportunity.ConnectionType.ConnectionStatuses )
+            {
+                // Cards never render for Connected or Inactive requests, so evaluate each status as Active.
+                if ( CanUserConnect( connectionStatus.Id, ConnectionState.Active ) )
+                {
+                    statusIds.Add( connectionStatus.Id );
+                }
+            }
+
+            return statusIds;
         }
 
         /// <summary>
@@ -5374,7 +5420,8 @@ namespace RockWeb.Blocks.Connection
     statusIds: {8},
     connectionStates: {9},
     campusId: {10},
-    pastDueOnly: {11}
+    pastDueOnly: {11},
+    userConnectableStatusIds: {12}
 }});",
                 ToJavaScript( ConnectionRequestId ), // 0
                 ToJavaScript( whitespaceRemovedTemplate ), // 1
@@ -5387,7 +5434,8 @@ namespace RockWeb.Blocks.Connection
                 ToJavaScript( cblStatusFilter.SelectedValuesAsInt ), // 8
                 ToJavaScript( cblStateFilter.SelectedValues ), // 9
                 ToJavaScript( CampusId ), // 10
-                ToJavaScript( rcbPastDueOnly.Checked ) /* 11 */ );
+                ToJavaScript( rcbPastDueOnly.Checked ), // 11
+                ToJavaScript( GetUserConnectableStatusIds() ) /* 12 */ );
 
             ScriptManager.RegisterStartupScript(
                 upnlJavaScript,
@@ -5423,7 +5471,8 @@ namespace RockWeb.Blocks.Connection
     lastActivityTypeIds: {11},
     controlClientId: {12},
     pastDueOnly: {13},
-    connectionRequestId: {14}
+    connectionRequestId: {14},
+    userConnectableStatusIds: {15}
 }});",
                 ToJavaScript( ConnectionOpportunityId ), // 0
                 ToJavaScript( GetMaxCardsPerColumn() ), // 1
@@ -5439,7 +5488,8 @@ namespace RockWeb.Blocks.Connection
                 ToJavaScript( cblLastActivityFilter.SelectedValuesAsInt ), // 11
                 ToJavaScript( lbJavaScriptCommand.ClientID ), // 12
                 ToJavaScript( rcbPastDueOnly.Checked ), //13
-                ToJavaScript( ConnectionRequestId ) /* 14 */ );
+                ToJavaScript( ConnectionRequestId ), // 14
+                ToJavaScript( GetUserConnectableStatusIds() ) /* 15 */ );
 
             ScriptManager.RegisterStartupScript(
                 upnlJavaScript,
