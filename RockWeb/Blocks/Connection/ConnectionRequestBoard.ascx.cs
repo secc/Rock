@@ -159,7 +159,7 @@ namespace RockWeb.Blocks.Connection
 
     [SecurityRoleField(
         "Safety & Security Role",
-        Description = "If set, only members of this security role (plus Rock Administrators) can use the Connect button on opportunities that require security to connect.",
+        Description = "Members of this security role (plus Rock Administrators) can use the Connect button on opportunities that require security to connect. If an opportunity requires security to connect and no role is set here, only Rock Administrators can connect.",
         IsRequired = false,
         Order = 30,
         Key = AttributeKey.SafetySecurityRole )]
@@ -656,8 +656,13 @@ namespace RockWeb.Blocks.Connection
 
             if ( action == "connect" )
             {
-                MarkRequestConnected();
-                RefreshRequestCard();
+                // ROCK-8640: enforce edit rights and the S&S connect gate on the card-menu connect action.
+                if ( CanUserEditConnectionRequest() && CanUserConnect() )
+                {
+                    MarkRequestConnected();
+                    RefreshRequestCard();
+                }
+
                 return;
             }
 
@@ -2520,105 +2525,18 @@ namespace RockWeb.Blocks.Connection
         }
 
         /// <summary>
-        /// SECC: Returns true if the current user may connect the request, based on the opportunity's
-        /// SecurityToConnect flag and the configured Safety &amp; Security role.
-        /// Fails closed: returns false if the opportunity or request cannot be resolved.
+        /// SECC (ROCK-8640): Returns true if the current user may connect the request, based on the
+        /// opportunity's SecurityToConnect flag and the configured Safety &amp; Security role.
+        /// Shared gate logic lives in <see cref="SeccConnectGateHelper"/> (also used by ConnectionRequestDetail).
+        /// Fails closed: returns false if the opportunity cannot be resolved.
         /// </summary>
         private bool CanUserConnect()
         {
-            var connectionOpportunity = GetConnectionOpportunity();
-
-            if ( connectionOpportunity == null )
-            {
-                return false;
-            }
-
-            connectionOpportunity.LoadAttributes();
-            var requiresSecurityToConnect = GetRequiresSecurityToConnect( connectionOpportunity );
-
-            if ( !requiresSecurityToConnect.HasValue || !requiresSecurityToConnect.Value )
-            {
-                return true;
-            }
-
-            if ( !UserIsAuthorizedToConnect() )
-            {
-                return false;
-            }
-
-            var connectableStatuses = connectionOpportunity.GetAttributeValue( "ConnectableStatuses" ).SplitDelimitedValues()
-                .Select( v => v.AsIntegerOrNull() )
-                .Where( v => v.HasValue )
-                .ToList();
-
-            if ( connectableStatuses.Count == 0 )
-            {
-                return true;
-            }
-
-            var connectionRequest = GetConnectionRequest();
-
-            // Add mode: no request yet — don't block modal rendering.
-            if ( connectionRequest == null )
-            {
-                return true;
-            }
-
-            return connectableStatuses.Contains( connectionRequest.ConnectionStatusId )
-                || connectionRequest.ConnectionState == ConnectionState.Connected;
-        }
-
-        /// <summary>
-        /// SECC: Returns true if the current person satisfies the S&amp;S connect gate:
-        /// Rock Administrators always pass; otherwise the person must be in the configured S&amp;S role.
-        /// If no S&amp;S role is configured, only Rock Administrators pass.
-        /// </summary>
-        private bool UserIsAuthorizedToConnect()
-        {
-            if ( CurrentPerson == null )
-            {
-                return false;
-            }
-
-            var adminRole = RoleCache.Get( Rock.SystemGuid.Group.GROUP_ADMINISTRATORS.AsGuid() );
-            if ( adminRole != null && adminRole.IsPersonInRole( CurrentPerson.Guid ) )
-            {
-                return true;
-            }
-
-            var roleGuid = GetAttributeValue( AttributeKey.SafetySecurityRole ).AsGuidOrNull();
-            if ( !roleGuid.HasValue )
-            {
-                return false;
-            }
-
-            var ssRole = RoleCache.Get( roleGuid.Value );
-            return ssRole != null && ssRole.IsPersonInRole( CurrentPerson.Guid );
-        }
-
-        // ROCK-8640: attribute keys for the SecurityToConnect flag across all opportunity types.
-        private static readonly string[] SecurityToConnectAttributeKeys =
-        {
-            "SecurityToConnect",
-            "RequireSafetySecuritytoConnect",      // RISE
-            "RequireSafetyandSecuritytoConnect"    // Lightning Lane
-        };
-
-        /// <summary>
-        /// SECC: Returns the first non-null SecurityToConnect value found across all known attribute keys.
-        /// </summary>
-        private static bool? GetRequiresSecurityToConnect( ConnectionOpportunity opportunity )
-        {
-            foreach ( var key in SecurityToConnectAttributeKeys )
-            {
-                var value = opportunity.GetAttributeValue( key ).AsBooleanOrNull();
-                if ( value.HasValue )
-                {
-                    return value;
-                }
-            }
-
-            return null;
+            return SeccConnectGateHelper.CanConnect(
+                GetConnectionRequest(),
+                GetConnectionOpportunity(),
+                CurrentPerson,
+                GetAttributeValue( AttributeKey.SafetySecurityRole ).AsGuidOrNull() );
         }
 
         /// <summary>
@@ -3232,7 +3150,8 @@ namespace RockWeb.Blocks.Connection
         /// <param name="e">The <see cref="EventArgs"/> instance containing the event data.</param>
         protected void btnRequestModalViewModeConnect_Click( object sender, EventArgs e )
         {
-            if ( !CanUserEditConnectionRequest() )
+            // ROCK-8640: also enforce the S&S connect gate server-side.
+            if ( !CanUserEditConnectionRequest() || !CanUserConnect() )
             {
                 return;
             }
