@@ -2532,11 +2532,45 @@ namespace RockWeb.Blocks.Connection
         /// </summary>
         private bool CanUserConnect()
         {
+            var connectionRequest = GetConnectionRequest();
+
             return SeccConnectGateHelper.CanConnect(
-                GetConnectionRequest(),
-                GetConnectionOpportunity(),
+                connectionRequest,
+                GetGateConnectionOpportunity( connectionRequest ),
                 CurrentPerson,
                 GetAttributeValue( AttributeKey.SafetySecurityRole ).AsGuidOrNull() );
+        }
+
+        /// <summary>
+        /// SECC (ROCK-8640): Returns the opportunity whose connect rules apply to the given request.
+        /// The request identifier arrives from the client, so it can belong to an opportunity other than the
+        /// one currently selected on the board. The gate has to read SecurityToConnect and ConnectableStatuses
+        /// from the request's own opportunity - which is what ConnectionRequestDetail does - otherwise a user
+        /// on an opportunity that does not require security could connect a request in one that does.
+        /// Falls back to the selected opportunity when there is no request in context (modal add mode), which
+        /// is the opportunity the new request will be created in.
+        /// </summary>
+        /// <param name="connectionRequest">The connection request, or null in modal add mode.</param>
+        private ConnectionOpportunity GetGateConnectionOpportunity( ConnectionRequest connectionRequest )
+        {
+            var selectedConnectionOpportunity = GetConnectionOpportunity();
+
+            if ( connectionRequest == null )
+            {
+                return selectedConnectionOpportunity;
+            }
+
+            // Reuse the already loaded instance when it is the right one, which is the normal case.
+            if ( selectedConnectionOpportunity != null
+                && selectedConnectionOpportunity.Id == connectionRequest.ConnectionOpportunityId )
+            {
+                return selectedConnectionOpportunity;
+            }
+
+            return new ConnectionOpportunityService( new RockContext() )
+                .Queryable()
+                .AsNoTracking()
+                .FirstOrDefault( co => co.Id == connectionRequest.ConnectionOpportunityId );
         }
 
         /// <summary>
