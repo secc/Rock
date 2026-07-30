@@ -95,6 +95,22 @@ namespace RockWeb
         /// </summary>
         public static bool CanConnect( ConnectionRequest connectionRequest, ConnectionOpportunity opportunity, Person currentPerson, Guid? safetySecurityRoleGuid )
         {
+            if ( connectionRequest == null )
+            {
+                return CanConnect( ( int? ) null, null, opportunity, currentPerson, safetySecurityRoleGuid );
+            }
+
+            return CanConnect( connectionRequest.ConnectionStatusId, connectionRequest.ConnectionState, opportunity, currentPerson, safetySecurityRoleGuid );
+        }
+
+        /// <summary>
+        /// Same gate, evaluated for an arbitrary status instead of a request. Lets callers ask
+        /// "could the person connect a request at this status?" (e.g. the board card action menu,
+        /// which must decide per status column). A null status means there is no request in context,
+        /// which is allowed (board add mode) so modal rendering isn't blocked.
+        /// </summary>
+        public static bool CanConnect( int? connectionStatusId, ConnectionState? connectionState, ConnectionOpportunity opportunity, Person currentPerson, Guid? safetySecurityRoleGuid )
+        {
             if ( opportunity == null )
             {
                 return false;
@@ -123,13 +139,13 @@ namespace RockWeb
                 return true;
             }
 
-            if ( connectionRequest == null )
+            if ( !connectionStatusId.HasValue )
             {
                 return true;
             }
 
-            return connectableStatuses.Contains( connectionRequest.ConnectionStatusId )
-                || connectionRequest.ConnectionState == ConnectionState.Connected;
+            return connectableStatuses.Contains( connectionStatusId.Value )
+                || connectionState == ConnectionState.Connected;
         }
     }
 }
