@@ -159,7 +159,7 @@ namespace RockWeb.Blocks.Connection
 
     [SecurityRoleField(
         "Safety & Security Role",
-        Description = "If set, only members of this security role (plus Rock Administrators) can use the Connect button on opportunities that require security to connect.",
+        Description = "Members of this security role (plus Rock Administrators) can use the Connect button on opportunities that require security to connect. If an opportunity requires security to connect and no role is set here, only Rock Administrators can connect.",
         IsRequired = false,
         Order = 30,
         Key = AttributeKey.SafetySecurityRole )]
@@ -656,8 +656,13 @@ namespace RockWeb.Blocks.Connection
 
             if ( action == "connect" )
             {
-                MarkRequestConnected();
-                RefreshRequestCard();
+                // ROCK-8640: enforce edit rights and the S&S connect gate on the card-menu connect action.
+                if ( CanUserEditConnectionRequest() && CanUserConnect() )
+                {
+                    MarkRequestConnected();
+                    RefreshRequestCard();
+                }
+
                 return;
             }
 
@@ -2520,105 +2525,107 @@ namespace RockWeb.Blocks.Connection
         }
 
         /// <summary>
-        /// SECC: Returns true if the current user may connect the request, based on the opportunity's
-        /// SecurityToConnect flag and the configured Safety &amp; Security role.
-        /// Fails closed: returns false if the opportunity or request cannot be resolved.
+        /// SECC (ROCK-8640): Returns true if the current user may connect the request, based on the
+        /// opportunity's SecurityToConnect flag and the configured Safety &amp; Security role.
+        /// Shared gate logic lives in <see cref="SeccConnectGateHelper"/> (also used by ConnectionRequestDetail).
+        /// Fails closed: returns false if the opportunity cannot be resolved.
         /// </summary>
         private bool CanUserConnect()
         {
-            var connectionOpportunity = GetConnectionOpportunity();
-
-            if ( connectionOpportunity == null )
-            {
-                return false;
-            }
-
-            connectionOpportunity.LoadAttributes();
-            var requiresSecurityToConnect = GetRequiresSecurityToConnect( connectionOpportunity );
-
-            if ( !requiresSecurityToConnect.HasValue || !requiresSecurityToConnect.Value )
-            {
-                return true;
-            }
-
-            if ( !UserIsAuthorizedToConnect() )
-            {
-                return false;
-            }
-
-            var connectableStatuses = connectionOpportunity.GetAttributeValue( "ConnectableStatuses" ).SplitDelimitedValues()
-                .Select( v => v.AsIntegerOrNull() )
-                .Where( v => v.HasValue )
-                .ToList();
-
-            if ( connectableStatuses.Count == 0 )
-            {
-                return true;
-            }
-
             var connectionRequest = GetConnectionRequest();
 
-            // Add mode: no request yet — don't block modal rendering.
+            return SeccConnectGateHelper.CanConnect(
+                connectionRequest,
+                GetGateConnectionOpportunity( connectionRequest ),
+                CurrentPerson,
+                GetAttributeValue( AttributeKey.SafetySecurityRole ).AsGuidOrNull() );
+        }
+
+        /// <summary>
+        /// SECC (ROCK-8640): Returns the opportunity whose connect rules apply to the given request.
+        /// The request identifier arrives from the client, so it can belong to an opportunity other than the
+        /// one currently selected on the board. The gate has to read SecurityToConnect and ConnectableStatuses
+        /// from the request's own opportunity - which is what ConnectionRequestDetail does - otherwise a user
+        /// on an opportunity that does not require security could connect a request in one that does.
+        /// Falls back to the selected opportunity when there is no request in context (modal add mode), which
+        /// is the opportunity the new request will be created in.
+        /// </summary>
+        /// <param name="connectionRequest">The connection request, or null in modal add mode.</param>
+        private ConnectionOpportunity GetGateConnectionOpportunity( ConnectionRequest connectionRequest )
+        {
+            var selectedConnectionOpportunity = GetConnectionOpportunity();
+
             if ( connectionRequest == null )
             {
-                return true;
+                return selectedConnectionOpportunity;
             }
 
-            return connectableStatuses.Contains( connectionRequest.ConnectionStatusId )
-                || connectionRequest.ConnectionState == ConnectionState.Connected;
+            // Reuse the already loaded instance when it is the right one, which is the normal case.
+            if ( selectedConnectionOpportunity != null
+                && selectedConnectionOpportunity.Id == connectionRequest.ConnectionOpportunityId )
+            {
+                return selectedConnectionOpportunity;
+            }
+
+            return new ConnectionOpportunityService( new RockContext() )
+                .Queryable()
+                .AsNoTracking()
+                .FirstOrDefault( co => co.Id == connectionRequest.ConnectionOpportunityId );
         }
 
         /// <summary>
-        /// SECC: Returns true if the current person satisfies the S&amp;S connect gate:
-        /// Rock Administrators always pass; otherwise the person must be in the configured S&amp;S role.
-        /// If no S&amp;S role is configured, only Rock Administrators pass.
+        /// SECC (ROCK-8640): Runs the shared gate against every status on the selected opportunity, so the
+        /// board card action menu can hide its Connect item using exactly the same rule that hides the
+        /// Connect button on the request modal. Presentation only - the card menu's postback is enforced
+        /// separately in ProcessJavaScriptCommand.
         /// </summary>
-        private bool UserIsAuthorizedToConnect()
+        private List<int> GetUserConnectableStatusIds()
         {
-            if ( CurrentPerson == null )
+            var statusIds = new List<int>();
+
+            /*
+                The modal's Connect button also requires edit rights, so apply the same check here.
+
+                Note that no request is in context at bind time, so when the connection type has
+                EnableRequestSecurity turned on this evaluates opportunity-level Edit rather than the
+                per-request Edit the modal evaluates, and the card menu can show Connect for a request
+                the modal would hide. The card menu's postback is still evaluated per-request in
+                ProcessJavaScriptCommand, so this is a presentation difference only. Matching the modal
+                exactly here would require evaluating the gate per request instead of per status.
+            */
+            if ( !CanUserEditConnectionRequest() )
             {
-                return false;
+                return statusIds;
             }
 
-            var adminRole = RoleCache.Get( Rock.SystemGuid.Group.GROUP_ADMINISTRATORS.AsGuid() );
-            if ( adminRole != null && adminRole.IsPersonInRole( CurrentPerson.Guid ) )
+            var connectionOpportunity = GetConnectionOpportunity();
+
+            if ( connectionOpportunity == null
+                || connectionOpportunity.ConnectionType == null
+                || connectionOpportunity.ConnectionType.ConnectionStatuses == null )
             {
-                return true;
+                return statusIds;
             }
 
-            var roleGuid = GetAttributeValue( AttributeKey.SafetySecurityRole ).AsGuidOrNull();
-            if ( !roleGuid.HasValue )
+            var safetySecurityRoleGuid = GetAttributeValue( AttributeKey.SafetySecurityRole ).AsGuidOrNull();
+
+            // Ordered so the same board state always produces the same list. The client stores these in its
+            // options object and re-renders the board when that object changes.
+            foreach ( var connectionStatus in connectionOpportunity.ConnectionType.ConnectionStatuses.OrderBy( cs => cs.Id ) )
             {
-                return false;
-            }
-
-            var ssRole = RoleCache.Get( roleGuid.Value );
-            return ssRole != null && ssRole.IsPersonInRole( CurrentPerson.Guid );
-        }
-
-        // ROCK-8640: attribute keys for the SecurityToConnect flag across all opportunity types.
-        private static readonly string[] SecurityToConnectAttributeKeys =
-        {
-            "SecurityToConnect",
-            "RequireSafetySecuritytoConnect",      // RISE
-            "RequireSafetyandSecuritytoConnect"    // Lightning Lane
-        };
-
-        /// <summary>
-        /// SECC: Returns the first non-null SecurityToConnect value found across all known attribute keys.
-        /// </summary>
-        private static bool? GetRequiresSecurityToConnect( ConnectionOpportunity opportunity )
-        {
-            foreach ( var key in SecurityToConnectAttributeKeys )
-            {
-                var value = opportunity.GetAttributeValue( key ).AsBooleanOrNull();
-                if ( value.HasValue )
+                /*
+                    Each status is evaluated as Active. State only affects the gate when it is Connected,
+                    and the client applies this list only to cards whose core CanConnect is already true --
+                    which is false for both Connected and Inactive requests -- so the state passed here
+                    cannot change the outcome.
+                */
+                if ( SeccConnectGateHelper.CanConnect( connectionStatus.Id, ConnectionState.Active, connectionOpportunity, CurrentPerson, safetySecurityRoleGuid ) )
                 {
-                    return value;
+                    statusIds.Add( connectionStatus.Id );
                 }
             }
 
-            return null;
+            return statusIds;
         }
 
         /// <summary>
@@ -3232,7 +3239,8 @@ namespace RockWeb.Blocks.Connection
         /// <param name="e">The <see cref="EventArgs"/> instance containing the event data.</param>
         protected void btnRequestModalViewModeConnect_Click( object sender, EventArgs e )
         {
-            if ( !CanUserEditConnectionRequest() )
+            // ROCK-8640: also enforce the S&S connect gate server-side.
+            if ( !CanUserEditConnectionRequest() || !CanUserConnect() )
             {
                 return;
             }
@@ -5374,7 +5382,8 @@ namespace RockWeb.Blocks.Connection
     statusIds: {8},
     connectionStates: {9},
     campusId: {10},
-    pastDueOnly: {11}
+    pastDueOnly: {11},
+    userConnectableStatusIds: {12}
 }});",
                 ToJavaScript( ConnectionRequestId ), // 0
                 ToJavaScript( whitespaceRemovedTemplate ), // 1
@@ -5387,7 +5396,8 @@ namespace RockWeb.Blocks.Connection
                 ToJavaScript( cblStatusFilter.SelectedValuesAsInt ), // 8
                 ToJavaScript( cblStateFilter.SelectedValues ), // 9
                 ToJavaScript( CampusId ), // 10
-                ToJavaScript( rcbPastDueOnly.Checked ) /* 11 */ );
+                ToJavaScript( rcbPastDueOnly.Checked ), // 11
+                ToJavaScript( GetUserConnectableStatusIds() ) /* 12 */ );
 
             ScriptManager.RegisterStartupScript(
                 upnlJavaScript,
@@ -5423,7 +5433,8 @@ namespace RockWeb.Blocks.Connection
     lastActivityTypeIds: {11},
     controlClientId: {12},
     pastDueOnly: {13},
-    connectionRequestId: {14}
+    connectionRequestId: {14},
+    userConnectableStatusIds: {15}
 }});",
                 ToJavaScript( ConnectionOpportunityId ), // 0
                 ToJavaScript( GetMaxCardsPerColumn() ), // 1
@@ -5439,7 +5450,8 @@ namespace RockWeb.Blocks.Connection
                 ToJavaScript( cblLastActivityFilter.SelectedValuesAsInt ), // 11
                 ToJavaScript( lbJavaScriptCommand.ClientID ), // 12
                 ToJavaScript( rcbPastDueOnly.Checked ), //13
-                ToJavaScript( ConnectionRequestId ) /* 14 */ );
+                ToJavaScript( ConnectionRequestId ), // 14
+                ToJavaScript( GetUserConnectableStatusIds() ) /* 15 */ );
 
             ScriptManager.RegisterStartupScript(
                 upnlJavaScript,

@@ -83,8 +83,34 @@
         };
         let _cardTemplate = '';
 
+        // ROCK-8640: the card action menu's Connect item is driven by the core CanConnect value, which knows
+        // nothing about the SECC Safety & Security gate. The server evaluates that gate (the same method that
+        // hides the Connect button on the request modal) for every status on the opportunity and sends the
+        // allowed status ids here, so this only has to check membership - no gate logic lives in JavaScript.
+        let _userConnectableStatusIds = null;
+
+        const captureConnectGate = function (options) {
+            if (options && options.userConnectableStatusIds) {
+                _userConnectableStatusIds = options.userConnectableStatusIds;
+            }
+        };
+
+        const applyConnectGate = function (viewModel) {
+            if (!viewModel || viewModel.CanConnect !== true || !_userConnectableStatusIds) {
+                return viewModel;
+            }
+
+            if (_userConnectableStatusIds.indexOf(viewModel.StatusId) !== -1) {
+                return viewModel;
+            }
+
+            const gated = $.extend({}, viewModel);
+            gated.CanConnect = false;
+            return gated;
+        };
+
         const getCardHtml = function (requestViewModel) {
-            return resolveTemplateFields(getCardTemplate(), requestViewModel);
+            return resolveTemplateFields(getCardTemplate(), applyConnectGate(requestViewModel));
         };
 
         const getSentryTemplate = function () {
@@ -248,6 +274,8 @@
             if (!options || !options.connectionRequestId) {
                 return
             }
+
+            captureConnectGate(options);
 
             fetchRequestViewModel(options, function (requestViewModel) {
                 refreshCard(options.connectionRequestId, requestViewModel);
@@ -643,6 +671,10 @@
             if (!options || !options.connectionOpportunityId || !options.controlClientId) {
                 throw 'A valid options object is required';
             }
+
+            // ROCK-8640: capture before the early return below, so the gate is applied even when the board
+            // itself does not need re-rendering.
+            captureConnectGate(options);
 
             // Check if this options object has already been initialized (no need to do it again)
             const newOptionsHash = JSON.stringify(options);
