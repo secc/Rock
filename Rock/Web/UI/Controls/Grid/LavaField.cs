@@ -243,7 +243,9 @@ namespace Rock.Web.UI.Controls
         /// <param name="dataItem">The data item.</param>
         private void PopulateDataItemPropertiesDictionary( object dataItem )
         {
-            var dataItemProperties = dataItem.GetType().GetProperties().Where( a => a.GetGetMethod() != null && !a.GetGetMethod().IsVirtual ).ToArray();
+            // Exclude indexer properties (e.g. LavaDataObject's "this[string key]"): they cannot be read
+            // without an index argument, so GetValue( dataItem, null ) on them throws a TargetParameterCountException.
+            var dataItemProperties = dataItem.GetType().GetProperties().Where( a => a.GetGetMethod() != null && !a.GetGetMethod().IsVirtual && a.GetIndexParameters().Length == 0 ).ToArray();
             this.DataItemPropertiesDictionary = new Dictionary<string, DataFieldInfo>();
 
             // add MergeFields based on the associated ColumnHeaderText of each property of the dataitem (without spaces or special chars)

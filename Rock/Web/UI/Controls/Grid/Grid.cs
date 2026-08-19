@@ -2444,6 +2444,15 @@ $('#{this.ClientID} .{GRID_SELECT_CELL_CSS_CLASS}').on( 'click', function (event
                         continue;
                     }
 
+                    // Skip indexer properties. They cannot be read without an index argument, so the
+                    // prop.GetValue( item, null ) call below would throw a TargetParameterCountException.
+                    // LavaDataObject exposes a public "this[string key]" indexer, so any grid whose data
+                    // source type inherits from it lands here.
+                    if ( prop.GetIndexParameters().Length > 0 )
+                    {
+                        continue;
+                    }
+
                     props.Add( prop );
                 }
 
@@ -2746,6 +2755,14 @@ $('#{this.ClientID} .{GRID_SELECT_CELL_CSS_CLASS}').on( 'click', function (event
                 else if ( typeof( RockDynamic ).IsAssignableFrom( dataSourceObjectType ) )
                 {
                     var dropProperties = typeof( RockDynamic ).GetProperties().Select( a => a.Name );
+                    additionalMergeProperties = additionalMergeProperties.Where( a => !dropProperties.Contains( a.Name ) ).ToList();
+                }
+                // If this is a LavaDataObject class, don't include any of the properties that are inherited from
+                // LavaDataObject. This mirrors the non-RockLiquid branch below. Without it, LavaDataObject's
+                // "this[string key]" indexer is treated as an exportable "Item" column.
+                else if ( typeof( LavaDataObject ).IsAssignableFrom( dataSourceObjectType ) )
+                {
+                    var dropProperties = typeof( LavaDataObject ).GetProperties().Select( a => a.Name );
                     additionalMergeProperties = additionalMergeProperties.Where( a => !dropProperties.Contains( a.Name ) ).ToList();
                 }
             }
