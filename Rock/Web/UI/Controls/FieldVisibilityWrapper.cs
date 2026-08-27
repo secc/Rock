@@ -93,6 +93,26 @@ namespace Rock.Web.UI.Controls
         /// <returns></returns>
         public RegistrationTemplateFormFieldCache GetRegistrationTemplateFormField()
         {
+            /*
+                2026-08-27 SECC JW
+
+                Only consult the registration field cache for Registration forms. For Workflow
+                forms, FormFieldId holds an Attribute Id; looking it up in
+                RegistrationTemplateFormFieldCache can collide with an unrelated
+                RegistrationTemplateFormField that happens to share the same integer Id. When
+                that happens, ApplyFieldVisibilityRules files the field's value under the
+                colliding registration field's AttributeId, so every conditional visibility
+                rule that compares against this field silently evaluates false and the
+                dependent fields are never rendered.
+
+                On long-tenured databases every workflow attribute with an Id at or below
+                MAX(RegistrationTemplateFormField.Id) is affected.
+            */
+            if ( FormType != FormTypes.Registration )
+            {
+                return null;
+            }
+
             return RegistrationTemplateFormFieldCache.Get( FormFieldId );
         }
 
