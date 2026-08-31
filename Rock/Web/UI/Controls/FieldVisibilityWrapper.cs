@@ -105,8 +105,8 @@ namespace Rock.Web.UI.Controls
                 rule that compares against this field silently evaluates false and the
                 dependent fields are never rendered.
 
-                On long-tenured databases every workflow attribute with an Id at or below
-                MAX(RegistrationTemplateFormField.Id) is affected.
+                On long-tenured databases, workflow attributes whose Id also exists in
+                RegistrationTemplateFormField are affected.
             */
             if ( FormType != FormTypes.Registration )
             {
