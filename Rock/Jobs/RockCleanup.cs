@@ -1344,13 +1344,6 @@ namespace Rock.Jobs
             int totalRowsDeleted = 0;
             var currentDateTime = RockDateTime.Now;
 
-            // Use a HashSet rather than a List. The duplicate check below runs once per
-            // expiring session id, and List<int>.Contains is a linear scan of a list that
-            // grows as ids are added to it, making the accumulation O(n^2). On a channel
-            // with tens of millions of expiring interactions that never completed, and
-            // because it runs before BulkDeleteInChunks, the channel's retention duration
-            // was silently never enforced.
-            var interactionSessionIdsOfDeletedInteractions = new HashSet<int>();
             var interactionChannelsWithRentionDurations = InteractionChannelCache.All().Where( ic => ic.RetentionDuration.HasValue );
 
             using ( var interactionRockContext = CreateRockContext() )
@@ -1368,85 +1361,13 @@ namespace Rock.Jobs
                         i.InteractionComponent.InteractionChannelId == interactionChannel.Id &&
                         i.InteractionDateTime < retentionCutoffDateTime );
 
-                    // UnionWith streams the query results straight into the set and handles
-                    // the de-duplication itself. The previous code called ToList() first,
-                    // materializing every expiring session id an extra time before filtering.
-                    interactionSessionIdsOfDeletedInteractions.UnionWith( interactionsToDeleteQuery
-                        .Where( i => i.InteractionSessionId != null )
-                        .Select( i => ( int ) i.InteractionSessionId )
-                        .Distinct() );
-
                     totalRowsDeleted += BulkDeleteInChunks( interactionsToDeleteQuery, batchAmount, commandTimeout );
                 }
             }
 
-            if ( interactionSessionIdsOfDeletedInteractions.Any() )
-            {
-                RunCleanupTask( "Unused Interaction Session Cleanup", () => CleanupUnusedInteractionSessions( interactionSessionIdsOfDeletedInteractions.ToList() ) );
-            }
-
-            return totalRowsDeleted;
-        }
-
-        /// <summary>
-        /// Cleanups the unused interactions.
-        /// </summary>
-        /// <param name="interactionSessionIds">The interaction session ids.</param>
-        /// <returns></returns>
-        private int CleanupUnusedInteractionSessions( List<int> interactionSessionIds )
-        {
-            if ( !interactionSessionIds.Any() )
-            {
-                return 0;
-            }
-
-            int totalRowsDeleted = 0;
-            var currentDateTime = RockDateTime.Now;
-
-            // delete any InteractionSession records that are no longer used.
-            var rockContext = CreateRockContext();
-
-            // process 1K at a time to prevent the exception "Query processor ran out of internal resources".
-            // Round the chunk count up. The previous integer division ( Count / 1000 ) dropped the
-            // final partial chunk on every run, and skipped the work altogether whenever there
-            // were fewer than 1000 ids.
-            int chunkCount = ( interactionSessionIds.Count + 999 ) / 1000;
-
-            for ( int x = 0; x < chunkCount; x++ )
-            {
-                // GetRange indexes straight into the list. Skip( x * 1000 ) re-enumerated from
-                // the start of the list on every iteration, making the loop O(n^2) over the ids.
-                int chunkStartIndex = x * 1000;
-                int chunkSize = Math.Min( 1000, interactionSessionIds.Count - chunkStartIndex );
-                var interactionSessionIdChunk = interactionSessionIds.GetRange( chunkStartIndex, chunkSize );
-
-                // Find a list of session IDs in the delete list that are being used for other interactions
-                var interactionSessionsIdsToKeep = new InteractionService( rockContext )
-                    .Queryable()
-                    .Where( s => interactionSessionIdChunk.Contains( s.InteractionSessionId.Value ) )
-                    .Select( s => s.InteractionSessionId.Value )
-                    .ToList();
-
-                // filter list to remove InteractionSessionIds that are still being used
-                var interactionSessionsIdsToRemove = interactionSessionIdChunk.Where( i => !interactionSessionsIdsToKeep.Contains( i ) );
-                var interactionSessionQueryable = new InteractionSessionService( rockContext ).Queryable().Where( s => interactionSessionsIdsToRemove.Contains( s.Id ) );
-
-                // take a snapshot of the most recent session id so we don't have to worry about deleting a session id that might be right in the middle of getting used
-                int maxInteractionSessionId = interactionSessionQueryable.Max( a => ( int? ) a.Id ) ?? 0;
-
-                // put the batchCount in the where clause to make sure that the BulkDeleteInChunks puts its Take *after* we've batched it
-                var batchUnusedInteractionSessionsQuery = interactionSessionQueryable
-                        .Where( a => a.Id < maxInteractionSessionId )
-                        .OrderBy( a => a.Id )
-                        .Take( batchAmount );
-
-                var unusedInteractionSessionsQueryToRemove = new InteractionSessionService( rockContext )
-                    .Queryable()
-                    .Where( a => batchUnusedInteractionSessionsQuery.Any( u => u.Id == a.Id ) );
-
-                totalRowsDeleted += BulkDeleteInChunks( unusedInteractionSessionsQueryToRemove, batchAmount, commandTimeout );
-            }
-
+            // InteractionSession rows orphaned by these deletes are cleaned up by the
+            // CleanupUnusedInteractionSessions() task that Execute runs immediately after
+            // this one, entirely in SQL. Don't track the deleted session ids here.
             return totalRowsDeleted;
         }
 
