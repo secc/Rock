@@ -1344,7 +1344,13 @@ namespace Rock.Jobs
             int totalRowsDeleted = 0;
             var currentDateTime = RockDateTime.Now;
 
-            var interactionSessionIdsOfDeletedInteractions = new List<int>();
+            // Use a HashSet rather than a List. The duplicate check below runs once per
+            // expiring session id, and List<int>.Contains is a linear scan of a list that
+            // grows as ids are added to it, making the accumulation O(n^2). On a channel
+            // with tens of millions of expiring interactions that never completed, and
+            // because it runs before BulkDeleteInChunks, the channel's retention duration
+            // was silently never enforced.
+            var interactionSessionIdsOfDeletedInteractions = new HashSet<int>();
             var interactionChannelsWithRentionDurations = InteractionChannelCache.All().Where( ic => ic.RetentionDuration.HasValue );
 
             using ( var interactionRockContext = CreateRockContext() )
@@ -1362,14 +1368,13 @@ namespace Rock.Jobs
                         i.InteractionComponent.InteractionChannelId == interactionChannel.Id &&
                         i.InteractionDateTime < retentionCutoffDateTime );
 
-                    var interactionSessionIdsForInteractionChannel = interactionsToDeleteQuery
+                    // UnionWith streams the query results straight into the set and handles
+                    // the de-duplication itself. The previous code called ToList() first,
+                    // materializing every expiring session id an extra time before filtering.
+                    interactionSessionIdsOfDeletedInteractions.UnionWith( interactionsToDeleteQuery
                         .Where( i => i.InteractionSessionId != null )
                         .Select( i => ( int ) i.InteractionSessionId )
-                        .Distinct()
-                        .ToList()
-                        .Where( i => !interactionSessionIdsOfDeletedInteractions.Contains( i ) );
-
-                    interactionSessionIdsOfDeletedInteractions.AddRange( interactionSessionIdsForInteractionChannel );
+                        .Distinct() );
 
                     totalRowsDeleted += BulkDeleteInChunks( interactionsToDeleteQuery, batchAmount, commandTimeout );
                 }
@@ -1377,7 +1382,7 @@ namespace Rock.Jobs
 
             if ( interactionSessionIdsOfDeletedInteractions.Any() )
             {
-                RunCleanupTask( "Unused Interaction Session Cleanup", () => CleanupUnusedInteractionSessions( interactionSessionIdsOfDeletedInteractions ) );
+                RunCleanupTask( "Unused Interaction Session Cleanup", () => CleanupUnusedInteractionSessions( interactionSessionIdsOfDeletedInteractions.ToList() ) );
             }
 
             return totalRowsDeleted;
@@ -1402,9 +1407,18 @@ namespace Rock.Jobs
             var rockContext = CreateRockContext();
 
             // process 1K at a time to prevent the exception "Query processor ran out of internal resources".
-            for ( int x = 0; x < interactionSessionIds.Count / 1000; x++ )
+            // Round the chunk count up. The previous integer division ( Count / 1000 ) dropped the
+            // final partial chunk on every run, and skipped the work altogether whenever there
+            // were fewer than 1000 ids.
+            int chunkCount = ( interactionSessionIds.Count + 999 ) / 1000;
+
+            for ( int x = 0; x < chunkCount; x++ )
             {
-                var interactionSessionIdChunk = interactionSessionIds.Skip( x * 1000 ).Take( 1000 );
+                // GetRange indexes straight into the list. Skip( x * 1000 ) re-enumerated from
+                // the start of the list on every iteration, making the loop O(n^2) over the ids.
+                int chunkStartIndex = x * 1000;
+                int chunkSize = Math.Min( 1000, interactionSessionIds.Count - chunkStartIndex );
+                var interactionSessionIdChunk = interactionSessionIds.GetRange( chunkStartIndex, chunkSize );
 
                 // Find a list of session IDs in the delete list that are being used for other interactions
                 var interactionSessionsIdsToKeep = new InteractionService( rockContext )
