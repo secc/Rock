@@ -1344,7 +1344,6 @@ namespace Rock.Jobs
             int totalRowsDeleted = 0;
             var currentDateTime = RockDateTime.Now;
 
-            var interactionSessionIdsOfDeletedInteractions = new List<int>();
             var interactionChannelsWithRentionDurations = InteractionChannelCache.All().Where( ic => ic.RetentionDuration.HasValue );
 
             using ( var interactionRockContext = CreateRockContext() )
@@ -1362,77 +1361,13 @@ namespace Rock.Jobs
                         i.InteractionComponent.InteractionChannelId == interactionChannel.Id &&
                         i.InteractionDateTime < retentionCutoffDateTime );
 
-                    var interactionSessionIdsForInteractionChannel = interactionsToDeleteQuery
-                        .Where( i => i.InteractionSessionId != null )
-                        .Select( i => ( int ) i.InteractionSessionId )
-                        .Distinct()
-                        .ToList()
-                        .Where( i => !interactionSessionIdsOfDeletedInteractions.Contains( i ) );
-
-                    interactionSessionIdsOfDeletedInteractions.AddRange( interactionSessionIdsForInteractionChannel );
-
                     totalRowsDeleted += BulkDeleteInChunks( interactionsToDeleteQuery, batchAmount, commandTimeout );
                 }
             }
 
-            if ( interactionSessionIdsOfDeletedInteractions.Any() )
-            {
-                RunCleanupTask( "Unused Interaction Session Cleanup", () => CleanupUnusedInteractionSessions( interactionSessionIdsOfDeletedInteractions ) );
-            }
-
-            return totalRowsDeleted;
-        }
-
-        /// <summary>
-        /// Cleanups the unused interactions.
-        /// </summary>
-        /// <param name="interactionSessionIds">The interaction session ids.</param>
-        /// <returns></returns>
-        private int CleanupUnusedInteractionSessions( List<int> interactionSessionIds )
-        {
-            if ( !interactionSessionIds.Any() )
-            {
-                return 0;
-            }
-
-            int totalRowsDeleted = 0;
-            var currentDateTime = RockDateTime.Now;
-
-            // delete any InteractionSession records that are no longer used.
-            var rockContext = CreateRockContext();
-
-            // process 1K at a time to prevent the exception "Query processor ran out of internal resources".
-            for ( int x = 0; x < interactionSessionIds.Count / 1000; x++ )
-            {
-                var interactionSessionIdChunk = interactionSessionIds.Skip( x * 1000 ).Take( 1000 );
-
-                // Find a list of session IDs in the delete list that are being used for other interactions
-                var interactionSessionsIdsToKeep = new InteractionService( rockContext )
-                    .Queryable()
-                    .Where( s => interactionSessionIdChunk.Contains( s.InteractionSessionId.Value ) )
-                    .Select( s => s.InteractionSessionId.Value )
-                    .ToList();
-
-                // filter list to remove InteractionSessionIds that are still being used
-                var interactionSessionsIdsToRemove = interactionSessionIdChunk.Where( i => !interactionSessionsIdsToKeep.Contains( i ) );
-                var interactionSessionQueryable = new InteractionSessionService( rockContext ).Queryable().Where( s => interactionSessionsIdsToRemove.Contains( s.Id ) );
-
-                // take a snapshot of the most recent session id so we don't have to worry about deleting a session id that might be right in the middle of getting used
-                int maxInteractionSessionId = interactionSessionQueryable.Max( a => ( int? ) a.Id ) ?? 0;
-
-                // put the batchCount in the where clause to make sure that the BulkDeleteInChunks puts its Take *after* we've batched it
-                var batchUnusedInteractionSessionsQuery = interactionSessionQueryable
-                        .Where( a => a.Id < maxInteractionSessionId )
-                        .OrderBy( a => a.Id )
-                        .Take( batchAmount );
-
-                var unusedInteractionSessionsQueryToRemove = new InteractionSessionService( rockContext )
-                    .Queryable()
-                    .Where( a => batchUnusedInteractionSessionsQuery.Any( u => u.Id == a.Id ) );
-
-                totalRowsDeleted += BulkDeleteInChunks( unusedInteractionSessionsQueryToRemove, batchAmount, commandTimeout );
-            }
-
+            // InteractionSession rows orphaned by these deletes are cleaned up by the
+            // CleanupUnusedInteractionSessions() task that Execute runs immediately after
+            // this one, entirely in SQL. Don't track the deleted session ids here.
             return totalRowsDeleted;
         }
 
