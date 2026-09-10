@@ -1150,6 +1150,16 @@ namespace RockWeb.Blocks.Connection
             {
                 placementGroupHtml = "None Assigned";
             }
+            else if ( connectionRequest.AssignedGroup == null )
+            {
+                // SECC ROCK-9138: the assigned group has been archived. When the request is
+                // loaded without an Include (see GetConnectionRequest), the AssignedGroup
+                // navigation property comes back null for an archived group, while GroupName
+                // was projected SQL-side by ConnectionRequestService and is still populated.
+                // Show the name without a link and skip the role / group-member-attribute
+                // rendering, which needs the Group.
+                placementGroupHtml = string.Format( "{0} (Archived)", viewModel.GroupName.EncodeHtml() );
+            }
             else
             {
                 var groupDetailPageUrl = LinkedPageUrl(
