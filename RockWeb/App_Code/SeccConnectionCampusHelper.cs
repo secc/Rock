@@ -242,9 +242,13 @@ namespace RockWeb
                 return true;
             }
 
-            // Mirrors the picker: only enforce coverage while a covered campus actually still exists.
+            // Mirrors the picker: only enforce coverage while a covered campus actually still exists AND is
+            // active. CampusCache.All() includes inactive campuses, but the pickers on both blocks render with
+            // IncludeInactive="false" - so an inactive covered campus is one the user can never choose. Counting
+            // it here would enforce coverage the picker did not, and every campus the picker offers would be
+            // refused (an unsaveable request).
             var enforceCoverage = !HasGlobalConnectorGroup( rockContext, connectionOpportunityId )
-                && CampusCache.All().Any( c => connectorCampusIds.Contains( c.Id ) );
+                && CampusCache.All().Any( c => connectorCampusIds.Contains( c.Id ) && ( !c.IsActive.HasValue || c.IsActive.Value ) );
 
             if ( enforceCoverage && !connectorCampusIds.Contains( selectedCampusId.Value ) )
             {
