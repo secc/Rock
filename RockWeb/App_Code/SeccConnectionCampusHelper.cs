@@ -146,12 +146,13 @@ namespace RockWeb
 
         /// <summary>
         /// SECC (ROCK-9046): Formats the campus names into the given sentence, or returns an empty
-        /// string when there are none to name.
+        /// string when there are none to name. Names are HTML-encoded because both blocks show the
+        /// message in a NotificationBox, which renders its Text as raw HTML.
         /// </summary>
         private static string FormatCampusList( string format, List<string> campusNames )
         {
             return campusNames.Any()
-                ? string.Format( format, campusNames.AsDelimited( ", " ) )
+                ? string.Format( format, campusNames.AsDelimited( ", ", null, true ) )
                 : string.Empty;
         }
     }
