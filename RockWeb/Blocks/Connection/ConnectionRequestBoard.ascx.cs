@@ -177,7 +177,7 @@ namespace RockWeb.Blocks.Connection
 
     [BooleanField(
         "Require Campus",
-        Description = "Master switch for the campus requirement on the Add/Edit form. When on, it does NOT make campus required everywhere - each opportunity decides for itself based on its Connector Groups (Opportunity > Edit > Connector Groups): if every connector group row has a Campus set, campus is required and the picker is limited to those campuses; if any row has a blank Campus (a global group that serves all campuses), campus stays optional with the full list. Opportunities with no connector groups are not affected. Set to No to turn the whole behavior off on this block.",
+        Description = "Master switch for the campus requirement on the Add/Edit form. When on, it does NOT make campus required everywhere - each opportunity decides for itself based on its Connector Groups (Opportunity > Edit > Connector Groups): if every active connector group row has a Campus set, campus is required; if any active row has a blank Campus (a global group that serves all campuses), campus stays optional. Opportunities with no active connector groups are not affected, and campus is never required on a request that is already Connected. The campus list itself is never changed - only whether a campus has to be picked. Set to No to turn the whole behavior off on this block.",
         DefaultBooleanValue = true,
         Order = 7,
         Key = AttributeKey.RequireCampus )]
@@ -385,8 +385,6 @@ namespace RockWeb.Blocks.Connection
             public const string CurrentSortProperty = "CurrentSortProperty";
             public const string CampusId = "CampusId";
             public const string AvailableAttributeIds = "AvailableAttributeIds";
-            public const string IsCampusPickerAdjusted = "IsCampusPickerAdjusted"; // ROCK-9046: tracks whether this block has narrowed/required the campus picker, so it can be restored when switching opportunities.
-            public const string IsCampusSelectionDefault = "IsCampusSelectionDefault"; // ROCK-9046: true while the campus shown is a prefilled default rather than a user choice.
         }
 
         #endregion Keys
@@ -1531,6 +1529,21 @@ namespace RockWeb.Blocks.Connection
                 connectionRequest.ConnectionState = ConnectionState.Active;
             }
 
+            if ( oldConnectionState != ConnectionState.Connected )
+            {
+                // ROCK-9046: server-side guard, so a campus-scoped opportunity cannot be saved without a campus its
+                // connector groups actually serve (the picker's Required flag only covers the browser). It runs here,
+                // ahead of MaintainRequestOrder below, because that call writes to the database immediately via
+                // BulkUpdate - rejecting the save after it would leave every other card in the status reordered.
+                // Only the in-memory connectionRequest has been touched so far, so returning here persists nothing.
+                string campusErrorMessage;
+                if ( !SeccConnectionCampusHelper.ValidateCampusSelection( rockContext, IsCampusRequiredSettingEnabled(), connectionRequest.ConnectionOpportunityId, connectionRequest.CampusId, cpRequestModalAddEditModeCampus.SelectedCampusId, out campusErrorMessage ) )
+                {
+                    ShowRequestModalNotification( campusErrorMessage, NotificationBoxType.Danger );
+                    return;
+                }
+            }
+
             if ( connectionRequest.ConnectionStatusId != rblRequestModalAddEditModeStatus.SelectedValueAsInt().Value )
             {
                 MaintainRequestOrder( connectionRequest, connectionRequestService, connectionRequest.Order, connectionRequest.ConnectionStatusId, rblRequestModalAddEditModeStatus.SelectedValueAsInt().Value, rockContext );
@@ -1551,14 +1564,6 @@ namespace RockWeb.Blocks.Connection
 
             if ( oldConnectionState != ConnectionState.Connected )
             {
-                // ROCK-9046: server-side guard so a campus-scoped opportunity can't be saved without a servable campus.
-                string campusErrorMessage;
-                if ( !SeccConnectionCampusHelper.ValidateCampusSelection( rockContext, IsCampusRequiredSettingEnabled(), connectionRequest.ConnectionOpportunityId, connectionRequest.CampusId, cpRequestModalAddEditModeCampus.SelectedCampusId, out campusErrorMessage ) )
-                {
-                    ShowRequestModalNotification( campusErrorMessage, NotificationBoxType.Danger );
-                    return;
-                }
-
                 connectionRequest.CampusId = cpRequestModalAddEditModeCampus.SelectedCampusId;
                 connectionRequest.AssignedGroupId = ddlRequestModalAddEditModePlacementGroup.SelectedValueAsId();
                 connectionRequest.AssignedGroupMemberRoleId = ddlRequestModalAddEditModePlacementRole.SelectedValueAsInt();
@@ -1707,15 +1712,6 @@ namespace RockWeb.Blocks.Connection
                 {
                     HideRequestModalNotification();
                 }
-
-                // ROCK-9046: re-evaluate the campus requirement so the new requester's primary campus can
-                // replace a prefilled default (a user-chosen campus is left alone).
-                var campusIdBeforePrefill = cpRequestModalAddEditModeCampus.SelectedCampusId;
-                ApplyCampusRequirement( rockContext, campusIdBeforePrefill, ppRequestModalAddEditModePerson.PersonId );
-
-                // ROCK-9046: setting the picker in code does not raise SelectedIndexChanged, so the connector
-                // list would otherwise stay bound to the previous campus.
-                SyncRequestModalAddEditModeConnectorsToCampus( campusIdBeforePrefill );
             }
 
             CheckRequestModalAddEditModeGroupRequirements();
@@ -1791,9 +1787,6 @@ namespace RockWeb.Blocks.Connection
         /// <param name="e">The <see cref="EventArgs"/> instance containing the event data.</param>
         protected void cpRequestModalAddEditModeCampus_SelectedIndexChanged( object sender, EventArgs e )
         {
-            // ROCK-9046: the campus is now a user choice, so later prefills must not replace it.
-            IsCampusSelectionDefault = false;
-
             var viewModel = GetConnectionRequestViewModel();
             var connectorPersonAliasId = ddlRequestModalAddEditModeConnector.SelectedValue.AsInteger();
             var campusId = cpRequestModalAddEditModeCampus.SelectedCampusId;
@@ -2219,17 +2212,26 @@ namespace RockWeb.Blocks.Connection
             SyncRequestModalAddEditModeFollowUp();
             cpRequestModalAddEditModeCampus.SelectedCampusId = campusId;
 
-            // ROCK-9046: require (and restrict) campus when the opportunity's connector groups are campus-scoped.
-            // On a new request the campus above is the board's campus filter, so it is a default, not a user choice.
-            IsCampusSelectionDefault = viewModel == null && campusId.HasValue;
-            using ( var campusRockContext = new RockContext() )
-            {
-                ApplyCampusRequirement( campusRockContext, campusId, ppRequestModalAddEditModePerson.PersonId );
-            }
+            // ROCK-9046: require a campus when every active connector group on this opportunity is campus-scoped,
+            // because a request with no campus could never be routed to one of those connectors. Assigned on every
+            // bind (both true and false) because Required is ViewState-backed and this modal is reused across
+            // requests. enableConnectionRelatedControl is stock's own Connected test - it disables this picker just
+            // below, and a disabled picker must never be required.
+            var campusRequirementOpportunity = IsCampusRequiredSettingEnabled() && enableConnectionRelatedControl
+                ? GetConnectionOpportunity()
+                : null;
 
-            // ROCK-9046: the connector list above was bound for the campus we started with. If the prefill moved the
-            // picker (e.g. to the requester's primary campus), rebind so the connectors match the campus shown.
-            SyncRequestModalAddEditModeConnectorsToCampus( campusId );
+            if ( campusRequirementOpportunity == null )
+            {
+                cpRequestModalAddEditModeCampus.Required = false;
+            }
+            else
+            {
+                using ( var campusRockContext = new RockContext() )
+                {
+                    cpRequestModalAddEditModeCampus.Required = SeccConnectionCampusHelper.IsCampusRequired( campusRockContext, campusRequirementOpportunity.Id );
+                }
+            }
 
             BindRequestModalAddEditModeGroups();
 
@@ -2924,96 +2926,6 @@ namespace RockWeb.Blocks.Connection
         private bool IsCampusRequiredSettingEnabled()
         {
             return GetAttributeValue( AttributeKey.RequireCampus ).AsBooleanOrNull() ?? true;
-        }
-
-        /// <summary>
-        /// SECC (ROCK-9046): True while this block has narrowed or required the campus picker. The board
-        /// switches opportunities in-page on the same picker, so the previous restriction has to be undone.
-        /// </summary>
-        private bool IsCampusPickerAdjusted
-        {
-            get { return ViewState[ViewStateKey.IsCampusPickerAdjusted] as bool? ?? false; }
-            set { ViewState[ViewStateKey.IsCampusPickerAdjusted] = value; }
-        }
-
-        /// <summary>
-        /// SECC (ROCK-9046): True while the campus shown is a prefilled default (the board's campus filter
-        /// or the requester's primary campus) rather than a campus the user chose.
-        /// </summary>
-        private bool IsCampusSelectionDefault
-        {
-            get { return ViewState[ViewStateKey.IsCampusSelectionDefault] as bool? ?? false; }
-            set { ViewState[ViewStateKey.IsCampusSelectionDefault] = value; }
-        }
-
-        /// <summary>
-        /// SECC (ROCK-9046): Applies the connector-group campus requirement to the add/edit modal campus picker.
-        /// Shared rules live in <see cref="SeccConnectionCampusHelper"/> (also used by ConnectionRequestDetail).
-        /// </summary>
-        /// <param name="currentCampusId">The campus the picker currently shows, which may be a default.</param>
-        private void ApplyCampusRequirement( RockContext rockContext, int? currentCampusId, int? requesterPersonId )
-        {
-            var connectionOpportunity = GetConnectionOpportunity();
-
-            if ( connectionOpportunity == null )
-            {
-                return;
-            }
-
-            var isPickerAdjusted = IsCampusPickerAdjusted;
-            var isSelectionDefault = IsCampusSelectionDefault;
-
-            SeccConnectionCampusHelper.ApplyCampusRequirement(
-                cpRequestModalAddEditModeCampus,
-                IsCampusRequiredSettingEnabled(),
-                rockContext,
-                connectionOpportunity.Id,
-                currentCampusId,
-                requesterPersonId,
-                ref isPickerAdjusted,
-                ref isSelectionDefault );
-
-            IsCampusPickerAdjusted = isPickerAdjusted;
-            IsCampusSelectionDefault = isSelectionDefault;
-        }
-
-        /// <summary>
-        /// SECC (ROCK-9046): After <see cref="ApplyCampusRequirement"/> may have moved the campus picker in code,
-        /// rebinds the connector list to the campus now shown. Mirrors what
-        /// <see cref="cpRequestModalAddEditModeCampus_SelectedIndexChanged"/> does for a user change - that event
-        /// does not fire for a programmatic change, so without this the connectors stay bound to the old campus.
-        /// A connector already chosen is kept when it is still available; otherwise the campus default is used.
-        /// </summary>
-        /// <param name="previousCampusId">The campus the connector list was bound for before the prefill.</param>
-        private void SyncRequestModalAddEditModeConnectorsToCampus( int? previousCampusId )
-        {
-            var campusId = cpRequestModalAddEditModeCampus.SelectedCampusId;
-
-            if ( campusId == previousCampusId )
-            {
-                return;
-            }
-
-            var connectionOpportunity = GetConnectionOpportunity();
-            var connectorPersonAliasId = ddlRequestModalAddEditModeConnector.SelectedValue.AsIntegerOrNull();
-
-            // The current connector is kept across a rebind only if a person chose them. If they are simply the
-            // previous campus's default connector - auto-selected when the modal opened for that campus - carrying
-            // them over would leave the wrong campus's connector selected (and force-added to the list), so drop
-            // them and let the new campus's default take over.
-            if ( connectorPersonAliasId.HasValue && connectionOpportunity != null
-                && connectorPersonAliasId == connectionOpportunity.GetDefaultConnectorPersonAliasId( previousCampusId ) )
-            {
-                connectorPersonAliasId = null;
-            }
-
-            BindConnectorOptions( ddlRequestModalAddEditModeConnector, true, campusId, connectorPersonAliasId );
-            ddlRequestModalAddEditModeConnector.SetValue( connectorPersonAliasId );
-
-            if ( ddlRequestModalAddEditModeConnector.SelectedValue.AsInteger() == 0 && connectionOpportunity != null )
-            {
-                ddlRequestModalAddEditModeConnector.SetValue( connectionOpportunity.GetDefaultConnectorPersonAliasId( campusId ) );
-            }
         }
 
         /// <summary>
