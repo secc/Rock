@@ -1710,7 +1710,12 @@ namespace RockWeb.Blocks.Connection
 
                 // ROCK-9046: re-evaluate the campus requirement so the new requester's primary campus can
                 // replace a prefilled default (a user-chosen campus is left alone).
-                ApplyCampusRequirement( rockContext, cpRequestModalAddEditModeCampus.SelectedCampusId, ppRequestModalAddEditModePerson.PersonId );
+                var campusIdBeforePrefill = cpRequestModalAddEditModeCampus.SelectedCampusId;
+                ApplyCampusRequirement( rockContext, campusIdBeforePrefill, ppRequestModalAddEditModePerson.PersonId );
+
+                // ROCK-9046: setting the picker in code does not raise SelectedIndexChanged, so the connector
+                // list would otherwise stay bound to the previous campus.
+                SyncRequestModalAddEditModeConnectorsToCampus( campusIdBeforePrefill );
             }
 
             CheckRequestModalAddEditModeGroupRequirements();
@@ -2221,6 +2226,10 @@ namespace RockWeb.Blocks.Connection
             {
                 ApplyCampusRequirement( campusRockContext, campusId, ppRequestModalAddEditModePerson.PersonId );
             }
+
+            // ROCK-9046: the connector list above was bound for the campus we started with. If the prefill moved the
+            // picker (e.g. to the requester's primary campus), rebind so the connectors match the campus shown.
+            SyncRequestModalAddEditModeConnectorsToCampus( campusId );
 
             BindRequestModalAddEditModeGroups();
 
@@ -2966,6 +2975,39 @@ namespace RockWeb.Blocks.Connection
 
             IsCampusPickerAdjusted = isPickerAdjusted;
             IsCampusSelectionDefault = isSelectionDefault;
+        }
+
+        /// <summary>
+        /// SECC (ROCK-9046): After <see cref="ApplyCampusRequirement"/> may have moved the campus picker in code,
+        /// rebinds the connector list to the campus now shown. Mirrors what
+        /// <see cref="cpRequestModalAddEditModeCampus_SelectedIndexChanged"/> does for a user change - that event
+        /// does not fire for a programmatic change, so without this the connectors stay bound to the old campus.
+        /// A connector already chosen is kept when it is still available; otherwise the campus default is used.
+        /// </summary>
+        /// <param name="previousCampusId">The campus the connector list was bound for before the prefill.</param>
+        private void SyncRequestModalAddEditModeConnectorsToCampus( int? previousCampusId )
+        {
+            var campusId = cpRequestModalAddEditModeCampus.SelectedCampusId;
+
+            if ( campusId == previousCampusId )
+            {
+                return;
+            }
+
+            var connectorPersonAliasId = ddlRequestModalAddEditModeConnector.SelectedValue.AsInteger();
+
+            BindConnectorOptions( ddlRequestModalAddEditModeConnector, true, campusId, connectorPersonAliasId );
+            ddlRequestModalAddEditModeConnector.SetValue( connectorPersonAliasId );
+
+            if ( ddlRequestModalAddEditModeConnector.SelectedValue.AsInteger() == 0 )
+            {
+                var connectionOpportunity = GetConnectionOpportunity();
+
+                if ( connectionOpportunity != null )
+                {
+                    ddlRequestModalAddEditModeConnector.SetValue( connectionOpportunity.GetDefaultConnectorPersonAliasId( campusId ) );
+                }
+            }
         }
 
         /// <summary>

@@ -644,7 +644,29 @@ namespace RockWeb.Blocks.Connection
 
                     // ROCK-9046: re-evaluate the campus requirement so the new requester's primary campus can
                     // replace a prefilled default (a user-chosen campus is left alone).
-                    ApplyCampusRequirement( rockContext, connectionOpportunityId, cpCampus.SelectedCampusId, ppRequestor.PersonId );
+                    var campusIdBeforePrefill = cpCampus.SelectedCampusId;
+                    ApplyCampusRequirement( rockContext, connectionOpportunityId, campusIdBeforePrefill, ppRequestor.PersonId );
+
+                    // ROCK-9046: setting the picker in code does not raise cpCampus_SelectedIndexChanged, so the
+                    // connector and placement-group lists would stay bound to the previous campus. Rebind them the
+                    // same way that handler does. (The connectionRequest above is the possible duplicate, not the
+                    // request being edited, so resolve the edited one here.)
+                    if ( cpCampus.SelectedCampusId != campusIdBeforePrefill )
+                    {
+                        var editedRequest = connectionRequestService.Get( hfConnectionRequestId.ValueAsInt() );
+                        if ( editedRequest == null )
+                        {
+                            editedRequest = new ConnectionRequest();
+                            var connectionOpportunity = new ConnectionOpportunityService( rockContext ).Get( connectionOpportunityId );
+                            if ( connectionOpportunity != null )
+                            {
+                                editedRequest.ConnectionOpportunity = connectionOpportunity;
+                                editedRequest.ConnectionOpportunityId = connectionOpportunity.Id;
+                            }
+                        }
+
+                        RebindGroupsAndConnectors( editedRequest, rockContext );
+                    }
                 }
             }
 
