@@ -64,17 +64,17 @@ namespace RockWeb
         }
 
         /// <summary>
-        /// SECC (ROCK-9046): Returns true if the opportunity has any campus-scoped connector group,
-        /// meaning a campus is needed to route the request. Part of the approved helper surface; the two
-        /// blocks reach the same answer through ApplyCampusRequirement / ValidateCampusSelection, so this
-        /// is kept for callers that only need the question answered.
+        /// SECC (ROCK-9046): Returns true if a campus is needed to route a request for the opportunity:
+        /// it has at least one campus-scoped connector group and no global (no campus) one. A global
+        /// group can route a request with no campus, so a mixed opportunity does not need one. Part of
+        /// the approved helper surface; the two blocks reach the same answer through
+        /// ApplyCampusRequirement / ValidateCampusSelection, so this is kept for callers that only need
+        /// the question answered.
         /// </summary>
         public static bool IsCampusRequired( RockContext rockContext, int connectionOpportunityId )
         {
-            return new ConnectionOpportunityConnectorGroupService( rockContext )
-                .Queryable()
-                .AsNoTracking()
-                .Any( g => g.ConnectionOpportunityId == connectionOpportunityId && g.CampusId.HasValue );
+            return GetConnectorCampusIds( rockContext, connectionOpportunityId ).Any()
+                && !HasGlobalConnectorGroup( rockContext, connectionOpportunityId );
         }
 
         /// <summary>
@@ -114,10 +114,11 @@ namespace RockWeb
                 ? GetConnectorCampusIds( rockContext, connectionOpportunityId )
                 : new List<int>();
 
-            if ( !connectorCampusIds.Any() )
+            if ( !connectorCampusIds.Any() || HasGlobalConnectorGroup( rockContext, connectionOpportunityId ) )
             {
-                // Not required: the setting is off, or the opportunity has no campus-scoped connector
-                // groups. Undo only what this method previously did - the board reuses one picker across
+                // Not required: the setting is off, the opportunity has no campus-scoped connector groups, or
+                // it also has a global (no campus) connector group that can route a request without a campus.
+                // Undo only what this method previously did - the board reuses one picker across
                 // opportunities, so a narrowed list would otherwise bleed into the next opportunity.
                 if ( isPickerAdjusted )
                 {
@@ -134,8 +135,6 @@ namespace RockWeb
                 return false;
             }
 
-            var hasGlobalConnectorGroup = HasGlobalConnectorGroup( rockContext, connectionOpportunityId );
-
             // Build the list exactly as the picker would render it, so "one campus survives" here means
             // "one campus survives there" too. The campus currently shown is always kept - and, like
             // CampusPicker.LoadItems' own selectedValue escape, is exempt from the active filter - so an
@@ -151,7 +150,7 @@ namespace RockWeb
             // connector-group campus has since been deleted or deactivated, narrowing would render an
             // empty (and therefore hidden) picker that could never satisfy the requirement, so fall back
             // to the full list and let the server guard require nothing more than a non-null campus.
-            var enforceCoverage = !hasGlobalConnectorGroup && allowedCampuses.Any( c => connectorCampusIds.Contains( c.Id ) );
+            var enforceCoverage = allowedCampuses.Any( c => connectorCampusIds.Contains( c.Id ) );
 
             // ForceVisible has to be set before the item list is rebuilt: CampusPicker.LoadItems hides the
             // picker when a single campus survives filtering, and the multi-campus branch never re-shows it.
@@ -225,8 +224,9 @@ namespace RockWeb
                 return true;
             }
 
+            // Mirrors the picker: nothing is required unless every connector group is campus-scoped.
             var connectorCampusIds = GetConnectorCampusIds( rockContext, connectionOpportunityId );
-            if ( !connectorCampusIds.Any() )
+            if ( !connectorCampusIds.Any() || HasGlobalConnectorGroup( rockContext, connectionOpportunityId ) )
             {
                 return true;
             }
@@ -247,8 +247,7 @@ namespace RockWeb
             // IncludeInactive="false" - so an inactive covered campus is one the user can never choose. Counting
             // it here would enforce coverage the picker did not, and every campus the picker offers would be
             // refused (an unsaveable request).
-            var enforceCoverage = !HasGlobalConnectorGroup( rockContext, connectionOpportunityId )
-                && CampusCache.All().Any( c => connectorCampusIds.Contains( c.Id ) && ( !c.IsActive.HasValue || c.IsActive.Value ) );
+            var enforceCoverage = CampusCache.All().Any( c => connectorCampusIds.Contains( c.Id ) && ( !c.IsActive.HasValue || c.IsActive.Value ) );
 
             if ( enforceCoverage && !connectorCampusIds.Contains( selectedCampusId.Value ) )
             {
