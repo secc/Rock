@@ -2994,19 +2994,25 @@ namespace RockWeb.Blocks.Connection
                 return;
             }
 
-            var connectorPersonAliasId = ddlRequestModalAddEditModeConnector.SelectedValue.AsInteger();
+            var connectionOpportunity = GetConnectionOpportunity();
+            var connectorPersonAliasId = ddlRequestModalAddEditModeConnector.SelectedValue.AsIntegerOrNull();
+
+            // The current connector is kept across a rebind only if a person chose them. If they are simply the
+            // previous campus's default connector - auto-selected when the modal opened for that campus - carrying
+            // them over would leave the wrong campus's connector selected (and force-added to the list), so drop
+            // them and let the new campus's default take over.
+            if ( connectorPersonAliasId.HasValue && connectionOpportunity != null
+                && connectorPersonAliasId == connectionOpportunity.GetDefaultConnectorPersonAliasId( previousCampusId ) )
+            {
+                connectorPersonAliasId = null;
+            }
 
             BindConnectorOptions( ddlRequestModalAddEditModeConnector, true, campusId, connectorPersonAliasId );
             ddlRequestModalAddEditModeConnector.SetValue( connectorPersonAliasId );
 
-            if ( ddlRequestModalAddEditModeConnector.SelectedValue.AsInteger() == 0 )
+            if ( ddlRequestModalAddEditModeConnector.SelectedValue.AsInteger() == 0 && connectionOpportunity != null )
             {
-                var connectionOpportunity = GetConnectionOpportunity();
-
-                if ( connectionOpportunity != null )
-                {
-                    ddlRequestModalAddEditModeConnector.SetValue( connectionOpportunity.GetDefaultConnectorPersonAliasId( campusId ) );
-                }
+                ddlRequestModalAddEditModeConnector.SetValue( connectionOpportunity.GetDefaultConnectorPersonAliasId( campusId ) );
             }
         }
 

@@ -665,6 +665,17 @@ namespace RockWeb.Blocks.Connection
                             }
                         }
 
+                        // RebindGroupsAndConnectors keeps (and force-adds) the connector currently selected. That is
+                        // right for a connector a person chose, but here the selection may just be the previous
+                        // campus's default connector, auto-selected when the form loaded. Clear that case so the
+                        // rebind falls through to the new campus's default instead of carrying the old one over.
+                        var currentConnectorPersonId = ddlConnectorEdit.SelectedValueAsInt();
+                        if ( currentConnectorPersonId.HasValue && campusIdBeforePrefill.HasValue && editedRequest.ConnectionOpportunity != null
+                            && currentConnectorPersonId == editedRequest.ConnectionOpportunity.GetDefaultConnectorPersonId( campusIdBeforePrefill.Value ) )
+                        {
+                            ddlConnectorEdit.SetValue( string.Empty );
+                        }
+
                         RebindGroupsAndConnectors( editedRequest, rockContext );
                     }
                 }
