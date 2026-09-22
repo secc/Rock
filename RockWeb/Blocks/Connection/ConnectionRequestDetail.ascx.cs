@@ -110,7 +110,7 @@ namespace RockWeb.Blocks.Connection
 
     [BooleanField(
         "Require Campus",
-        Description = "When enabled, a campus is required on add/edit for opportunities whose connector groups are campus-scoped. Opportunities with only global (no campus) connector groups are unaffected.",
+        Description = "Master switch for the campus requirement on the Add/Edit form. When on, it does NOT make campus required everywhere - each opportunity decides for itself based on its Connector Groups (Opportunity > Edit > Connector Groups): if every connector group row has a Campus set, campus is required and the picker is limited to those campuses; if any row has a blank Campus (a global group that serves all campuses), campus stays optional with the full list. Opportunities with no connector groups are not affected. Set to No to turn the whole behavior off on this block.",
         DefaultBooleanValue = true,
         Order = 10,
         Key = AttributeKeys.RequireCampus )]
