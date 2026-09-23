@@ -2048,6 +2048,7 @@ namespace RockWeb.Blocks.Connection
             var groupMember = new GroupMember
             {
                 GroupId = groupId.Value,
+                Group = GetPlacementGroup( groupId ),
                 GroupRoleId = groupMemberRoleId.Value,
                 GroupMemberStatus = groupMemberStatus.Value
             };
@@ -2093,6 +2094,7 @@ namespace RockWeb.Blocks.Connection
             var groupMember = new GroupMember
             {
                 GroupId = groupId.Value,
+                Group = GetPlacementGroup( groupId ),
                 GroupRoleId = groupMemberRoleId.Value,
                 GroupMemberStatus = groupMemberStatus.Value
             };
