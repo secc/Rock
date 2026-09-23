@@ -1154,20 +1154,45 @@ namespace RockWeb.Blocks.Connection
             // Placement group HTML
             var placementGroupHtml = string.Empty;
 
+            // Encode once, for every branch below: DescriptionList emits its values as-is into
+            // an asp:Literal, so an un-encoded group name is rendered as markup.
+            var placementGroupName = viewModel.GroupName.EncodeHtml();
+
             if ( viewModel.GroupName.IsNullOrWhiteSpace() )
             {
                 placementGroupHtml = "None Assigned";
             }
             else
             {
-                var groupDetailPageUrl = LinkedPageUrl(
-                    AttributeKey.GroupDetailPage,
-                    new Dictionary<string, string>
-                    {
-                        { "GroupId", connectionRequest.AssignedGroup.Id.ToString() }
-                    } );
+                // SECC ROCK-9138: connectionRequest.AssignedGroup lazy-loads as null when the
+                // placement group is archived, because the lazy load issues its own root query
+                // against Group and so picks up the global IsArchived query filter. Resolve the
+                // group through GetPlacementGroup instead, which uses AsNoFilter and therefore
+                // returns archived groups, so the group can be labelled from Group.IsArchived
+                // rather than inferred from a null navigation property.
+                var placementGroup = GetPlacementGroup( viewModel.PlacementGroupId );
 
-                placementGroupHtml = string.Format( "<a href=\"{0}\">{1}</a>", groupDetailPageUrl, viewModel.GroupName );
+                if ( placementGroup == null )
+                {
+                    // The group row is gone entirely; show the name the view model projected.
+                    placementGroupHtml = placementGroupName;
+                }
+                else if ( placementGroup.IsArchived )
+                {
+                    // No link: the group detail page is not a useful destination for an archived group.
+                    placementGroupHtml = string.Format( "{0} (Archived)", placementGroupName );
+                }
+                else
+                {
+                    var groupDetailPageUrl = LinkedPageUrl(
+                        AttributeKey.GroupDetailPage,
+                        new Dictionary<string, string>
+                        {
+                            { "GroupId", placementGroup.Id.ToString() }
+                        } );
+
+                    placementGroupHtml = string.Format( "<a href=\"{0}\">{1}</a>", groupDetailPageUrl, placementGroupName );
+                }
 
                 if ( viewModel.PlacementGroupRoleId.HasValue )
                 {
@@ -1187,14 +1212,18 @@ namespace RockWeb.Blocks.Connection
                             roleName );
                     }
 
-                    if ( viewModel.PlacementGroupId.HasValue )
+                    if ( viewModel.PlacementGroupId.HasValue && placementGroup != null )
                     {
                         var groupMember = new GroupMember();
-                        groupMember.Group = connectionRequest.AssignedGroup;
+                        groupMember.Group = placementGroup;
                         groupMember.GroupId = viewModel.PlacementGroupId.Value;
                         groupMember.GroupRole = role;
-                        groupMember.GroupRoleId = viewModel.PlacementGroupId.Value;
-                        groupMember.GroupMemberStatus = viewModel.PlacementGroupMemberStatus.Value;
+
+                        // Was viewModel.PlacementGroupId: the group id was being assigned as the
+                        // role id, so GroupMember attributes qualified on GroupRoleId matched the
+                        // wrong role in view mode.
+                        groupMember.GroupRoleId = viewModel.PlacementGroupRoleId.Value;
+                        groupMember.GroupMemberStatus = viewModel.PlacementGroupMemberStatus ?? GroupMemberStatus.Active;
 
                         groupMember.LoadAttributes();
 
@@ -1828,23 +1857,26 @@ namespace RockWeb.Blocks.Connection
             // Add the currently assigned group if it hasn't been added already
             if ( viewModel != null && viewModel.PlacementGroupId.HasValue && !groups.Any( g => g.Id == viewModel.PlacementGroupId ) )
             {
-                var rockContext = new RockContext();
-                var groupService = new GroupService( rockContext );
-                var currentGroup = groupService.Queryable()
-                    .AsNoTracking()
-                    .Where( g => g.Id == viewModel.PlacementGroupId )
-                    .Select( g => new GroupViewModel
-                    {
-                        Id = g.Id,
-                        Name = g.Name,
-                        CampusId = g.CampusId,
-                        CampusName = g.Campus.Name
-                    } )
-                    .FirstOrDefault();
+                // SECC ROCK-9138: resolve through GetPlacementGroup, which uses AsNoFilter,
+                // rather than GroupService.Queryable(), which excludes archived groups. Without
+                // this the assigned group is missing from the list, the dropdown falls back to
+                // blank, and saving the request clears AssignedGroupId along with the role,
+                // status and group member attribute values.
+                var currentGroup = GetPlacementGroup( viewModel.PlacementGroupId );
 
                 if ( currentGroup != null )
                 {
-                    groups.Add( currentGroup );
+                    groups.Add( new GroupViewModel
+                    {
+                        Id = currentGroup.Id,
+                        Name = currentGroup.IsArchived ?
+                            string.Format( "{0} [Archived]", currentGroup.Name ) :
+                            currentGroup.Name,
+                        CampusId = currentGroup.CampusId,
+                        CampusName = currentGroup.CampusId.HasValue ?
+                            CampusCache.Get( currentGroup.CampusId.Value )?.Name :
+                            null
+                    } );
                 }
             }
 
@@ -1925,7 +1957,10 @@ namespace RockWeb.Blocks.Connection
                 var groupService = new GroupService( rockContext );
                 var groupConfigService = new ConnectionOpportunityGroupConfigService( rockContext );
 
-                var groupTypeQuery = groupService.Queryable()
+                // SECC ROCK-9138: AsNoFilter so an archived placement group still resolves to
+                // its group type. Otherwise this returns nothing, the dropdown binds empty, and
+                // the role/status are wiped on save.
+                var groupTypeQuery = groupService.AsNoFilter()
                     .AsNoTracking()
                     .Where( g => g.Id == groupId )
                     .Select( g => g.GroupTypeId );
@@ -1977,7 +2012,10 @@ namespace RockWeb.Blocks.Connection
                 var groupService = new GroupService( rockContext );
                 var groupConfigService = new ConnectionOpportunityGroupConfigService( rockContext );
 
-                var groupTypeQuery = groupService.Queryable()
+                // SECC ROCK-9138: AsNoFilter so an archived placement group still resolves to
+                // its group type. Otherwise this returns nothing, the dropdown binds empty, and
+                // the role/status are wiped on save.
+                var groupTypeQuery = groupService.AsNoFilter()
                     .AsNoTracking()
                     .Where( g => g.Id == groupId )
                     .Select( g => g.GroupTypeId );
@@ -2033,6 +2071,7 @@ namespace RockWeb.Blocks.Connection
             var groupMember = new GroupMember
             {
                 GroupId = groupId.Value,
+                Group = GetPlacementGroup( groupId ),
                 GroupRoleId = groupMemberRoleId.Value,
                 GroupMemberStatus = groupMemberStatus.Value
             };
@@ -2078,6 +2117,7 @@ namespace RockWeb.Blocks.Connection
             var groupMember = new GroupMember
             {
                 GroupId = groupId.Value,
+                Group = GetPlacementGroup( groupId ),
                 GroupRoleId = groupMemberRoleId.Value,
                 GroupMemberStatus = groupMemberStatus.Value
             };
@@ -4836,6 +4876,19 @@ namespace RockWeb.Blocks.Connection
                     connectionRequest.AssignedGroupMemberStatus.HasValue )
                 {
                     var group = connectionRequest.AssignedGroup;
+
+                    // SECC ROCK-9138: Group sets AllowPropertyFilter = false, so this Include
+                    // does return archived groups and the null check below passes for one.
+                    // Refuse the connect instead of adding the person to an archived group.
+                    if ( group != null && group.IsArchived )
+                    {
+                        ShowRequestModalNotification(
+                            string.Format(
+                                "This request cannot be connected because its placement group, {0}, has been archived. Edit the request to choose a different placement group, or clear it, and then connect.",
+                                group.Name.EncodeHtml() ),
+                            NotificationBoxType.Validation );
+                        return;
+                    }
 
                     if ( group != null )
                     {
