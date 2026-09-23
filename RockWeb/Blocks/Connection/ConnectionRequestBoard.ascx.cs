@@ -175,6 +175,13 @@ namespace RockWeb.Blocks.Connection
         Order = 30,
         Key = AttributeKey.SafetySecurityRole )]
 
+    [BooleanField(
+        "Require Campus",
+        Description = "Master switch for the campus requirement on the Add/Edit form. When on, it does NOT make campus required everywhere - each opportunity decides for itself based on its Connector Groups (Opportunity > Edit > Connector Groups): if every active connector group row has a Campus set, campus is required; if any active row has a blank Campus (a global group that serves all campuses), campus stays optional. Opportunities with no active connector groups are not affected, and campus is never required on a request that is already Connected. The campus list itself is never changed - only whether a campus has to be picked. Set to No to turn the whole behavior off on this block.",
+        DefaultBooleanValue = true,
+        Order = 7,
+        Key = AttributeKey.RequireCampus )]
+
     #endregion Block Attributes
 
     [ContextAware( typeof( Person ), IsConfigurable = false )]
@@ -292,6 +299,7 @@ namespace RockWeb.Blocks.Connection
             public const string ConnectionRequestHistoryPage = "ConnectionRequestHistoryPage";
             public const string BulkUpdateRequestsPage = "BulkUpdateRequestsPage";
             public const string SafetySecurityRole = "SafetySecurityRole";
+            public const string RequireCampus = "RequireCampus"; // ROCK-9046: block setting that turns the connector-group campus requirement on or off.
         }
 
         /// <summary>
@@ -1521,6 +1529,21 @@ namespace RockWeb.Blocks.Connection
                 connectionRequest.ConnectionState = ConnectionState.Active;
             }
 
+            if ( oldConnectionState != ConnectionState.Connected )
+            {
+                // ROCK-9046: server-side guard, so a campus-scoped opportunity cannot be saved without a campus its
+                // connector groups actually serve (the picker's Required flag only covers the browser). It runs here,
+                // ahead of MaintainRequestOrder below, because that call writes to the database immediately via
+                // BulkUpdate - rejecting the save after it would leave every other card in the status reordered.
+                // Only the in-memory connectionRequest has been touched so far, so returning here persists nothing.
+                string campusErrorMessage;
+                if ( !SeccConnectionCampusHelper.ValidateCampusSelection( rockContext, IsCampusRequiredSettingEnabled(), connectionRequest.ConnectionOpportunityId, connectionRequest.CampusId, cpRequestModalAddEditModeCampus.SelectedCampusId, out campusErrorMessage ) )
+                {
+                    ShowRequestModalNotification( campusErrorMessage, NotificationBoxType.Danger );
+                    return;
+                }
+            }
+
             if ( connectionRequest.ConnectionStatusId != rblRequestModalAddEditModeStatus.SelectedValueAsInt().Value )
             {
                 MaintainRequestOrder( connectionRequest, connectionRequestService, connectionRequest.Order, connectionRequest.ConnectionStatusId, rblRequestModalAddEditModeStatus.SelectedValueAsInt().Value, rockContext );
@@ -2188,6 +2211,28 @@ namespace RockWeb.Blocks.Connection
 
             SyncRequestModalAddEditModeFollowUp();
             cpRequestModalAddEditModeCampus.SelectedCampusId = campusId;
+
+            // ROCK-9046: require a campus when every active connector group on this opportunity is campus-scoped,
+            // because a request with no campus could never be routed to one of those connectors. Assigned on every
+            // bind (both true and false) because Required is ViewState-backed and this modal is reused across
+            // requests. enableConnectionRelatedControl is stock's own Connected test - it disables this picker just
+            // below, and a disabled picker must never be required.
+            var campusRequirementOpportunity = IsCampusRequiredSettingEnabled() && enableConnectionRelatedControl
+                ? GetConnectionOpportunity()
+                : null;
+
+            if ( campusRequirementOpportunity == null )
+            {
+                cpRequestModalAddEditModeCampus.Required = false;
+            }
+            else
+            {
+                using ( var campusRockContext = new RockContext() )
+                {
+                    cpRequestModalAddEditModeCampus.Required = SeccConnectionCampusHelper.IsCampusRequired( campusRockContext, campusRequirementOpportunity.Id );
+                }
+            }
+
             BindRequestModalAddEditModeGroups();
 
             ddlRequestModalAddEditModePlacementGroup.Enabled = enableConnectionRelatedControl;
@@ -2873,6 +2918,14 @@ namespace RockWeb.Blocks.Connection
                 GetGateConnectionOpportunity( connectionRequest ),
                 CurrentPerson,
                 GetAttributeValue( AttributeKey.SafetySecurityRole ).AsGuidOrNull() );
+        }
+
+        /// <summary>
+        /// SECC (ROCK-9046): Returns the value of the "Require Campus" block setting, defaulting to enabled.
+        /// </summary>
+        private bool IsCampusRequiredSettingEnabled()
+        {
+            return GetAttributeValue( AttributeKey.RequireCampus ).AsBooleanOrNull() ?? true;
         }
 
         /// <summary>

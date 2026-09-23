@@ -108,6 +108,13 @@ namespace RockWeb.Blocks.Connection
         Order = 9,
         Key = AttributeKeys.SafetySecurityRole )]
 
+    [BooleanField(
+        "Require Campus",
+        Description = "Master switch for the campus requirement on the Add/Edit form. When on, it does NOT make campus required everywhere - each opportunity decides for itself based on its Connector Groups (Opportunity > Edit > Connector Groups): if every active connector group row has a Campus set, campus is required; if any active row has a blank Campus (a global group that serves all campuses), campus stays optional. Opportunities with no active connector groups are not affected, and campus is never required on a request that is already Connected. The campus list itself is never changed - only whether a campus has to be picked. Set to No to turn the whole behavior off on this block.",
+        DefaultBooleanValue = true,
+        Order = 10,
+        Key = AttributeKeys.RequireCampus )]
+
     #endregion Block Attributes
 
     [Rock.SystemGuid.BlockTypeGuid( "A7961C9C-2EF5-44DF-BEA5-C334B42A90E2" )]
@@ -127,6 +134,7 @@ namespace RockWeb.Blocks.Connection
             public const string LavaHeadingTemplate = "LavaHeadingTemplate";
             public const string ActivityLavaTemplate = "Activity Lava Template";
             public const string SafetySecurityRole = "SafetySecurityRole";
+            public const string RequireCampus = "RequireCampus"; // ROCK-9046: block setting that turns the connector-group campus requirement on or off.
         }
 
         #endregion Attribute Keys
@@ -706,6 +714,16 @@ namespace RockWeb.Blocks.Connection
 
                     if ( oldState != ConnectionState.Connected )
                     {
+                        // ROCK-9046: server-side guard, so a campus-scoped opportunity cannot be saved without a
+                        // campus its connector groups actually serve (the picker's Required flag only covers the
+                        // browser). Nothing has been written to the connection request yet, so returning here is safe.
+                        string campusErrorMessage;
+                        if ( !SeccConnectionCampusHelper.ValidateCampusSelection( rockContext, IsCampusRequiredSettingEnabled(), connectionRequest.ConnectionOpportunityId, connectionRequest.CampusId, cpCampus.SelectedCampusId, out campusErrorMessage ) )
+                        {
+                            ShowErrorMessage( "Campus Required", campusErrorMessage );
+                            return;
+                        }
+
                         connectionRequest.CampusId = cpCampus.SelectedCampusId;
                         connectionRequest.AssignedGroupId = ddlPlacementGroup.SelectedValueAsId();
                         connectionRequest.AssignedGroupMemberRoleId = ddlPlacementGroupRole.SelectedValueAsInt();
@@ -2154,6 +2172,14 @@ namespace RockWeb.Blocks.Connection
         }
 
         /// <summary>
+        /// SECC (ROCK-9046): Returns the value of the "Require Campus" block setting, defaulting to enabled.
+        /// </summary>
+        private bool IsCampusRequiredSettingEnabled()
+        {
+            return GetAttributeValue( AttributeKeys.RequireCampus ).AsBooleanOrNull() ?? true;
+        }
+
+        /// <summary>
         /// Shows the readonly details.
         /// </summary>
         /// <param name="connectionRequest">The connection request.</param>
@@ -2472,6 +2498,16 @@ namespace RockWeb.Blocks.Connection
 
             // Campus
             cpCampus.SelectedCampusId = connectionRequest.CampusId;
+
+            // ROCK-9046: require a campus when every active connector group on this opportunity is campus-scoped,
+            // because a request with no campus could never be routed to one of those connectors. Assigned on every
+            // bind (both true and false) because Required is ViewState-backed and would otherwise persist.
+            // The Connected test is the same expression as enableConnectionRelatedControl in RebindGroupStatus (reached
+            // from the RebindGroupsAndConnectors call below), which sets cpCampus.Enabled from this same
+            // connectionRequest - so the picker can never be required while it is disabled.
+            cpCampus.Required = IsCampusRequiredSettingEnabled()
+                && connectionRequest.ConnectionState != ConnectionState.Connected
+                && SeccConnectionCampusHelper.IsCampusRequired( rockContext, connectionRequest.ConnectionOpportunityId );
 
             hfGroupMemberAttributeValues.Value = connectionRequest.AssignedGroupMemberAttributeValues;
 
