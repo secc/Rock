@@ -108,9 +108,23 @@ namespace Rock.Storage.Provider
                 Reason: Wide SMS image attachments stored in Azure cause exceptions in Communication Wizard.
                 https://github.com/SparkDevNetwork/Rock/issues/5719
              */
-            blobClient.Upload( binaryFile.ContentStream, overwrite: true );
+            /*
+                9/28/2026 - SL (SECC)
 
-            fileSize = binaryFile.ContentStream.Length;
+                Dispose the content stream after uploading so this provider follows the same
+                contract as the Database and FileSystem providers. Callers such as
+                SignatureDocumentTemplateService.UpdateDocumentStatus assign a FileStream to
+                ContentStream, save, then File.Delete() the temp file; leaving the stream open
+                leaked the file handle and caused the delete to throw IOException.
+
+                Reason: ROCK-9041 Process Signature Documents job fails with file lock on Azure provider.
+             */
+            using ( var stream = binaryFile.ContentStream )
+            {
+                blobClient.Upload( stream, overwrite: true );
+
+                fileSize = stream.Length;
+            }
         }
 
         /// <summary>
