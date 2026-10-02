@@ -15,6 +15,7 @@
 // </copyright>
 //
 using System;
+using System.Collections.Generic;
 using System.Linq;
 
 using Rock;
@@ -95,12 +96,7 @@ namespace RockWeb
         /// </summary>
         public static bool CanConnect( ConnectionRequest connectionRequest, ConnectionOpportunity opportunity, Person currentPerson, Guid? safetySecurityRoleGuid )
         {
-            if ( connectionRequest == null )
-            {
-                return CanConnect( ( int? ) null, null, opportunity, currentPerson, safetySecurityRoleGuid );
-            }
-
-            return CanConnect( connectionRequest.ConnectionStatusId, connectionRequest.ConnectionState, opportunity, currentPerson, safetySecurityRoleGuid );
+            return CanConnect( connectionRequest?.ConnectionStatusId, connectionRequest?.ConnectionState, opportunity, currentPerson, safetySecurityRoleGuid );
         }
 
         /// <summary>
@@ -111,12 +107,68 @@ namespace RockWeb
         /// </summary>
         public static bool CanConnect( int? connectionStatusId, ConnectionState? connectionState, ConnectionOpportunity opportunity, Person currentPerson, Guid? safetySecurityRoleGuid )
         {
+            List<int> connectableStatuses;
+            if ( !TryGetStatusRestriction( opportunity, currentPerson, safetySecurityRoleGuid, out connectableStatuses ) )
+            {
+                return false;
+            }
+
+            if ( connectableStatuses == null || !connectionStatusId.HasValue )
+            {
+                return true;
+            }
+
+            return connectableStatuses.Contains( connectionStatusId.Value )
+                || connectionState == ConnectionState.Connected;
+        }
+
+        /// <summary>
+        /// Returns the subset of <paramref name="connectionStatusIds"/> at which the person could connect a
+        /// (not yet connected) request on the opportunity. Evaluates the opportunity-level half of the gate
+        /// once instead of once per status, which is what the board needs when it builds its card action menu.
+        /// Fails closed: returns an empty list if the opportunity cannot be resolved.
+        /// </summary>
+        public static List<int> GetConnectableStatusIds( IEnumerable<int> connectionStatusIds, ConnectionOpportunity opportunity, Person currentPerson, Guid? safetySecurityRoleGuid )
+        {
+            var statusIds = new List<int>();
+
+            if ( connectionStatusIds == null )
+            {
+                return statusIds;
+            }
+
+            List<int> connectableStatuses;
+            if ( !TryGetStatusRestriction( opportunity, currentPerson, safetySecurityRoleGuid, out connectableStatuses ) )
+            {
+                return statusIds;
+            }
+
+            statusIds.AddRange( connectableStatuses == null
+                ? connectionStatusIds
+                : connectionStatusIds.Where( connectableStatuses.Contains ) );
+
+            return statusIds;
+        }
+
+        /// <summary>
+        /// Evaluates the status-independent half of the gate. Returns false when the person may not connect
+        /// anything on the opportunity. Returns true otherwise, with <paramref name="connectableStatuses"/>
+        /// set to the status ids the opportunity restricts connecting to, or null when there is no restriction.
+        /// </summary>
+        private static bool TryGetStatusRestriction( ConnectionOpportunity opportunity, Person currentPerson, Guid? safetySecurityRoleGuid, out List<int> connectableStatuses )
+        {
+            connectableStatuses = null;
+
             if ( opportunity == null )
             {
                 return false;
             }
 
-            opportunity.LoadAttributes();
+            if ( opportunity.Attributes == null )
+            {
+                opportunity.LoadAttributes();
+            }
+
             var requiresSecurityToConnect = GetRequiresSecurityToConnect( opportunity );
 
             if ( !requiresSecurityToConnect.HasValue || !requiresSecurityToConnect.Value )
@@ -129,23 +181,18 @@ namespace RockWeb
                 return false;
             }
 
-            var connectableStatuses = opportunity.GetAttributeValue( "ConnectableStatuses" ).SplitDelimitedValues()
+            var statuses = opportunity.GetAttributeValue( "ConnectableStatuses" ).SplitDelimitedValues()
                 .Select( v => v.AsIntegerOrNull() )
                 .Where( v => v.HasValue )
+                .Select( v => v.Value )
                 .ToList();
 
-            if ( connectableStatuses.Count == 0 )
+            if ( statuses.Count > 0 )
             {
-                return true;
+                connectableStatuses = statuses;
             }
 
-            if ( !connectionStatusId.HasValue )
-            {
-                return true;
-            }
-
-            return connectableStatuses.Contains( connectionStatusId.Value )
-                || connectionState == ConnectionState.Connected;
+            return true;
         }
     }
 }
