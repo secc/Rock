@@ -422,20 +422,20 @@ namespace RockWeb.Blocks.Connection
             // SECC (ROCK-9044): the State list offers Connected, which makes this the one board path that can move
             // requests into Connected without the Safety & Security connect gate the board and detail blocks enforce.
             // Apply the same gate here, against the opportunity and status the requests are being moved to. A request
-            // enters Connected on the target opportunity when State is set to Connected, or when it is already
-            // Connected and is being moved to a different opportunity with State left unchanged.
+            // enters Connected on the target opportunity when it ends up Connected (State set to Connected, or left
+            // unchanged on an already Connected request) and was not already Connected on that opportunity. Each one
+            // is gated as a new connect (no state passed), so the target's ConnectableStatuses always apply.
             var targetState = ddlState.SelectedValueAsEnumOrNull<ConnectionState>();
             var targetOpportunityId = connectionOpportunity.Id;
             var targetStatusId = ddlStatus.SelectedValue.AsIntegerOrNull();
             var safetySecurityRoleGuid = GetAttributeValue( AttributeKeys.SafetySecurityRole ).AsGuidOrNull();
 
             var blockedCount = connectionRequests.Count( cr =>
-                ( targetState.HasValue
-                    ? targetState.Value == ConnectionState.Connected
-                    : cr.ConnectionState == ConnectionState.Connected && cr.ConnectionOpportunityId != targetOpportunityId )
+                ( targetState ?? cr.ConnectionState ) == ConnectionState.Connected
+                && !( cr.ConnectionState == ConnectionState.Connected && cr.ConnectionOpportunityId == targetOpportunityId )
                 && !SeccConnectGateHelper.CanConnect(
                     targetStatusId ?? cr.ConnectionStatusId,
-                    cr.ConnectionState,
+                    null,
                     connectionOpportunity,
                     CurrentPerson,
                     safetySecurityRoleGuid ) );

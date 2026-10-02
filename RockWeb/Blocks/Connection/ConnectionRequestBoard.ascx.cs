@@ -855,6 +855,8 @@ namespace RockWeb.Blocks.Connection
 
             if ( action == "view" )
             {
+                // ROCK-9044: a refusal shown for the previously opened request must not carry over to this one.
+                HideRequestModalNotification();
                 ViewAllActivities = false;
                 IsRequestModalAddEditMode = false;
                 RequestModalViewModeSubMode = RequestModalViewModeSubMode_View;
@@ -1574,7 +1576,10 @@ namespace RockWeb.Blocks.Connection
             // (the selected opportunity, assigned above), not the request's pre-save opportunity. Refuse the save
             // and say so, like the other two connect paths, rather than silently saving with the old state.
             // Only the in-memory connectionRequest has been touched so far, so returning here persists nothing.
-            if ( state == ConnectionState.Connected
+            // A request that is already Connected is not being connected by this save, so it is not gated; the
+            // check above keeps it in the selected opportunity, so the save cannot move it into another one.
+            if ( oldConnectionState != ConnectionState.Connected
+                && state == ConnectionState.Connected
                 && !SeccConnectGateHelper.CanConnect(
                     rblRequestModalAddEditModeStatus.SelectedValueAsInt(),
                     connectionRequest.ConnectionState,
@@ -2558,6 +2563,9 @@ namespace RockWeb.Blocks.Connection
         protected void gRequests_RowSelected( object sender, RowEventArgs e )
         {
             ConnectionRequestId = e.RowKeyId;
+
+            // ROCK-9044: a refusal shown for the previously opened request must not carry over to this one.
+            HideRequestModalNotification();
             ViewAllActivities = false;
             IsRequestModalAddEditMode = false;
             RequestModalViewModeSubMode = RequestModalViewModeSubMode_View;
