@@ -411,33 +411,45 @@ namespace RockWeb.Blocks.Connection
                 .Where( cr => RequestIdsState.Contains( cr.Id ) && ( ( includeNoCampus && !cr.CampusId.HasValue ) || selectedCampusIds.Contains( cr.CampusId.Value ) ) )
                 .ToList();
 
+            // SECC (ROCK-9044): nothing has been modified yet, so returning from either guard below persists nothing.
+            if ( connectionOpportunity == null )
+            {
+                mdConfirmUpdateRequests.Hide();
+                ShowNotification( NotificationBoxType.Danger, "The selected connection opportunity could not be found. No requests were updated." );
+                return;
+            }
+
             // SECC (ROCK-9044): the State list offers Connected, which makes this the one board path that can move
             // requests into Connected without the Safety & Security connect gate the board and detail blocks enforce.
-            // Apply the same gate here, against the opportunity and status the requests are being moved to. Nothing
-            // has been modified yet, so returning here persists nothing.
-            if ( ddlState.SelectedValueAsEnumOrNull<ConnectionState>() == ConnectionState.Connected )
-            {
-                var targetStatusId = ddlStatus.SelectedValue.AsIntegerOrNull();
-                var safetySecurityRoleGuid = GetAttributeValue( AttributeKeys.SafetySecurityRole ).AsGuidOrNull();
+            // Apply the same gate here, against the opportunity and status the requests are being moved to. A request
+            // enters Connected on the target opportunity when State is set to Connected, or when it is already
+            // Connected and is being moved to a different opportunity with State left unchanged.
+            var targetState = ddlState.SelectedValueAsEnumOrNull<ConnectionState>();
+            var targetOpportunityId = connectionOpportunity.Id;
+            var targetStatusId = ddlStatus.SelectedValue.AsIntegerOrNull();
+            var safetySecurityRoleGuid = GetAttributeValue( AttributeKeys.SafetySecurityRole ).AsGuidOrNull();
 
-                var blockedCount = connectionRequests.Count( cr => !SeccConnectGateHelper.CanConnect(
+            var blockedCount = connectionRequests.Count( cr =>
+                ( targetState.HasValue
+                    ? targetState.Value == ConnectionState.Connected
+                    : cr.ConnectionState == ConnectionState.Connected && cr.ConnectionOpportunityId != targetOpportunityId )
+                && !SeccConnectGateHelper.CanConnect(
                     targetStatusId ?? cr.ConnectionStatusId,
                     cr.ConnectionState,
                     connectionOpportunity,
                     CurrentPerson,
                     safetySecurityRoleGuid ) );
 
-                if ( blockedCount > 0 )
-                {
-                    mdConfirmUpdateRequests.Hide();
-                    ShowNotification(
-                        NotificationBoxType.Danger,
-                        string.Format(
-                            "You are not authorized to connect {0} of the selected connection requests on {1}. No requests were updated.",
-                            blockedCount.ToString( "N0" ),
-                            connectionOpportunity.Name.EncodeHtml() ) );
-                    return;
-                }
+            if ( blockedCount > 0 )
+            {
+                mdConfirmUpdateRequests.Hide();
+                ShowNotification(
+                    NotificationBoxType.Danger,
+                    string.Format(
+                        "You are not authorized to connect {0} of the selected connection requests on {1}. No requests were updated.",
+                        blockedCount.ToString( "N0" ),
+                        connectionOpportunity.Name.EncodeHtml() ) );
+                return;
             }
 
             foreach ( var connectionRequest in connectionRequests )

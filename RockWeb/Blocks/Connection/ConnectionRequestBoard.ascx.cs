@@ -747,6 +747,11 @@ namespace RockWeb.Blocks.Connection
             }
             else
             {
+                // ROCK-9044: the block-level notification box is only ever shown, never hidden, and it lives in an
+                // always-updating panel - so a message raised on one postback (e.g. a refused connect) would persist
+                // across every later partial postback. Reset it here so a message lives for exactly one postback.
+                nbNotificationBox.Visible = false;
+
                 var causingControlClientId = Request["__EVENTTARGET"].ToStringSafe();
                 var causingControl = Page.FindControl( causingControlClientId );
 
@@ -869,7 +874,7 @@ namespace RockWeb.Blocks.Connection
                 }
                 else
                 {
-                    ShowError( ConnectNotAuthorizedMessage );
+                    ShowError( ConnectNotAuthorizedMessage, ConnectNotAuthorizedTitle );
                 }
 
                 return;
@@ -1116,10 +1121,13 @@ namespace RockWeb.Blocks.Connection
                 which ultimately controlling btnRequestModalViewModeConnect Visibility.
             */
             //btnRequestModalViewModeConnect.Visible = viewModel.CanConnect && CanUserEditConnectionRequest();
+            // ROCK-9044: same three checks btnRequestModalViewModeConnect_Click enforces, so the button is never
+            // rendered for a connect the server would refuse.
             btnRequestModalViewModeConnect.Visible =
                 viewModel.ConnectionState != ConnectionState.Inactive &&
                 viewModel.ConnectionState != ConnectionState.Connected &&
                 connectionRequest.ConnectionOpportunity.ShowConnectButton &&
+                IsRequestInSelectedOpportunity() &&
                 CanUserEditConnectionRequest() &&
                 CanUserConnect();
             btnRequestModalViewModeEdit.Visible = CanUserEditConnectionRequest();
@@ -1536,6 +1544,16 @@ namespace RockWeb.Blocks.Connection
 
             var isAddMode = IsRequestModalAddMode();
 
+            // ROCK-9044: the request id is client-supplied and the edit check runs against the selected opportunity,
+            // and the save below re-points the request at that opportunity. Refuse an edit of a request that is not
+            // in the selected opportunity, otherwise Edit on one opportunity could rewrite (and connect) a request
+            // in another. Same rule the two connect paths apply.
+            if ( !isAddMode && !IsRequestInSelectedOpportunity() )
+            {
+                ShowRequestModalNotification( EditNotAuthorizedMessage, NotificationBoxType.Danger );
+                return;
+            }
+
             var rockContext = new RockContext();
             var connectionRequestService = new ConnectionRequestService( rockContext );
             var connectionRequest = isAddMode ?
@@ -1552,9 +1570,10 @@ namespace RockWeb.Blocks.Connection
             var state = rblRequestModalAddEditModeState.SelectedValueAsEnumOrNull<ConnectionState>();
 
             // ROCK-8640: prevent unauthorized users from transitioning a request into Connected state.
-            // If the selected state is Connected but the user isn't authorized, preserve the existing state.
             // ROCK-9044: evaluate the gate against the opportunity and status the request is being saved with
-            // (the selected opportunity, assigned above), not the request's pre-save opportunity.
+            // (the selected opportunity, assigned above), not the request's pre-save opportunity. Refuse the save
+            // and say so, like the other two connect paths, rather than silently saving with the old state.
+            // Only the in-memory connectionRequest has been touched so far, so returning here persists nothing.
             if ( state == ConnectionState.Connected
                 && !SeccConnectGateHelper.CanConnect(
                     rblRequestModalAddEditModeStatus.SelectedValueAsInt(),
@@ -1563,7 +1582,8 @@ namespace RockWeb.Blocks.Connection
                     CurrentPerson,
                     GetAttributeValue( AttributeKey.SafetySecurityRole ).AsGuidOrNull() ) )
             {
-                state = connectionRequest.ConnectionState;
+                ShowRequestModalNotification( ConnectNotAuthorizedMessage, NotificationBoxType.Danger );
+                return;
             }
 
             // If a value is selected in the radio button list, use it, otherwise use "Active".
@@ -2919,6 +2939,14 @@ namespace RockWeb.Blocks.Connection
         private bool CanUserEditConnectionRequest( ConnectionRequest connectionRequest )
         {
             var connectionOpportunity = GetConnectionOpportunity();
+
+            // ROCK-9044: fail closed when the selected opportunity cannot be resolved (e.g. deactivated mid-session).
+            // Every branch below is scoped to it, and the connector-group query dereferences it.
+            if ( connectionOpportunity == null )
+            {
+                return false;
+            }
+
             var connectionType = GetConnectionType();
 
             var userCanEditConnectionRequest = false;
@@ -2927,7 +2955,7 @@ namespace RockWeb.Blocks.Connection
             {
                 userCanEditConnectionRequest = connectionRequest.IsAuthorized( Authorization.EDIT, CurrentPerson );
             }
-            else if ( connectionOpportunity != null )
+            else
             {
                 userCanEditConnectionRequest = connectionOpportunity.IsAuthorized( Authorization.EDIT, CurrentPerson );
             }
@@ -2978,6 +3006,16 @@ namespace RockWeb.Blocks.Connection
         private const string ConnectNotAuthorizedMessage = "You are not authorized to connect this request.";
 
         /// <summary>
+        /// SECC (ROCK-9044): Title for the block-level notification shown when a connect is refused.
+        /// </summary>
+        private const string ConnectNotAuthorizedTitle = "Not Authorized";
+
+        /// <summary>
+        /// SECC (ROCK-9044): Message shown when an edit is refused because the request is not in the selected opportunity.
+        /// </summary>
+        private const string EditNotAuthorizedMessage = "You are not authorized to edit this request.";
+
+        /// <summary>
         /// SECC (ROCK-9044): Returns true if the request in context belongs to the opportunity currently selected
         /// on the board. <see cref="CanUserEditConnectionRequest"/> evaluates Edit against the selected opportunity
         /// while the request id arrives from the client, so a connect has to be refused when the two do not match -
@@ -3000,14 +3038,15 @@ namespace RockWeb.Blocks.Connection
         /// opportunity's SecurityToConnect flag and the configured Safety &amp; Security role.
         /// Shared gate logic lives in <see cref="SeccConnectGateHelper"/> (also used by ConnectionRequestDetail).
         /// Fails closed: returns false if the opportunity cannot be resolved.
+        /// ROCK-9044: evaluated against the selected opportunity. Every caller first requires
+        /// <see cref="IsRequestInSelectedOpportunity"/> (or has no request in context, in modal add mode, where
+        /// the selected opportunity is the one the new request will be created in), so it is also the request's own.
         /// </summary>
         private bool CanUserConnect()
         {
-            var connectionRequest = GetConnectionRequest();
-
             return SeccConnectGateHelper.CanConnect(
-                connectionRequest,
-                GetGateConnectionOpportunity( connectionRequest ),
+                GetConnectionRequest(),
+                GetConnectionOpportunity(),
                 CurrentPerson,
                 GetAttributeValue( AttributeKey.SafetySecurityRole ).AsGuidOrNull() );
         }
@@ -3021,38 +3060,6 @@ namespace RockWeb.Blocks.Connection
         }
 
         /// <summary>
-        /// SECC (ROCK-8640): Returns the opportunity whose connect rules apply to the given request.
-        /// The request identifier arrives from the client, so it can belong to an opportunity other than the
-        /// one currently selected on the board. The gate has to read SecurityToConnect and ConnectableStatuses
-        /// from the request's own opportunity - which is what ConnectionRequestDetail does - otherwise a user
-        /// on an opportunity that does not require security could connect a request in one that does.
-        /// Falls back to the selected opportunity when there is no request in context (modal add mode), which
-        /// is the opportunity the new request will be created in.
-        /// </summary>
-        /// <param name="connectionRequest">The connection request, or null in modal add mode.</param>
-        private ConnectionOpportunity GetGateConnectionOpportunity( ConnectionRequest connectionRequest )
-        {
-            var selectedConnectionOpportunity = GetConnectionOpportunity();
-
-            if ( connectionRequest == null )
-            {
-                return selectedConnectionOpportunity;
-            }
-
-            // Reuse the already loaded instance when it is the right one, which is the normal case.
-            if ( selectedConnectionOpportunity != null
-                && selectedConnectionOpportunity.Id == connectionRequest.ConnectionOpportunityId )
-            {
-                return selectedConnectionOpportunity;
-            }
-
-            // ROCK-9044: same pattern ConnectionRequestDetail uses. The request came from a context that is
-            // still alive (GetConnectionRequest / the modal save), so the navigation property resolves lazily
-            // without a second query or an unowned RockContext.
-            return connectionRequest.ConnectionOpportunity;
-        }
-
-        /// <summary>
         /// SECC (ROCK-8640): Runs the shared gate against every status on the selected opportunity, so the
         /// board card action menu can hide its Connect item using exactly the same rule that hides the
         /// Connect button on the request modal. Presentation only - the card menu's postback is enforced
@@ -3062,8 +3069,6 @@ namespace RockWeb.Blocks.Connection
         {
             var statusIds = new List<int>();
 
-            // ROCK-9044: resolve the opportunity before the edit check. CanUserEditConnectionRequest dereferences
-            // the selected opportunity, so a null one (e.g. deactivated mid-session) must be caught here first.
             var connectionOpportunity = GetConnectionOpportunity();
 
             if ( connectionOpportunity == null
@@ -4781,9 +4786,10 @@ namespace RockWeb.Blocks.Connection
         /// Shows the error.
         /// </summary>
         /// <param name="text">The text.</param>
-        private void ShowError( string text )
+        /// <param name="title">The title. ROCK-9044: defaults to the original "Oops".</param>
+        private void ShowError( string text, string title = "Oops" )
         {
-            nbNotificationBox.Title = "Oops";
+            nbNotificationBox.Title = title;
             nbNotificationBox.NotificationBoxType = NotificationBoxType.Danger;
             nbNotificationBox.Text = text;
             nbNotificationBox.Visible = true;
