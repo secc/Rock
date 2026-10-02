@@ -271,11 +271,13 @@
         // Region: DOM Manipulation
         //
         const fetchAndRefreshCard = function (options) {
+            // ROCK-9044: capture before the early return, matching initialize, so a future emission without a
+            // request id still refreshes the gate list.
+            captureConnectGate(options);
+
             if (!options || !options.connectionRequestId) {
                 return
             }
-
-            captureConnectGate(options);
 
             fetchRequestViewModel(options, function (requestViewModel) {
                 refreshCard(options.connectionRequestId, requestViewModel);

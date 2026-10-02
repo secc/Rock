@@ -860,10 +860,16 @@ namespace RockWeb.Blocks.Connection
             if ( action == "connect" )
             {
                 // ROCK-8640: enforce edit rights and the S&S connect gate on the card-menu connect action.
-                if ( CanUserEditConnectionRequest() && CanUserConnect() )
+                // ROCK-9044: the request id is client-supplied, so also require the request to be in the selected
+                // opportunity (the one the edit check runs against), and tell the user when the connect is refused.
+                if ( IsRequestInSelectedOpportunity() && CanUserEditConnectionRequest() && CanUserConnect() )
                 {
                     MarkRequestConnected();
                     RefreshRequestCard();
+                }
+                else
+                {
+                    ShowError( ConnectNotAuthorizedMessage );
                 }
 
                 return;
@@ -874,6 +880,11 @@ namespace RockWeb.Blocks.Connection
                 if ( newStatusId.HasValue && newIndex.HasValue )
                 {
                     ProcessConfirmedDragEvent( newStatusId.Value, newIndex.Value );
+
+                    // ROCK-9044: the drop changed the request's status, which is an input to the connect gate,
+                    // but the client re-used the original card markup. Re-render the card so its Connect item
+                    // reflects the new status.
+                    RefreshRequestCard();
                 }
 
                 return;
@@ -1542,7 +1553,15 @@ namespace RockWeb.Blocks.Connection
 
             // ROCK-8640: prevent unauthorized users from transitioning a request into Connected state.
             // If the selected state is Connected but the user isn't authorized, preserve the existing state.
-            if ( state == ConnectionState.Connected && !CanUserConnect() )
+            // ROCK-9044: evaluate the gate against the opportunity and status the request is being saved with
+            // (the selected opportunity, assigned above), not the request's pre-save opportunity.
+            if ( state == ConnectionState.Connected
+                && !SeccConnectGateHelper.CanConnect(
+                    rblRequestModalAddEditModeStatus.SelectedValueAsInt(),
+                    connectionRequest.ConnectionState,
+                    GetConnectionOpportunity(),
+                    CurrentPerson,
+                    GetAttributeValue( AttributeKey.SafetySecurityRole ).AsGuidOrNull() ) )
             {
                 state = connectionRequest.ConnectionState;
             }
@@ -2888,8 +2907,18 @@ namespace RockWeb.Blocks.Connection
 
         private bool CanUserEditConnectionRequest()
         {
+            return CanUserEditConnectionRequest( GetConnectionRequest() );
+        }
+
+        /// <summary>
+        /// SECC (ROCK-9044): Same edit check for an explicit request. Pass null to evaluate opportunity-level
+        /// edit rights with no request in context, which is what board-wide decisions (the card action menu's
+        /// gate list) need - otherwise whichever request happens to be in context on that postback would have
+        /// its per-request Edit result applied to every card.
+        /// </summary>
+        private bool CanUserEditConnectionRequest( ConnectionRequest connectionRequest )
+        {
             var connectionOpportunity = GetConnectionOpportunity();
-            var connectionRequest = GetConnectionRequest();
             var connectionType = GetConnectionType();
 
             var userCanEditConnectionRequest = false;
@@ -2944,6 +2973,29 @@ namespace RockWeb.Blocks.Connection
         }
 
         /// <summary>
+        /// SECC (ROCK-9044): Message shown when a connect is refused by the edit check or the S&amp;S connect gate.
+        /// </summary>
+        private const string ConnectNotAuthorizedMessage = "You are not authorized to connect this request.";
+
+        /// <summary>
+        /// SECC (ROCK-9044): Returns true if the request in context belongs to the opportunity currently selected
+        /// on the board. <see cref="CanUserEditConnectionRequest"/> evaluates Edit against the selected opportunity
+        /// while the request id arrives from the client, so a connect has to be refused when the two do not match -
+        /// otherwise Edit rights on one opportunity could connect a request in another. The board only renders cards
+        /// for the selected opportunity, and the transfer flow moves the selection with the request, so every
+        /// legitimate connect path passes this check. Fails closed when either side cannot be resolved.
+        /// </summary>
+        private bool IsRequestInSelectedOpportunity()
+        {
+            var connectionRequest = GetConnectionRequest();
+            var connectionOpportunity = GetConnectionOpportunity();
+
+            return connectionRequest != null
+                && connectionOpportunity != null
+                && connectionOpportunity.Id == connectionRequest.ConnectionOpportunityId;
+        }
+
+        /// <summary>
         /// SECC (ROCK-8640): Returns true if the current user may connect the request, based on the
         /// opportunity's SecurityToConnect flag and the configured Safety &amp; Security role.
         /// Shared gate logic lives in <see cref="SeccConnectGateHelper"/> (also used by ConnectionRequestDetail).
@@ -2994,10 +3046,10 @@ namespace RockWeb.Blocks.Connection
                 return selectedConnectionOpportunity;
             }
 
-            return new ConnectionOpportunityService( new RockContext() )
-                .Queryable()
-                .AsNoTracking()
-                .FirstOrDefault( co => co.Id == connectionRequest.ConnectionOpportunityId );
+            // ROCK-9044: same pattern ConnectionRequestDetail uses. The request came from a context that is
+            // still alive (GetConnectionRequest / the modal save), so the navigation property resolves lazily
+            // without a second query or an unowned RockContext.
+            return connectionRequest.ConnectionOpportunity;
         }
 
         /// <summary>
@@ -3010,21 +3062,8 @@ namespace RockWeb.Blocks.Connection
         {
             var statusIds = new List<int>();
 
-            /*
-                The modal's Connect button also requires edit rights, so apply the same check here.
-
-                Note that no request is in context at bind time, so when the connection type has
-                EnableRequestSecurity turned on this evaluates opportunity-level Edit rather than the
-                per-request Edit the modal evaluates, and the card menu can show Connect for a request
-                the modal would hide. The card menu's postback is still evaluated per-request in
-                ProcessJavaScriptCommand, so this is a presentation difference only. Matching the modal
-                exactly here would require evaluating the gate per request instead of per status.
-            */
-            if ( !CanUserEditConnectionRequest() )
-            {
-                return statusIds;
-            }
-
+            // ROCK-9044: resolve the opportunity before the edit check. CanUserEditConnectionRequest dereferences
+            // the selected opportunity, so a null one (e.g. deactivated mid-session) must be caught here first.
             var connectionOpportunity = GetConnectionOpportunity();
 
             if ( connectionOpportunity == null
@@ -3034,25 +3073,29 @@ namespace RockWeb.Blocks.Connection
                 return statusIds;
             }
 
-            var safetySecurityRoleGuid = GetAttributeValue( AttributeKey.SafetySecurityRole ).AsGuidOrNull();
+            /*
+                The modal's Connect button also requires edit rights, so apply the same check here.
+
+                ROCK-9044: evaluated with no request in context (opportunity-level Edit), because this list
+                applies to every card on the board. A request often IS in context here (deep link, card click,
+                the rebind after a modal save), and letting its per-request Edit result through would hide or
+                show Connect on every card. The card menu's postback is still evaluated per-request in
+                ProcessJavaScriptCommand. Keeping this request-independent also keeps the client's options hash
+                stable, so postbacks that do not need a board re-render keep hitting its early return.
+            */
+            if ( !CanUserEditConnectionRequest( null ) )
+            {
+                return statusIds;
+            }
 
             // Ordered so the same board state always produces the same list. The client stores these in its
             // options object and re-renders the board when that object changes.
-            foreach ( var connectionStatus in connectionOpportunity.ConnectionType.ConnectionStatuses.OrderBy( cs => cs.Id ) )
-            {
-                /*
-                    Each status is evaluated as Active. State only affects the gate when it is Connected,
-                    and the client applies this list only to cards whose core CanConnect is already true --
-                    which is false for both Connected and Inactive requests -- so the state passed here
-                    cannot change the outcome.
-                */
-                if ( SeccConnectGateHelper.CanConnect( connectionStatus.Id, ConnectionState.Active, connectionOpportunity, CurrentPerson, safetySecurityRoleGuid ) )
-                {
-                    statusIds.Add( connectionStatus.Id );
-                }
-            }
-
-            return statusIds;
+            // ROCK-9044: one gate evaluation for all statuses instead of one per status.
+            return SeccConnectGateHelper.GetConnectableStatusIds(
+                connectionOpportunity.ConnectionType.ConnectionStatuses.Select( cs => cs.Id ).OrderBy( id => id ),
+                connectionOpportunity,
+                CurrentPerson,
+                GetAttributeValue( AttributeKey.SafetySecurityRole ).AsGuidOrNull() );
         }
 
         /// <summary>
@@ -3431,6 +3474,10 @@ namespace RockWeb.Blocks.Connection
 
                         rockContext.SaveChanges();
 
+                        // ROCK-9044: the edit check above cached the pre-transfer request. Drop it so the modal
+                        // shown below evaluates the connect gate against the opportunity the request is now in.
+                        _connectionRequest = null;
+
                         if ( ConnectionOpportunityId != connectionRequest.ConnectionOpportunityId )
                         {
                             // Connection opportunity changed
@@ -3667,8 +3714,11 @@ namespace RockWeb.Blocks.Connection
         protected void btnRequestModalViewModeConnect_Click( object sender, EventArgs e )
         {
             // ROCK-8640: also enforce the S&S connect gate server-side.
-            if ( !CanUserEditConnectionRequest() || !CanUserConnect() )
+            // ROCK-9044: require the request to be in the selected opportunity (the one the edit check runs
+            // against), and tell the user when the connect is refused instead of silently doing nothing.
+            if ( !IsRequestInSelectedOpportunity() || !CanUserEditConnectionRequest() || !CanUserConnect() )
             {
+                ShowRequestModalNotification( ConnectNotAuthorizedMessage, NotificationBoxType.Danger );
                 return;
             }
 
