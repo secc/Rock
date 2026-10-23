@@ -76,7 +76,7 @@ namespace Rock.Tests.UnitTests.Rock.Web.Cache
                 {
                     new PageShortLinkSchedule
                     {
-                        CustomCalendarContent = GetScheduleContentForYesterday(),
+                        CustomCalendarContent = GetScheduleContentForTwoDaysAgo(),
                         Url = "https://rock.rocksolidchurchdemo.com"
                     }
                 }
@@ -107,10 +107,12 @@ END:VEVENT
 END:VCALENDAR";
         }
 
-        private string GetScheduleContentForYesterday()
+        private string GetScheduleContentForTwoDaysAgo()
         {
-            var start = RockDateTime.Now.AddDays( -1 ).AddMinutes( -30 ).ToString( "yyyyMMddTHHmm00" );
-            var end = RockDateTime.Now.AddDays( -1 ).AddMinutes( 30 ).ToString( "yyyyMMddTHHmm00" );
+            // Two days back so the event never ends on today's date, even when
+            // the window crosses midnight (a run between 11:30 PM and 12:30 AM).
+            var start = RockDateTime.Now.AddDays( -2 ).AddMinutes( -30 ).ToString( "yyyyMMddTHHmm00" );
+            var end = RockDateTime.Now.AddDays( -2 ).AddMinutes( 30 ).ToString( "yyyyMMddTHHmm00" );
 
             return $@"BEGIN:VCALENDAR
 BEGIN:VEVENT
