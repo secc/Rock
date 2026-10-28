@@ -495,7 +495,7 @@ namespace Rock.Jobs
             // Safety loop counter to quit after 1,000 iterations.  GetDirtyAttributeValues() can return up to 100,000
             // attribute values per iteration, so 1,000 iterations will be up to 100,000,000 total attribute value records.
             int loopCount = 0;
-            while ( dirtyDictionary.Count > 0 || loopCount <= 1000 )
+            while ( dirtyDictionary.Count > 0 && loopCount <= 1000 )
             {
                 loopCount++;
 
