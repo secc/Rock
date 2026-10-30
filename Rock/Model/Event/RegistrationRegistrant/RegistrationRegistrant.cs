@@ -168,6 +168,11 @@ namespace Rock.Model
         /// <value>
         /// The signature document.
         /// </value>
+        /// <remarks>
+        /// [IgnoreCanDelete] since <see cref="SignatureDocumentService.Delete(SignatureDocument)"/>
+        /// clears this value before the document is deleted.
+        /// </remarks>
+        [IgnoreCanDelete]
         [DataMember]
         public int? SignatureDocumentId { get; set; }
 
