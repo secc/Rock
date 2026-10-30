@@ -19,6 +19,8 @@ using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
 
+using Rock.Data;
+
 namespace Rock.Model
 {
     /// <summary>
@@ -47,6 +49,35 @@ namespace Rock.Model
         public SignatureDocument GetByDocumentKey( string documentKey )
         {
             return this.Queryable().Where( d => d.DocumentKey == documentKey ).FirstOrDefault();
+        }
+
+        /// <summary>
+        /// Deletes the specified signature document after clearing any
+        /// <see cref="RegistrationRegistrant"/> references to it.
+        /// </summary>
+        /// <param name="item">The signature document.</param>
+        /// <returns><c>true</c> if the document was marked for deletion.</returns>
+        public override bool Delete( SignatureDocument item )
+        {
+            /*
+                10/30/2026 SL
+
+                Registrants link to their signature document without a
+                cascade, which made it impossible to delete an invalid document
+                once it was attached to a registration. Unlink the registrants
+                so the document can be deleted; they will then show as unsigned.
+            */
+            var registrants = new RegistrationRegistrantService( ( RockContext ) Context )
+                .Queryable()
+                .Where( r => r.SignatureDocumentId == item.Id )
+                .ToList();
+
+            foreach ( var registrant in registrants )
+            {
+                registrant.SignatureDocumentId = null;
+            }
+
+            return base.Delete( item );
         }
 
         /// <summary>
