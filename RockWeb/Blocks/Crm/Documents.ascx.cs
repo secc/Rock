@@ -609,15 +609,28 @@ namespace RockWeb.Blocks.Crm
                     documentService.Add( document );
                 }
 
-                // The file identifier also comes from a hidden field. Accept only the
-                // document's current file or a new upload that isn't saved to anything
-                // yet, so a changed identifier can't attach someone else's file.
+                // The file identifier also comes from a hidden field, and uploads don't
+                // record who made them. Accept only the document's current file or a
+                // recent upload that isn't saved yet and has no parent other than this
+                // document, so a changed identifier can't attach someone else's file
+                // (including old temporary files that cleanup never removed).
                 var binaryFileId = fuUploader.BinaryFileId.Value;
                 if ( document.BinaryFile == null || document.BinaryFile.Id != binaryFileId )
                 {
                     var uploadedBinaryFile = new BinaryFileService( rockContext ).Get( binaryFileId );
-                    if ( uploadedBinaryFile == null || !uploadedBinaryFile.IsTemporary )
+                    var documentEntityTypeId = EntityTypeCache.GetId( Rock.SystemGuid.EntityType.DOCUMENT );
+                    var isAcceptableUpload = uploadedBinaryFile != null
+                        && uploadedBinaryFile.IsTemporary
+                        && uploadedBinaryFile.CreatedDateTime >= RockDateTime.Now.AddHours( -1 )
+                        && ( ( !uploadedBinaryFile.ParentEntityTypeId.HasValue && !uploadedBinaryFile.ParentEntityId.HasValue )
+                            || ( document.Id > 0
+                                && uploadedBinaryFile.ParentEntityTypeId == documentEntityTypeId
+                                && uploadedBinaryFile.ParentEntityId == document.Id ) );
+
+                    if ( !isAcceptableUpload )
                     {
+                        cvDocuement.IsValid = false;
+                        cvDocuement.ErrorMessage = "The uploaded file can't be used. Please upload the file again.";
                         return;
                     }
                 }
