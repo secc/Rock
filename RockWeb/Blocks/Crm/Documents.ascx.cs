@@ -369,7 +369,8 @@ namespace RockWeb.Blocks.Crm
         }
 
         /// <summary>
-        /// Determines whether the document belongs to the current context entity.
+        /// Determines whether the document belongs to the current context entity
+        /// and is of a document type that this block lists for it.
         /// </summary>
         /// <param name="document">The document.</param>
         /// <returns><c>true</c> if the document belongs to the context entity; otherwise <c>false</c>.</returns>
@@ -382,7 +383,11 @@ namespace RockWeb.Blocks.Crm
                 return false;
             }
 
-            return document.EntityId == contextEntity.Id && document.DocumentType.EntityTypeId == contextEntity.TypeId;
+            // The grid only lists the document types allowed by the block settings and
+            // the type qualifiers, so hold a posted document identifier to the same list.
+            return document.EntityId == contextEntity.Id
+                && document.DocumentType.EntityTypeId == contextEntity.TypeId
+                && GetFilteredDocumentTypes().Any( t => t.Id == document.DocumentTypeId );
         }
 
         #endregion Private Methods
@@ -511,6 +516,16 @@ namespace RockWeb.Blocks.Crm
             {
                 var documentService = new DocumentService( rockContext );
                 var document = documentService.Get( e.RowKeyId );
+
+                // The delete button is hidden for documents the person can't edit,
+                // so make the same check here before deleting.
+                if ( !IsDocumentForContextEntity( document )
+                    || !document.DocumentType.IsAuthorized( Authorization.EDIT, this.CurrentPerson )
+                    || !document.IsAuthorized( Authorization.EDIT, this.CurrentPerson ) )
+                {
+                    return;
+                }
+
                 documentService.Delete( document );
                 rockContext.SaveChanges();
             }
@@ -592,6 +607,19 @@ namespace RockWeb.Blocks.Crm
                 else
                 {
                     documentService.Add( document );
+                }
+
+                // The file identifier also comes from a hidden field. Accept only the
+                // document's current file or a new upload that isn't saved to anything
+                // yet, so a changed identifier can't attach someone else's file.
+                var binaryFileId = fuUploader.BinaryFileId.Value;
+                if ( document.BinaryFile == null || document.BinaryFile.Id != binaryFileId )
+                {
+                    var uploadedBinaryFile = new BinaryFileService( rockContext ).Get( binaryFileId );
+                    if ( uploadedBinaryFile == null || !uploadedBinaryFile.IsTemporary )
+                    {
+                        return;
+                    }
                 }
 
                 document.DocumentTypeId = ddlAddEditDocumentType.SelectedValueAsInt().Value;
