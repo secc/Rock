@@ -368,6 +368,28 @@ namespace RockWeb.Blocks.Crm
             return documentypesForContextEntityType.Where( d => !accessDeniedForDocumentTypeList.Contains( d.Id ) );
         }
 
+        /// <summary>
+        /// Determines whether the document belongs to the current context entity
+        /// and is of a document type that this block lists for it.
+        /// </summary>
+        /// <param name="document">The document.</param>
+        /// <returns><c>true</c> if the document belongs to the context entity; otherwise <c>false</c>.</returns>
+        private bool IsDocumentForContextEntity( Document document )
+        {
+            var contextEntity = this.ContextEntity();
+
+            if ( document == null || contextEntity == null )
+            {
+                return false;
+            }
+
+            // The grid only lists the document types allowed by the block settings and
+            // the type qualifiers, so hold a posted document identifier to the same list.
+            return document.EntityId == contextEntity.Id
+                && document.DocumentType.EntityTypeId == contextEntity.TypeId
+                && GetFilteredDocumentTypes().Any( t => t.Id == document.DocumentTypeId );
+        }
+
         #endregion Private Methods
 
         #region Grid Events
@@ -494,6 +516,16 @@ namespace RockWeb.Blocks.Crm
             {
                 var documentService = new DocumentService( rockContext );
                 var document = documentService.Get( e.RowKeyId );
+
+                // The delete button is hidden for documents the person can't edit,
+                // so make the same check here before deleting.
+                if ( !IsDocumentForContextEntity( document )
+                    || !document.DocumentType.IsAuthorized( Authorization.EDIT, this.CurrentPerson )
+                    || !document.IsAuthorized( Authorization.EDIT, this.CurrentPerson ) )
+                {
+                    return;
+                }
+
                 documentService.Delete( document );
                 rockContext.SaveChanges();
             }
@@ -522,6 +554,15 @@ namespace RockWeb.Blocks.Crm
             var rockContext = new RockContext();
             var documentService = new DocumentService( rockContext );
             var document = documentService.Get( documentId );
+
+            // The document identifier comes from a hidden field, so make sure
+            // it belongs to the context entity and the person can view it.
+            if ( !IsDocumentForContextEntity( document )
+                || !document.DocumentType.IsAuthorized( Authorization.VIEW, this.CurrentPerson )
+                || !document.IsAuthorized( Authorization.VIEW, this.CurrentPerson ) )
+            {
+                return;
+            }
 
             byte[] bytes = document.BinaryFile.ContentStream.ReadBytesToEnd();
 
@@ -553,13 +594,67 @@ namespace RockWeb.Blocks.Crm
                 if ( hfDocumentId.Value.IsNotNullOrWhiteSpace() )
                 {
                     document = documentService.Get( hfDocumentId.ValueAsInt() );
+
+                    // The document identifier comes from a hidden field, so make sure
+                    // it belongs to the context entity and the person can edit it.
+                    if ( !IsDocumentForContextEntity( document )
+                        || !document.DocumentType.IsAuthorized( Authorization.EDIT, this.CurrentPerson )
+                        || !document.IsAuthorized( Authorization.EDIT, this.CurrentPerson ) )
+                    {
+                        return;
+                    }
                 }
                 else
                 {
+                    // The type comes from the drop down. A crafted postback can select any type in
+                    // the list the drop down was last filled with, and the edit list also holds
+                    // types the person can only view. Hold a new document to the same rules as the
+                    // add list: a type this block lists, that is user selectable and that the
+                    // person can edit.
+                    var documentTypeId = ddlAddEditDocumentType.SelectedValueAsInt();
+                    var documentType = GetFilteredDocumentTypes().FirstOrDefault( t => t.Id == documentTypeId );
+                    if ( documentType == null
+                        || !documentType.UserSelectable
+                        || !documentType.IsAuthorized( Authorization.EDIT, this.CurrentPerson ) )
+                    {
+                        cvDocuement.IsValid = false;
+                        cvDocuement.ErrorMessage = "Please select a document type you can add.";
+                        return;
+                    }
+
+                    document.DocumentTypeId = documentType.Id;
                     documentService.Add( document );
                 }
 
-                document.DocumentTypeId = ddlAddEditDocumentType.SelectedValueAsInt().Value;
+                // The file identifier also comes from a hidden field, and uploads don't
+                // record who made them. Accept only the document's current file or a
+                // recent upload that isn't saved yet and has no parent other than this
+                // document, so a changed identifier can't attach someone else's file
+                // (including old temporary files that cleanup never removed).
+                var binaryFileId = fuUploader.BinaryFileId.Value;
+                if ( document.BinaryFile == null || document.BinaryFile.Id != binaryFileId )
+                {
+                    var uploadedBinaryFile = new BinaryFileService( rockContext ).Get( binaryFileId );
+                    var documentEntityTypeId = EntityTypeCache.GetId( Rock.SystemGuid.EntityType.DOCUMENT );
+                    var isAcceptableUpload = uploadedBinaryFile != null
+                        && uploadedBinaryFile.IsTemporary
+                        && uploadedBinaryFile.CreatedDateTime >= RockDateTime.Now.AddHours( -1 )
+                        && ( ( !uploadedBinaryFile.ParentEntityTypeId.HasValue && !uploadedBinaryFile.ParentEntityId.HasValue )
+                            || ( document.Id > 0
+                                && uploadedBinaryFile.ParentEntityTypeId == documentEntityTypeId
+                                && uploadedBinaryFile.ParentEntityId == document.Id ) );
+
+                    if ( !isAcceptableUpload )
+                    {
+                        cvDocuement.IsValid = false;
+                        cvDocuement.ErrorMessage = "The uploaded file can't be used. Please upload the file again.";
+                        return;
+                    }
+                }
+
+                // The document type is read-only once a document exists (the drop down is
+                // disabled on edit, but DropDownList still loads a posted value), so it's set
+                // only for new documents above.
                 document.EntityId = this.ContextEntity().Id;
                 document.Name = tbDocumentName.Text;
                 document.Description = tbDescription.Text;
