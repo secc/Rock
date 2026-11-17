@@ -606,6 +606,23 @@ namespace RockWeb.Blocks.Crm
                 }
                 else
                 {
+                    // The type comes from the drop down. A crafted postback can select any type in
+                    // the list the drop down was last filled with, and the edit list also holds
+                    // types the person can only view. Hold a new document to the same rules as the
+                    // add list: a type this block lists, that is user selectable and that the
+                    // person can edit.
+                    var documentTypeId = ddlAddEditDocumentType.SelectedValueAsInt();
+                    var documentType = GetFilteredDocumentTypes().FirstOrDefault( t => t.Id == documentTypeId );
+                    if ( documentType == null
+                        || !documentType.UserSelectable
+                        || !documentType.IsAuthorized( Authorization.EDIT, this.CurrentPerson ) )
+                    {
+                        cvDocuement.IsValid = false;
+                        cvDocuement.ErrorMessage = "Please select a document type you can add.";
+                        return;
+                    }
+
+                    document.DocumentTypeId = documentType.Id;
                     documentService.Add( document );
                 }
 
@@ -635,7 +652,9 @@ namespace RockWeb.Blocks.Crm
                     }
                 }
 
-                document.DocumentTypeId = ddlAddEditDocumentType.SelectedValueAsInt().Value;
+                // The document type is read-only once a document exists (the drop down is
+                // disabled on edit, but DropDownList still loads a posted value), so it's set
+                // only for new documents above.
                 document.EntityId = this.ContextEntity().Id;
                 document.Name = tbDocumentName.Text;
                 document.Description = tbDescription.Text;
