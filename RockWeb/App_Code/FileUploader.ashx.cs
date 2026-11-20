@@ -61,6 +61,17 @@ namespace RockWeb
             public const string ParentEntityId = "ParentEntityId";
         }
 
+        /// <summary>
+        /// SECC customization (ROCK-9494): the security roles whose members may upload content files
+        /// (files written to the web server file system or to an asset storage provider).
+        /// </summary>
+        private static readonly Guid[] ContentUploadRoleGuids = new Guid[]
+        {
+            Rock.SystemGuid.Group.GROUP_ADMINISTRATORS.AsGuid(),
+            Rock.SystemGuid.Group.GROUP_STAFF_MEMBERS.AsGuid(),
+            Rock.SystemGuid.Group.GROUP_STAFF_LIKE_MEMBERS.AsGuid()
+        };
+
         #endregion Constants
 
         /// <summary>
@@ -138,6 +149,11 @@ namespace RockWeb
                     {
                         throw new Rock.Web.FileUploadException( "Must be logged in.", System.Net.HttpStatusCode.Forbidden );
                     }
+                    else if ( !IsContentUploadAuthorized( currentPerson ) )
+                    {
+                        // SECC customization (ROCK-9494)
+                        throw new Rock.Web.FileUploadException( "Not authorized to upload content files.", System.Net.HttpStatusCode.Forbidden );
+                    }
                     else
                     {
                         if ( context.Request.Form[ParameterKey.IsAssetStorageProviderAsset].AsBoolean() )
@@ -202,6 +218,33 @@ namespace RockWeb
             {
                 throw new Rock.Web.FileUploadException( "Unable to upload file.", System.Net.HttpStatusCode.BadRequest );
             }
+        }
+
+        /// <summary>
+        /// SECC customization (ROCK-9494): Determines whether the person may upload content files.
+        /// Core Rock only requires the caller to be logged in, which lets any account (including
+        /// self-registered public accounts) write files to the web server. Binary file uploads are
+        /// not affected; those are secured by the BinaryFileType.
+        /// </summary>
+        /// <param name="currentPerson">The current person.</param>
+        /// <returns><c>true</c> if the person is in one of the staff security roles.</returns>
+        private static bool IsContentUploadAuthorized( Person currentPerson )
+        {
+            if ( currentPerson == null )
+            {
+                return false;
+            }
+
+            foreach ( var roleGuid in ContentUploadRoleGuids )
+            {
+                var role = RoleCache.Get( roleGuid );
+                if ( role != null && role.IsPersonInRole( currentPerson.Guid ) )
+                {
+                    return true;
+                }
+            }
+
+            return false;
         }
 
         /// <summary>
